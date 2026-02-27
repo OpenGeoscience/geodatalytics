@@ -1,7 +1,7 @@
 import axios from "axios";
 import OauthClient from "@resonant/oauth-client";
 import S3FileFieldClient from 'django-s3-file-field';
-import { useAppStore, useMapStore, useProjectStore } from "@/store";
+import { useAppStore } from "@/store";
 
 const OAUTH2_CLIENT_ID = 'cBmD6D6F2YAmMWHNQZFPUr4OpaXVpW5w4Thod6Kj';
 
@@ -73,11 +73,5 @@ apiClient.interceptors.response.use(
 
 export const logout = async () => {
   await oauthClient.logout();
-
-  useAppStore().currentUser = undefined;
-
-  useProjectStore().currentProject = undefined;
-  useProjectStore().clearState();
-
-  useMapStore().setMapCenter();
+  window.location.href = `${import.meta.env.VITE_APP_API_ROOT}accounts/logout/`
 };

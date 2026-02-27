@@ -110,19 +110,10 @@ watch(darkMode, () => {
               <v-icon v-bind="props" icon="mdi-cog" class="px-3"></v-icon>
             </template>
             <v-list>
-              <v-list-item density="compact">
+              <v-list-item density="compact" @click="logout">
                 Logout
                 <template v-slot:append>
                   <v-icon icon="mdi-logout"></v-icon>
-                  <v-dialog activator="parent" max-width="300">
-                    <template v-slot:default="{ isActive }">
-                      <v-card class="pa-3">
-                        <v-card-title>Log out?</v-card-title>
-                        <v-btn @click="isActive.value = false" text="Cancel" />
-                        <v-btn @click="logout" color="red" text="Confirm" />
-                      </v-card>
-                    </template>
-                  </v-dialog>
                 </template>
               </v-list-item>
               <v-list-item density="compact">
