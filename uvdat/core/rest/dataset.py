@@ -22,7 +22,6 @@ class DatasetViewSet(ModelViewSet):
     serializer_class = DatasetSerializer
     permission_classes = [DatasetGuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     def get_queryset(self):
         qs = super().get_queryset()

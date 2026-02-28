@@ -19,7 +19,6 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
     serializer_class = uvdat_serializers.TaskResultSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     @action(
         detail=False,

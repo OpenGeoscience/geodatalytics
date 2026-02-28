@@ -22,7 +22,6 @@ class ProjectViewSet(ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     def perform_create(self, serializer):
         project: Project = serializer.save()

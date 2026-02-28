@@ -28,7 +28,6 @@ class NetworkViewSet(ModelViewSet):
     serializer_class = NetworkSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     @action(detail=True, methods=["get"])
     def nodes(self, request, **kwargs):

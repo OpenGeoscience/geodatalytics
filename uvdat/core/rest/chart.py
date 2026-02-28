@@ -15,7 +15,6 @@ class ChartViewSet(ModelViewSet):
     serializer_class = ChartSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     def get_queryset(self):
         qs = super().get_queryset()

@@ -12,4 +12,3 @@ class ColormapViewSet(ModelViewSet):
     serializer_class = ColormapSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"

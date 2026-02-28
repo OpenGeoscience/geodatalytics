@@ -19,7 +19,6 @@ class FileItemViewSet(ModelViewSet):
     serializer_class = FileItemSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     def get_queryset(self):
         qs = super().get_queryset()

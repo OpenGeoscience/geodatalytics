@@ -14,4 +14,3 @@ class RegionViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericVie
     serializer_class = RegionSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"

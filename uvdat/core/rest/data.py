@@ -86,7 +86,6 @@ def get_filter_string(filters: dict | None = None):
 class GenericDataViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     @property
     def authentication_classes(self):
@@ -143,7 +142,7 @@ class VectorDataViewSet(GenericDataViewSet):
         url_path=r"tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+)",
         url_name="tiles",
     )
-    def get_vector_tile(self, request, id: str, x: str, y: str, z: str):
+    def get_vector_tile(self, request, pk: str, x: str, y: str, z: str):
         filters = request.query_params.copy()
         filters.pop("token", None)
         filters_string = get_filter_string(filters)
@@ -155,7 +154,7 @@ class VectorDataViewSet(GenericDataViewSet):
                     "x": x,
                     "y": y,
                     "srid": 3857,
-                    "vector_data_id": id,
+                    "vector_data_id": pk,
                 },
             )
             row = cursor.fetchone()

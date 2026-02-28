@@ -20,7 +20,6 @@ class LayerViewSet(ReadOnlyModelViewSet):
     serializer_class = LayerSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     @action(detail=True, methods=["get"])
     def frames(self, request, **kwargs):
@@ -35,7 +34,6 @@ class LayerFrameViewSet(ReadOnlyModelViewSet):
     serializer_class = LayerFrameSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
 
 class LayerStyleViewSet(ModelViewSet):
@@ -43,7 +41,6 @@ class LayerStyleViewSet(ModelViewSet):
     serializer_class = LayerStyleSerializer
     permission_classes = [GuardianPermission]
     filter_backends = [GuardianFilter]
-    lookup_field = "id"
 
     def get_queryset(self):
         qs = super().get_queryset()
