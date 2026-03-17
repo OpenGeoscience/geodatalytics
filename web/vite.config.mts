@@ -1,4 +1,5 @@
 // Plugins
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import Components from 'unplugin-vue-components/vite'
 import Vue from '@vitejs/plugin-vue'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
@@ -13,6 +14,9 @@ import packageJson from './package.json'
 
 process.env.VITE_APP_VERSION = packageJson.version;
 
+// Defined by: https://developers.cloudflare.com/pages/configuration/build-configuration/#environment-variables
+const GIT_SHA = process.env.CF_PAGES_COMMIT_SHA;
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
@@ -25,6 +29,13 @@ export default defineConfig({
         }),
         Components(),
         nodePolyfills(),
+        sentryVitePlugin({
+            org: "kitware-data",
+            project: "geodatalytics-client",
+            release: {
+                name: GIT_SHA,
+            }
+        }),
     ],
     resolve: {
         alias: {
@@ -47,6 +58,7 @@ export default defineConfig({
         port: 8080,
     },
     build: {
+        sourcemap: true,
         commonjsOptions: {
             transformMixedEsModules: true,
         },

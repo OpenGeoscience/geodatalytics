@@ -11,6 +11,7 @@
   "dependencies": {
     "@mdi/font": "^7.2.96",
     "@resonant/oauth-client": "^0.9.0",
+    "@sentry/vue": "^10.42.0",
     "@turf/turf": "^7.1.0",
     "axios": "^1.4.0",
     "buffer": "^6.0.3",
@@ -34,6 +35,7 @@
     "vuetify": "^3.8.0"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "^5.1.1",
     "@types/lodash": "^4.17.7",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.62.0",

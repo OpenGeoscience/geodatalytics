@@ -7,6 +7,8 @@ interface ViteTypeOptions {
 interface ImportMetaEnv {
   readonly VITE_APP_API_ROOT: string;
   readonly VITE_APP_VERSION: string;
+  // This is not set in development
+  readonly VITE_APP_SENTRY_DSN?: string;
 }
 
 interface ImportMeta {

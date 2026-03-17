@@ -34,7 +34,14 @@ resource "cloudflare_pages_project" "www" {
       environment_variables = local.www_env_vars
     }
     production {
-      environment_variables = local.www_env_vars
+      environment_variables = merge(
+        local.www_env_vars,
+        {
+          VITE_APP_SENTRY_DSN = ""
+          # SENTRY_AUTH_TOKEN is also set manually in the Cloudflare Pages console,
+          # but it's a secret, so don't include it here.
+        },
+      )
     }
   }
 }
