@@ -715,24 +715,24 @@ onMounted(resetCurrentStyle)
                                                     :disabled="!group.visible"
                                                     @update:model-value="(v: Colormap) => setGroupColormap(group.name, v)"
                                                 >
-                                                    <template v-slot:item="{ props, item }">
+                                                    <template v-slot:item="{ props, internalItem }">
                                                         <v-list-item v-bind="props">
                                                             <template v-slot:append>
                                                                 <v-icon
-                                                                    v-if="item.raw.project && ['owner', 'collaborator'].includes(projectPermission)"
+                                                                    v-if="internalItem.raw.project && ['owner', 'collaborator'].includes(projectPermission)"
                                                                     icon="mdi-pencil"
                                                                     class="ml-2"
-                                                                    @click="openColormapEditor(group.name, item.raw)"
+                                                                    @click="openColormapEditor(group.name, internalItem.raw)"
                                                                 />
                                                                 <v-icon
-                                                                    v-if="item.raw.project && ['owner', 'collaborator'].includes(projectPermission)"
+                                                                    v-if="internalItem.raw.project && ['owner', 'collaborator'].includes(projectPermission)"
                                                                     icon="mdi-trash-can"
                                                                     class="ml-2"
-                                                                    @click="delColormap = item.raw"
+                                                                    @click="delColormap = internalItem.raw"
                                                                 />
                                                                 <div style="width: 300px" class="ml-2">
                                                                     <colormap-preview
-                                                                        :colormap="item.raw"
+                                                                        :colormap="internalItem.raw"
                                                                         :discrete="group.colormap?.discrete || false"
                                                                         :nColors="group.colormap?.n_colors || -1"
                                                                     />
@@ -740,11 +740,11 @@ onMounted(resetCurrentStyle)
                                                             </template>
                                                         </v-list-item>
                                                     </template>
-                                                    <template v-slot:selection="{ item }">
-                                                        <span class="pr-15" v-if="getColormap(group.colormap)?.markers">{{ item.title }}</span>
+                                                    <template v-slot:selection="{ internalItem }">
+                                                        <span class="pr-15" v-if="getColormap(group.colormap)?.markers">{{ internalItem.title }}</span>
                                                         <div style="width: 300px" class="ml-2" v-if="group.colormap && getColormap(group.colormap)?.markers">
                                                             <colormap-preview
-                                                                :colormap="item.raw"
+                                                                :colormap="internalItem.raw"
                                                                 :discrete="group.colormap.discrete || false"
                                                                 :nColors="group.colormap.n_colors || -1"
                                                             />
@@ -960,10 +960,10 @@ onMounted(resetCurrentStyle)
                                                             group.colormap.discrete = !vectorProperties?.find((p) => p.name === v)?.range;
                                                         }}"
                                                     >
-                                                        <template v-slot:item="{ props, item }">
+                                                        <template v-slot:item="{ props, internalItem }">
                                                             <v-list-item v-bind="props">
                                                                 <template v-slot:append>
-                                                                    <v-chip size="small" v-if="(item.raw as Record<string, any>).sample_label">{{ (item.raw as Record<string, any>).sample_label }}</v-chip>
+                                                                    <v-chip size="small" v-if="(internalItem.raw as Record<string, any>).sample_label">{{ (internalItem.raw as Record<string, any>).sample_label }}</v-chip>
                                                                 </template>
                                                             </v-list-item>
                                                         </template>
@@ -984,24 +984,24 @@ onMounted(resetCurrentStyle)
                                                         return-object
                                                         @update:model-value="(v: Colormap) => setGroupColormap(group.name, v)"
                                                     >
-                                                        <template v-slot:item="{ props, item }">
+                                                        <template v-slot:item="{ props, internalItem }">
                                                             <v-list-item v-bind="props">
                                                                 <template v-slot:append>
                                                                     <v-icon
-                                                                        v-if="item.raw.project && ['owner', 'collaborator'].includes(projectPermission)"
+                                                                        v-if="internalItem.raw.project && ['owner', 'collaborator'].includes(projectPermission)"
                                                                         icon="mdi-pencil"
                                                                         class="ml-2"
-                                                                        @click="openColormapEditor(group.name, item.raw)"
+                                                                        @click="openColormapEditor(group.name, internalItem.raw)"
                                                                     />
                                                                     <v-icon
-                                                                        v-if="item.raw.project && ['owner', 'collaborator'].includes(projectPermission)"
+                                                                        v-if="internalItem.raw.project && ['owner', 'collaborator'].includes(projectPermission)"
                                                                         icon="mdi-trash-can"
                                                                         class="ml-2"
-                                                                        @click="delColormap = item.raw"
+                                                                        @click="delColormap = internalItem.raw"
                                                                     />
                                                                     <div style="width: 300px" class="ml-2">
                                                                         <colormap-preview
-                                                                            :colormap="item.raw"
+                                                                            :colormap="internalItem.raw"
                                                                             :discrete="group.colormap.discrete || false"
                                                                             :nColors="group.colormap.n_colors || -1"
                                                                         />
@@ -1009,11 +1009,11 @@ onMounted(resetCurrentStyle)
                                                                 </template>
                                                             </v-list-item>
                                                         </template>
-                                                        <template v-slot:selection="{ item }">
-                                                            <span class="pr-15" v-if="getColormap(group.colormap)?.markers">{{ item.title }}</span>
+                                                        <template v-slot:selection="{ internalItem }">
+                                                            <span class="pr-15" v-if="getColormap(group.colormap)?.markers">{{ internalItem.title }}</span>
                                                             <div style="width: 300px" class="ml-2" v-if="getColormap(group.colormap)?.markers">
                                                                 <colormap-preview
-                                                                    :colormap="item.raw"
+                                                                    :colormap="internalItem.raw"
                                                                     :discrete="group.colormap.discrete || false"
                                                                     :nColors="group.colormap.n_colors || -1"
                                                                 />
@@ -1206,10 +1206,10 @@ onMounted(resetCurrentStyle)
                                                     placeholder="Select property"
                                                     hide-details
                                                 >
-                                                    <template v-slot:item="{ props, item }">
-                                                        <v-list-item v-bind="props" :disabled="!(item.raw as Record<string, any>).range">
+                                                    <template v-slot:item="{ props, internalItem }">
+                                                        <v-list-item v-bind="props" :disabled="!(internalItem.raw as Record<string, any>).range">
                                                             <template v-slot:append>
-                                                                <v-chip size="small" v-if="(item.raw as Record<string, any>).sample_label">{{ (item.raw as Record<string, any>).sample_label }}</v-chip>
+                                                                <v-chip size="small" v-if="(internalItem.raw as Record<string, any>).sample_label">{{ (internalItem.raw as Record<string, any>).sample_label }}</v-chip>
                                                             </template>
                                                         </v-list-item>
                                                     </template>
@@ -1325,10 +1325,10 @@ onMounted(resetCurrentStyle)
                                         hide-details
                                         @update:model-value="(v) => updateFilterBy(filter.id, v)"
                                     >
-                                        <template v-slot:item="{ props, item }">
+                                        <template v-slot:item="{ props, internalItem }">
                                             <v-list-item v-bind="props">
                                                 <template v-slot:append>
-                                                    <v-chip size="small" v-if="(item.raw as Record<string, any>).sample_label">{{ (item.raw as Record<string, any>).sample_label }}</v-chip>
+                                                    <v-chip size="small" v-if="(internalItem.raw as Record<string, any>).sample_label">{{ (internalItem.raw as Record<string, any>).sample_label }}</v-chip>
                                                 </template>
                                             </v-list-item>
                                         </template>
