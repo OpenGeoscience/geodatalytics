@@ -573,7 +573,7 @@ onMounted(resetCurrentStyle)
                     />
                 </div>
 
-                <table class="aligned-controls px-2">
+                <table class="aligned-controls">
                     <tbody>
                         <tr v-if="frames.length > 1">
                             <td><v-label>Default Frame</v-label></td>
@@ -1595,7 +1595,7 @@ onMounted(resetCurrentStyle)
     font-size: 14px;
 }
 .aligned-controls {
-    padding: 0px;
+    padding: 0 8px;
     width: 100%;
 }
 .aligned-controls td {

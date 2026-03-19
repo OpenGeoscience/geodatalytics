@@ -152,7 +152,7 @@ watch(() => appStore.openSidebars, () => {
 
 <template>
   <div id="mapContainer" class="map">
-    <div id="map-tooltip" ref="tooltip" class="tooltip pa-0">
+    <div id="map-tooltip" ref="tooltip" class="tooltip">
       <MapTooltip />
     </div>
   </div>
@@ -189,7 +189,7 @@ watch(() => appStore.openSidebars, () => {
 
 .tooltip {
   border-radius: 5px;
-  padding: 10px 20px;
+  padding: 0;
   word-break: break-word;
   text-wrap: wrap;
   width: fit-content;
