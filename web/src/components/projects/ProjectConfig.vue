@@ -224,9 +224,8 @@ onMounted(() => {
 watch(selectedProject, resetProjectEdit);
 
 watch(() => projectStore.projectConfigMode, () => {
-  if (projectStore.currentProject) {
-    if (projectStore.projectConfigMode) selectProject(projectStore.currentProject)
-    else projectStore.currentProject = projectStore.availableProjects.find(
+  if (projectStore.currentProject && !projectStore.projectConfigMode) {
+    projectStore.currentProject = projectStore.availableProjects.find(
       (p) => p.id === projectStore.currentProject?.id
     )  // trigger project reload
   }

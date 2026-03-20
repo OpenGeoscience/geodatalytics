@@ -48,10 +48,10 @@ class GuardianFilter(BaseFilterBackend):
         if not hasattr(queryset, "filter_by_projects"):
             raise NotImplementedError
 
-        ids = request.query_params.get("project", request.query_params.get("project_id"))
-        if ids:
+        project_id = request.query_params.get("project")
+        if project_id:
             # Return queryset filtered by objects that are within these projects
-            return queryset.filter_by_projects(Project.objects.filter(id__in=ids))
+            return queryset.filter_by_projects(Project.objects.filter(id=project_id))
 
         if request.user.is_superuser:
             return queryset

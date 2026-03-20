@@ -73,6 +73,7 @@ class VectorData(models.Model):
             return json.load(f)
 
     def get_summary(self, *, cache=True):  # noqa: C901
+        self.check_color_props_coverage()
         if cache and self.summary:
             return self.summary
         # Limit number of unique values to return for non-numeric fields
@@ -122,6 +123,17 @@ class VectorData(models.Model):
         self.summary = summary
         self.save()
         return summary
+
+    def check_color_props_coverage(self):
+        if self.summary is not None and self.summary.get("color_props_coverage") is None:
+            n_covered_features = self.features.filter(
+                properties__has_keys=["fill", "stroke"]
+            ).count()
+            coverage = n_covered_features / self.features.count()
+            self.summary["color_props_coverage"] = (
+                "none" if coverage == 0 else "full" if coverage == 1 else "partial"
+            )
+            self.save()
 
 
 class VectorFeature(models.Model):

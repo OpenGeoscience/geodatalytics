@@ -84,6 +84,16 @@ function setVisibility(layer: Layer, visible = true) {
         return l
     })
 }
+
+function getColorPropsCoverage(layer: Layer) {
+  const frame_coverages = layerStore.layerFrames(layer).map(
+    (frame) => frame.vector?.summary?.color_props_coverage || "none"
+  )
+  if (frame_coverages.every((c) => c === 'full')) return 'full'
+  if (frame_coverages.every((c) => c === 'none')) return 'none'
+  return 'partial'
+
+}
 </script>
 
 <template>
@@ -98,30 +108,35 @@ function setVisibility(layer: Layer, visible = true) {
                     {{ layer.name }}
                     <div v-for="colormap_preview in getColormapPreviews(layer)" class="ml-6">
                         <div v-if="getColormapPreviews(layer).length > 1">{{ colormap_preview.name }}</div>
-                        <span v-if="colormap_preview.useFeatureProps">Use feature color props; default to </span>
-                        <span v-if="colormap_preview.colorBy">color by {{ colormap_preview.colorBy }}</span>
-                        <span v-if="!colormap_preview.colormap">Use default style</span>
-                        <div v-else>
-                            <colormap-preview v-if="!colormap_preview.valueColors" :colormap="colormap_preview.colormap"
-                                :discrete="colormap_preview.discrete" :nColors="colormap_preview.nColors"
-                                :range="colormap_preview.range" />
-                            <v-expansion-panels v-else>
-                                <v-expansion-panel static bg-color="transparent">
-                                    <v-expansion-panel-title class="pa-0" min-height="0">
-                                        <colormap-preview :colormap="colormap_preview.colormap"
-                                            :discrete="colormap_preview.discrete" :nColors="colormap_preview.nColors"
-                                            :range="colormap_preview.range" />
-                                    </v-expansion-panel-title>
-                                    <v-expansion-panel-text>
-                                        <div v-for="row in colormap_preview.valueColors">
-                                            <div v-if="row" class="d-flex" style="align-items: center;">
-                                                <div class="color-square" :style="{ backgroundColor: row.color }"></div>
-                                                {{ row.value }}
-                                            </div>
-                                        </div>
-                                    </v-expansion-panel-text>
-                                </v-expansion-panel>
-                            </v-expansion-panels>
+                        <span v-if="colormap_preview.useFeatureProps && getColorPropsCoverage(layer) !== 'none'">
+                          Use feature color properties
+                          <span v-if="getColorPropsCoverage(layer) !== 'full'">; default to </span>
+                        </span>
+                        <div v-if="getColorPropsCoverage(layer) !== 'full'">
+                          <span v-if="colormap_preview.colorBy">color by {{ colormap_preview.colorBy }}</span>
+                          <span v-if="!colormap_preview.colormap">Use default style</span>
+                          <div v-else>
+                              <colormap-preview v-if="!colormap_preview.valueColors" :colormap="colormap_preview.colormap"
+                                  :discrete="colormap_preview.discrete" :nColors="colormap_preview.nColors"
+                                  :range="colormap_preview.range" />
+                              <v-expansion-panels v-else>
+                                  <v-expansion-panel static bg-color="transparent">
+                                      <v-expansion-panel-title class="pa-0" min-height="0">
+                                          <colormap-preview :colormap="colormap_preview.colormap"
+                                              :discrete="colormap_preview.discrete" :nColors="colormap_preview.nColors"
+                                              :range="colormap_preview.range" />
+                                      </v-expansion-panel-title>
+                                      <v-expansion-panel-text>
+                                          <div v-for="row in colormap_preview.valueColors">
+                                              <div v-if="row" class="d-flex" style="align-items: center;">
+                                                  <div class="color-square" :style="{ backgroundColor: row.color }"></div>
+                                                  {{ row.value }}
+                                              </div>
+                                          </div>
+                                      </v-expansion-panel-text>
+                                  </v-expansion-panel>
+                              </v-expansion-panels>
+                          </div>
                         </div>
                     </div>
                 </v-list-item>

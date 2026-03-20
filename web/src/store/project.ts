@@ -236,6 +236,7 @@ export const useProjectStore = defineStore('project', () => {
 
     function clearProjectState() {
         availableDatasets.value = undefined;
+        availableViewStates.value = [];
 
         layerStore.selectedLayers = [];
         styleStore.selectedLayerStyles = {};

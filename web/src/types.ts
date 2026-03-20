@@ -52,7 +52,8 @@ export interface LayerFrame {
 
 export interface VectorSummary {
   feature_types: string[];
-  properties: Record<string, PropertySummary>
+  properties: Record<string, PropertySummary>;
+  color_props_coverage: 'full' | 'partial' | 'none';
 }
 
 export interface PropertySummary {

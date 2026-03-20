@@ -110,7 +110,7 @@ export async function createDataset(data: any): Promise<Dataset> {
 }
 
 export async function deleteDataset(datasetId: number): Promise<Dataset> {
-  return (await apiClient.delete(`datasets/${datasetId}`)).data;
+  return (await apiClient.delete(`datasets/${datasetId}/`)).data;
 }
 
 export async function getDatasetTags(): Promise<string[]> {
