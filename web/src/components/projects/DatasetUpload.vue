@@ -43,6 +43,12 @@ const mandatoryRule = [
     (v: any) => (v ? true : "Input required.")
 ];
 const acceptTypes = '.json,.geojson,.tif,.tiff,.zip'
+const maxFileSize = 2000000000
+const fileUploadRules = [(fileset: File[]) => {
+  if (fileset.some((f) => f.size > maxFileSize)) {
+    return 'File Upload cannot be greater than 2 GB.'
+  }
+}]
 
 const similarExisting = computed(() => {
     return props.allDatasets.filter((d) => {
@@ -57,7 +63,8 @@ const valid = computed(() => {
     return (
         name.value && description.value && category.value &&
         layers.value.length > 0 && layers.value.every((l) => {
-            return l.name && l.files.length && (
+            return l.name && l.files.length &&
+            fileUploadRules.every((rule) => rule(l.files) === undefined) && (
                 l.frame_method === 'single' || l.frame_property
             )
         })
@@ -228,7 +235,7 @@ watch(open, () => {
                                     <v-icon icon="mdi-information-outline" color="primary" class="upload-info-icon"
                                         v-tooltip="'Upload multiple files to create a sequence of frames, or upload a single file to optionally split into frames.'" />
                                     <v-file-upload v-model="layer.files" density="compact" class="mt-2" multiple
-                                        clearable :accept="acceptTypes"
+                                        clearable :accept="acceptTypes" show-size :rules="fileUploadRules"
                                         style="background-color: rgb(var(--v-theme-secondary)); padding: 10px"
                                         @update:model-value="() => { layer.frame_method = 'single'; layer.frame_property = undefined }">
                                         <template v-slot:icon>
