@@ -260,10 +260,10 @@ const swiperColor = computed(() => {
             class="map"
         />
 
-        <div id="map-tooltip" ref="tooltip" class="tooltip pa-0">
+        <div id="map-tooltip" ref="tooltip" class="tooltip">
         <MapTooltip />
         </div>
-        <div id="map-tooltip" ref="compareTooltip" class="tooltip pa-0">
+        <div id="map-tooltip" ref="compareTooltip" class="tooltip">
         <MapTooltip compare-map />
         </div>
     </div>
@@ -300,7 +300,7 @@ const swiperColor = computed(() => {
 
 .tooltip {
   border-radius: 5px;
-  padding: 10px 20px;
+  padding: 0;
   word-break: break-word;
   text-wrap: wrap;
   width: fit-content;

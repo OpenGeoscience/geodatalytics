@@ -235,7 +235,7 @@ watch(() => projectStore.projectConfigMode, () => {
 
 <template>
   <div>
-    <div class="project-row my-5">
+    <div class="project-row">
       <v-select
         placeholder="Select a Project"
         no-data-text="No available projects."
@@ -545,7 +545,7 @@ watch(() => projectStore.projectConfigMode, () => {
 <style>
 .project-row {
   display: flex;
-  margin: 0px 8px;
+  margin: 20px 8px;
   align-items: center;
   justify-content: space-between;
 }

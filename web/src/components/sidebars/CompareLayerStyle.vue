@@ -212,7 +212,7 @@ const panels = ref(['A', 'B'] as const);
                                         @update:model-value="selectStyle($event, panel)"
                                     ></v-select>
                                 </div>
-                                <table class="aligned-controls px-2">
+                                <table class="aligned-controls">
                                     <tbody>
                                         <tr>
                                             <td><v-label color="primary-text">Opacity</v-label></td>
@@ -254,7 +254,7 @@ const panels = ref(['A', 'B'] as const);
                                             @update:model-value="selectStyle($event, panel)"
                                         ></v-select>
                                     </div>
-                                    <table class="aligned-controls px-2">
+                                    <table class="aligned-controls">
                                         <tbody>
                                             <tr>
                                                 <td><v-label color="primary-text">Opacity</v-label></td>
@@ -286,7 +286,7 @@ const panels = ref(['A', 'B'] as const);
     font-size: 14px;
 }
 .aligned-controls {
-    padding: 0px;
+    padding: 0 8px;
     width: 100%;
 }
 .aligned-controls td {

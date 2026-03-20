@@ -277,7 +277,8 @@ onMounted(init)
                         <template v-slot:activator="{ props }">
                             <div
                                 v-bind="props"
-                                class="color-square ma-0"
+                                class="color-square"
+                                style="margin: 0"
                                 :style="{backgroundColor: marker.color}"
                             />
                         </template>

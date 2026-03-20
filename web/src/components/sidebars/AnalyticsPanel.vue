@@ -276,8 +276,8 @@ watch(
                 <v-select v-else-if="value.length" v-model="selectedInputs[key]" :label="key.replaceAll('_', ' ')"
                   :items="value" :rules="inputSelectionRules" item-value="id" item-title="name" density="compact"
                   hide-details="auto" class="my-1">
-                  <template #item="{ item, props: itemProps }">
-                    <v-list-item v-bind="itemProps" v-tooltip="item.title" style="max-width: 400px;" />
+                  <template #item="{ internalItem, props: itemProps }">
+                    <v-list-item v-bind="itemProps" v-tooltip="internalItem.title" style="max-width: 400px;" />
                   </template>
                 </v-select>
               </div>

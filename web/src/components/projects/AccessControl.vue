@@ -272,15 +272,15 @@ onMounted(() => {
               }
             "
           >
-            <template v-slot:item="{ props, item }">
+            <template v-slot:item="{ props, internalItem }">
               <v-list-item
                 v-bind="props"
                 :title="
-                  item.raw.first_name && item.raw.last_name
-                    ? item.raw.first_name + ' ' + item.raw.last_name
-                    : item.raw.username
+                  internalItem.raw.first_name && internalItem.raw.last_name
+                    ? internalItem.raw.first_name + ' ' + internalItem.raw.last_name
+                    : internalItem.raw.username
                 "
-                :subtitle="item.raw.email"
+                :subtitle="internalItem.raw.email"
               ></v-list-item>
             </template>
           </v-select>
