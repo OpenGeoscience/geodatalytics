@@ -96,7 +96,7 @@ type = [
   "django-stubs[compatible-mypy]==5.2.9",
   "djangorestframework-stubs[compatible-mypy]==3.16.8",
   "pandas-stubs==3.0.0.260204",
-  "types-channels==4.3.0.20250822",
+  "types-channels==4.3.0.20260321",
 ]
 test = [
   "django-s3-file-field-client==1.1.0",
