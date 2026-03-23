@@ -1279,7 +1279,7 @@ wheels = [
 
 [[package]]
 name = "django-large-image"
-version = "0.10.2"
+version = "0.10.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -1288,9 +1288,9 @@ dependencies = [
     { name = "filelock" },
     { name = "large-image" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/d0/185de978914506a16fdfc212173a962137b7f2d3b00c4d9453dbc01eb9c9/django_large_image-0.10.2.tar.gz", hash = "sha256:e8cce1526b98a1934de2f4cac1854fa2491339d169bcb500cec9085e20ab15fd", size = 941235, upload-time = "2025-10-20T17:44:32.564Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f6/13/c6e2313bb605f882d46198c0b64de6d340ffae5ebd5e9743febe98d959f1/django_large_image-0.10.3.tar.gz", hash = "sha256:abfeb739a0431d4c3c0a8031fa383b390278da21f3aab852acfd3b6134a12b57", size = 941858, upload-time = "2026-03-20T20:04:46.909Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f1/88/c87155c92f3808c33f767b4b15ab642b3e0f2d11ba3210cac39a3afb2aa2/django_large_image-0.10.2-py3-none-any.whl", hash = "sha256:d2400b2020729c88aa7e63c7ebab83de6bf317caace0241b4a9e78cd085f1a0a", size = 956395, upload-time = "2025-10-20T17:44:31.01Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/2e/de256d17fb39546aae5feed199a6c61f29a1d5da6ec5d0a6b49f489f615c/django_large_image-0.10.3-py3-none-any.whl", hash = "sha256:18d84c058dc0644928382a961e5fcb6bc889df4e2bb75bf48eac0a8a2fec0306", size = 957024, upload-time = "2026-03-20T20:04:45.09Z" },
 ]
 
 [[package]]
@@ -1864,19 +1864,19 @@ http = [
 
 [[package]]
 name = "gdal"
-version = "3.12.2.1"
+version = "3.12.3.1"
 source = { registry = "https://girder.github.io/large_image_wheels/" }
 wheels = [
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:d65c9e88aa231ab6be48e0b356a42382dbcfc6ee4a717f034f3d9c35ca55ff05" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:d8d0d463fead1cd887e0189e4eb5a9714b759a7990ba1498e087078d7c31a83e" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:61b26ae32b0ebdf66d72f35e92734a548edd35978db3dd75fb71e46b71c1ef51" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:3cec2c8fa2e89bf18fa5d99674d789c6d6b3537b33ddc955f76d4d564c89b2f9" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:3ac1b349f299af26183f9ed4d6e62a69ffe4ab2079c8334e87fd5358dbab40d8" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:d94214784c797509dfcf72b89f9119cc79efd09e178710d9c80d266052ee90e5" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:c8c3d0eccffd36780c40be07a0da7ea1cc4ff18fafe2211bf5965505b79786d0" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:9cfb750c947064dd61773c837d31334442a2c5d5e4914ecc93f7f46b84537963" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:9339b51751b313e40960109f9f256c2f2c1e48ef1dfe9a2d5c7e6d318c767c25" },
-    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.2.1-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:bf3744c74e670a947946071f179da8f8ae5c8b98b0cab6be1207c8c0eeaa6157" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:30425ca9f8cd2759b7d44367314c7cd8e47e93c4b20e672039f70453ce770ffa" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:6135ebab782efbdb6c607788205101c9d9b73d0b2e4a4e17e3da1f18aad98d33" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:a7d346329068fb09d1b526c6a08cde8dd58f82e569194608c51904c9d7290fef" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:37a6080ff2fbc7cdad1b173edd6a525d7f96bd9cec19b2dbdfb8d9e1e3255a87" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:c8d45cf208073d0fc93558ef74e7ef36c317c6ae9e55a5a8331c90b9e7173610" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:fa6a1e2bc6631b04a83fad093f121f5f15f3fca82cad84453bbfc974f52e1461" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:edb30482579c9b0900189022d71a30f922e0ed11ff7234e7db11ac29ab772c62" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:2cef6ea1cebd60c4dbab6b55c9fd4a6a6845836169292afdadfca1b847040aa4" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:b17b794b98c8dfdd1114c3a2ac4af429d339bfe335855e8ea9c87c74e81fe9a1" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/GDAL-3.12.3.1-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:c3988ba2e47ea01ecd9316fe3f6ad984c70e7f254d990efc32b19e697a210992" },
 ]
 
 [[package]]
@@ -2044,7 +2044,7 @@ requires-dist = [
     { name = "django-extensions", specifier = "==4.1" },
     { name = "django-filter", specifier = "==25.2" },
     { name = "django-guardian", specifier = "==3.3.0" },
-    { name = "django-large-image", specifier = "==0.10.2" },
+    { name = "django-large-image", specifier = "==0.10.3" },
     { name = "django-minio-storage", marker = "extra == 'development'", specifier = "==0.5.9" },
     { name = "django-oauth-toolkit", specifier = "==3.2.0" },
     { name = "django-resonant-settings", extras = ["allauth", "celery"], specifier = "==0.48.1" },
@@ -2056,7 +2056,7 @@ requires-dist = [
     { name = "django-stubs-ext", specifier = "==5.2.9" },
     { name = "djangorestframework", specifier = "==3.17.0" },
     { name = "drf-yasg", specifier = "==1.21.15" },
-    { name = "gdal", specifier = "==3.12.2.1", index = "https://girder.github.io/large_image_wheels/" },
+    { name = "gdal", specifier = "==3.12.3.1", index = "https://girder.github.io/large_image_wheels/" },
     { name = "geoai-py", marker = "extra == 'tasks'", specifier = "==0.35.0" },
     { name = "geopandas", specifier = "==1.1.3" },
     { name = "ipython", marker = "extra == 'development'", specifier = "==9.11.0" },
@@ -2575,6 +2575,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyyaml" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/f0/55/cb2efc27c07d4002bea7705b866bd10d5f63261fca06163ee8b17c608cc8/jsonargparse-4.47.0.tar.gz", hash = "sha256:d4a7b71ecd92695147650cf896a317cd0b34f3e48e52559382964e60fa67371f", size = 226021, upload-time = "2026-03-21T09:07:43.202Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a3/57/e5153ad1e9d9ad7554aa96bfa9bbd037fc3b06fd910810e9ab9d0b1dff82/jsonargparse-4.47.0-py3-none-any.whl", hash = "sha256:b038671662c1073b4a7045aa29c868e8485abe81c09ffc6716e6deff31c3cf25", size = 129061, upload-time = "2026-03-13T11:52:07.383Z" },
 ]
@@ -4197,7 +4198,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
