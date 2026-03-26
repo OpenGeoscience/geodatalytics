@@ -8,7 +8,7 @@ permissions:
   contents: write
 jobs:
   version-and-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -19,7 +19,7 @@ jobs:
       - name: Install npm
         uses: actions/setup-node@v6
         with:
-          node-version: 24.14.0
+          node-version: 24
       - name: Run Semantic Release
         run: |
           uvx python-semantic-release version

@@ -1,52 +1,21 @@
 # Setup Guide
+This guide walks you through setting up GeoDatalytics for local development using Dev Containers.
 
-This guide walks you through setting up GeoDatalytics for local development using Docker Compose.
+## Setup
+1. Install [VS Code with dev container support](https://code.visualstudio.com/docs/devcontainers/containers#_installation).
+1. Open the project in VS Code, then run `Dev Containers: Reopen in Container`
+   from the Command Palette (`Ctrl+Shift+P`).
+1. Once the container is ready, open a terminal and run:
+   ```sh
+   ./manage.py migrate
+   ./manage.py createsuperuser
+   ```
 
-## Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/) (v20.10+)
-- [Docker Compose](https://docs.docker.com/compose/install/) (v2.0+)
-- [Node.js](https://nodejs.org/) (v22+ recommended)
-- [npm](https://www.npmjs.com/)
-
----
-
-## Initial Setup
-
-### 1. Build and Start Docker Containers
-
-```bash
-docker compose up
-```
-
-> **Note:** Ensure all containers start and stay running before continuing. Check the logs for any errors.
-
-### 2. Initialize the Database
-
-While the containers are running, open a **separate terminal** and run:
-
-```bash
-# Apply database migrations
-docker compose run --rm django ./manage.py migrate
-
-# Create an admin user (you will be prompted for email and password)
-docker compose run --rm -it django ./manage.py createsuperuser
-```
-
-> **Note:** The `createsuperuser` command prompts you to create login credentials (email and password). Use these credentials to sign into both the Admin Panel and User Interface. If you forget your password, run `createsuperuser` again to create a new admin account.
-
-> **Windows Users:** If the `createsuperuser` command hangs or doesn't show prompts, prefix the command with `winpty`:
->
-> ```bash
-> winpty docker compose run --rm -it django ./manage.py createsuperuser
-> ```
-
-### 3. Load Sample Data (Optional)
-
+### Load Sample Data (Optional)
 The ingest command loads datasets, charts, and project configuration from an ingestion file:
 
-```bash
-docker compose run --rm django ./manage.py ingest {JSON_FILE}
+```sh
+./manage.py ingest {JSON_FILE}
 ```
 
 Available ingest options (paths relative to `sample_data/`):
@@ -55,6 +24,38 @@ Available ingest options (paths relative to `sample_data/`):
 - `multiframe_test.json`
 - `la_wildfires.json`
 - `new_york_energy/data.json`
+
+## Run
+Open the **Run and Debug** panel (`Ctrl+Shift+D`) and select a launch configuration:
+
+* **Django: Server** — Starts the development server at <http://localhost:8000/>
+* **Django: Server (eager Celery)** — Same, but Celery tasks run synchronously
+  in the web process (useful for debugging task code without a worker)
+* **Celery: Worker** — Starts only the Celery worker
+* **Vite: Dev Server** — Starts the frontend development server at <http://localhost:8080/>
+* **Django: Management Command** — Pick and run any management command
+* **Django + Celery + Vite** — Starts the server, a Celery worker, and the frontend
+
+## Test
+Run the full test suite from a terminal: `tox`
+
+Auto-format code: `tox -e format`
+
+Run and debug individual tests from the **Testing** panel (`Ctrl+Shift+;`).
+
+## Rebuild
+After changes to the Dockerfile, Docker Compose files, or `devcontainer.json`,
+run `Dev Containers: Rebuild Container` from the Command Palette (`Ctrl+Shift+P`).
+
+For dependency changes in `pyproject.toml`, just run `uv sync --all-extras --all-groups`.
+
+
+
+
+
+
+
+
 
 ---
 
@@ -94,50 +95,7 @@ Press `Ctrl+C` in the terminal running `docker compose up`, or run:
 docker compose stop
 ```
 
----
-
-## Application Maintenance
-
-When new package dependencies or database schema changes occur, update your development environment:
-
-```bash
-# Pull latest base images
-docker compose pull
-
-# Rebuild containers (no cache)
-docker compose build --pull --no-cache
-
-# Apply any new migrations
-docker compose run --rm django ./manage.py migrate
-```
-
----
-
 ## Troubleshooting
-
-### Container Build Failures
-
-If you encounter build errors related to Python packages:
-
-1. **Clear Docker build cache:**
-
-   ```bash
-   docker compose build --no-cache
-   ```
-
-2. **Prune unused Docker resources:**
-   ```bash
-   docker system prune -a
-   ```
-
-### Database Connection Issues
-
-Ensure PostgreSQL is running and healthy:
-
-```bash
-docker compose ps
-docker compose logs postgres
-```
 
 ### Port Conflicts
 
@@ -158,23 +116,3 @@ docker compose up
 ```
 
 GPU acceleration is optional and only needed for accelerated inferencing.
-
-### Windows-Specific Issues
-
-**Interactive commands don't work or hang:**
-
-On Windows (especially Git Bash/MINGW), interactive Docker commands like `createsuperuser` may hang or fail to display prompts. Prefix the command with `winpty`:
-
-```bash
-winpty docker compose run --rm -it django ./manage.py createsuperuser
-```
-
-**"No such container" errors:**
-
-If you see errors like `No such container: django` when trying to attach to a running container, use `docker compose run` instead:
-
-```bash
-docker compose run --rm -it django ./manage.py <command>
-```
-
-This creates a new container instance rather than attaching to an existing one.
