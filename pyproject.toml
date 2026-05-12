@@ -44,7 +44,7 @@ dependencies = [
   "pylibtiff==0.7.0.4.7.1",
   "pyshp==3.0.3",
   "rasterio==1.5.0",
-  "rich==14.3.3",
+  "rich==15.0.0",
   "webcolors==25.10.0",
   "whitenoise[brotli]==6.12.0",
   # Production-only
