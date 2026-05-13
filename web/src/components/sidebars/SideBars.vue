@@ -189,24 +189,18 @@ function togglePanelVisibility(id: string) {
               v-tooltip="'Panel Visibility'"
             ></v-icon>
           </template>
-          <v-list
-            :items="panelStore.panelArrangement.filter((p) => p.closeable)"
-            item-title="label"
-            item-value="id"
-            selectable
-            :selected="panelStore.panelArrangement.filter((p) => p.visible)"
-            @click:select="(item) => togglePanelVisibility(item.id as string)"
-            select-strategy="leaf"
-            return-object
-          >
-            <template v-slot:prepend="{ item, isSelected }">
-              <v-list-item-action start>
-                <v-checkbox-btn
-                  :model-value="isSelected"
-                  @change="togglePanelVisibility(item.id)"
-                ></v-checkbox-btn>
-              </v-list-item-action>
-            </template>
+          <v-list>
+            <v-list-item
+              v-for="item in panelStore.panelArrangement.filter(
+                (p) => p.closeable,
+              )"
+              @click="togglePanelVisibility(item.id)"
+            >
+              <v-checkbox-btn
+                :model-value="item.visible"
+                :label="item.label"
+              ></v-checkbox-btn>
+            </v-list-item>
           </v-list>
         </v-menu>
       </div>
@@ -306,5 +300,9 @@ function togglePanelVisibility(id: string) {
 
 .v-text-field {
   background-color: rgb(var(--v-theme-background));
+}
+
+.v-checkbox-btn .v-label {
+  margin-left: 5px;
 }
 </style>
