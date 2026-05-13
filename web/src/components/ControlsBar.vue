@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 import { Map, type LngLatBoundsLike } from "maplibre-gl";
 
 import JsonEditorVue from "json-editor-vue";
