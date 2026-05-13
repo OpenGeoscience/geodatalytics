@@ -140,7 +140,7 @@ function setNewBasemapStyleFromTileURL() {
   }
 }
 
-function createNewBasemapPreview() {
+async function createNewBasemapPreview() {
   const map = mapStore.getMap();
   const center = map.getCenter();
   const zoom = map.getZoom();
@@ -153,7 +153,17 @@ function createNewBasemapPreview() {
   newBasemapPreview.value.setCenter(center);
   newBasemapPreview.value.setZoom(zoom);
   if (newBasemapStyleJSON.value) {
-    jsonErrors.value = validateStyleMin(newBasemapStyleJSON.value);
+    if (typeof newBasemapStyleJSON.value == 'string') {
+      try {
+        const response = await fetch(newBasemapStyleJSON.value)
+        const content = await response.json()
+        jsonErrors.value = validateStyleMin(content);
+      } catch {
+        jsonErrors.value = [{message: 'Invalid URL.'}]
+      }
+    } else {
+      jsonErrors.value = validateStyleMin(newBasemapStyleJSON.value);
+    }
     if (!jsonErrors.value?.length) {
       newBasemapPreview.value.setStyle(newBasemapStyleJSON.value);
       return;
