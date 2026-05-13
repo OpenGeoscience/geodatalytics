@@ -25,11 +25,11 @@ import type {
 } from "@/types";
 
 export async function getUsers(): Promise<User[]> {
-  return (await apiClient.get("users/")).data.results;
+  return (await apiClient.get("users/")).data?.results;
 }
 
 export async function getBasemaps(): Promise<Basemap[]> {
-  return (await apiClient.get("basemaps/")).data.results;
+  return (await apiClient.get("basemaps/")).data?.results;
 }
 
 export async function createBasemap(basemap: Basemap): Promise<Basemap> {
@@ -37,7 +37,7 @@ export async function createBasemap(basemap: Basemap): Promise<Basemap> {
 }
 
 export async function getProjects(): Promise<Project[]> {
-  return (await apiClient.get("projects/")).data.results;
+  return (await apiClient.get("projects/")).data?.results;
 }
 
 export async function createProject(
@@ -75,7 +75,7 @@ export async function deleteProject(projectId: number): Promise<Project> {
 export async function getProjectDatasets(
   projectId: number,
 ): Promise<Dataset[]> {
-  return (await apiClient.get(`datasets/?project=${projectId}`)).data.results;
+  return (await apiClient.get(`datasets/?project=${projectId}`)).data?.results;
 }
 
 export async function getChart(chartId: number): Promise<Chart> {
@@ -87,7 +87,7 @@ export async function getChartFiles(chartId: number): Promise<FileItem[]> {
 }
 
 export async function getProjectCharts(projectId: number): Promise<Chart[]> {
-  return (await apiClient.get(`charts/?project=${projectId}`)).data.results;
+  return (await apiClient.get(`charts/?project=${projectId}`)).data?.results;
 }
 
 export async function getProjectAnalysisTypes(
@@ -97,7 +97,7 @@ export async function getProjectAnalysisTypes(
 }
 
 export async function getDatasets(): Promise<Dataset[]> {
-  return (await apiClient.get("datasets/")).data.results;
+  return (await apiClient.get("datasets/")).data?.results;
 }
 
 export async function getDataset(datasetId: number): Promise<Dataset> {
@@ -163,7 +163,7 @@ export async function getDatasetNetworks(
 export async function getProjectNetworks(
   projectId: number,
 ): Promise<Network[]> {
-  return (await apiClient.get(`networks/?project=${projectId}`)).data.results;
+  return (await apiClient.get(`networks/?project=${projectId}`)).data?.results;
 }
 
 export async function getNetwork(networkId: number): Promise<Network> {
@@ -267,7 +267,7 @@ export async function getVectorDataBounds(vectorId: number): Promise<number[]> {
 }
 
 export async function getLayerStyles(layerId: number): Promise<LayerStyle[]> {
-  return (await apiClient.get(`layer-styles/?layer=${layerId}`)).data.results;
+  return (await apiClient.get(`layer-styles/?layer=${layerId}`)).data?.results;
 }
 
 export async function createLayerStyle(data: LayerStyle): Promise<LayerStyle> {
@@ -288,7 +288,7 @@ export async function deleteLayerStyle(styleId: number): Promise<LayerStyle> {
 export async function getProjectColormaps(
   projectId: number,
 ): Promise<Colormap[]> {
-  return (await apiClient.get(`colormaps/?project=${projectId}`)).data.results;
+  return (await apiClient.get(`colormaps/?project=${projectId}`)).data?.results;
 }
 
 export async function createColormap(colormap: Colormap): Promise<Colormap> {
