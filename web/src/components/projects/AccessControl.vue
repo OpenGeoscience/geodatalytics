@@ -276,11 +276,11 @@ onMounted(() => {
               <v-list-item
                 v-bind="props"
                 :title="
-                  item.raw.first_name && item.raw.last_name
-                    ? item.raw.first_name + ' ' + item.raw.last_name
-                    : item.raw.username
+                  item.first_name && item.last_name
+                    ? item.first_name + ' ' + item.last_name
+                    : item.username
                 "
-                :subtitle="item.raw.email"
+                :subtitle="item.email"
               ></v-list-item>
             </template>
           </v-select>

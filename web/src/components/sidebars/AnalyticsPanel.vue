@@ -280,7 +280,7 @@ watch(
         style="height: 100%; overflow: auto"
       >
         <v-card-title class="analysis-title">
-          {{ analysisStore.currentAnalysisType.name }}
+          <span>{{ analysisStore.currentAnalysisType.name }}</span>
           <v-tooltip text="Close" location="bottom">
             <template v-slot:activator="{ props }">
               <v-btn
@@ -368,10 +368,10 @@ watch(
                   hide-details="auto"
                   class="my-1"
                 >
-                  <template #item="{ item, props: itemProps }">
+                  <template v-slot:item="{ props, item }">
                     <v-list-item
-                      v-bind="itemProps"
-                      v-tooltip="item.title"
+                      v-bind="props"
+                      v-tooltip="(item as any).name"
                       style="max-width: 400px"
                     />
                   </template>
@@ -567,5 +567,11 @@ watch(
   width: 100%;
   justify-content: space-between;
   align-items: center;
+}
+.analysis-title > span:first-child {
+  flex-shrink: 1;
+  min-width: 100px;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 </style>

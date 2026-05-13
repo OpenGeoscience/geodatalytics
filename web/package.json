@@ -37,7 +37,7 @@
     "vue-maplibre-compare": "1.0.26",
     "vue-router": "5.0.6",
     "vuedraggable": "4.1.0",
-    "vuetify": "3.12.6"
+    "vuetify": "4.0.7"
   },
   "devDependencies": {
     "@sentry/vite-plugin": "5.2.1",
