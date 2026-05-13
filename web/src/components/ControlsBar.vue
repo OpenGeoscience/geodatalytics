@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import html2canvas from "html2canvas";
-import { Map } from "maplibre-gl";
+import { Map, type LngLatBoundsLike } from "maplibre-gl";
 
 import JsonEditorVue from "json-editor-vue";
 import "vanilla-jsoneditor/themes/jse-theme-dark.css";
@@ -81,7 +81,7 @@ const userHasEditPermission = computed(() => {
 function createBasemapPreviews() {
   if (basemapList.value) {
     const map = mapStore.getMap();
-    const bounds = map.getBounds();
+    const bounds = map.getBounds().toArray() as LngLatBoundsLike;
     mapStore.availableBasemaps.forEach((basemap) => {
       if (basemap.id === undefined || basemap.style === undefined) return;
       if (basemapPreviews.value[basemap.id]) {
