@@ -304,14 +304,6 @@ function togglePanelVisibility(id: string) {
   max-height: calc(100% - 100px);
 }
 
-.v-icon {
-  color: rgb(var(--v-theme-secondary-text)) !important;
-}
-
-.v-btn.bg-primary .v-icon {
-  color: rgb(var(--v-theme-button-text)) !important;
-}
-
 .v-text-field {
   background-color: rgb(var(--v-theme-background));
 }
