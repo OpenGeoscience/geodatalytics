@@ -902,31 +902,29 @@ onMounted(resetCurrentStyle);
                               <template v-slot:append>
                                 <v-icon
                                   v-if="
-                                    item.raw.project &&
+                                    item.project &&
                                     ['owner', 'collaborator'].includes(
                                       projectPermission,
                                     )
                                   "
                                   icon="mdi-pencil"
                                   class="ml-2"
-                                  @click="
-                                    openColormapEditor(group.name, item.raw)
-                                  "
+                                  @click="openColormapEditor(group.name, item)"
                                 />
                                 <v-icon
                                   v-if="
-                                    item.raw.project &&
+                                    item.project &&
                                     ['owner', 'collaborator'].includes(
                                       projectPermission,
                                     )
                                   "
                                   icon="mdi-trash-can"
                                   class="ml-2"
-                                  @click="delColormap = item.raw"
+                                  @click="delColormap = item"
                                 />
                                 <div style="width: 300px" class="ml-2">
                                   <colormap-preview
-                                    :colormap="item.raw"
+                                    :colormap="item"
                                     :discrete="
                                       group.colormap?.discrete || false
                                     "
@@ -940,7 +938,7 @@ onMounted(resetCurrentStyle);
                             <span
                               class="pr-15"
                               v-if="getColormap(group.colormap)?.markers"
-                              >{{ item.title }}</span
+                              >{{ item.name }}</span
                             >
                             <div
                               style="width: 300px"
@@ -951,7 +949,7 @@ onMounted(resetCurrentStyle);
                               "
                             >
                               <colormap-preview
-                                :colormap="item.raw"
+                                :colormap="item"
                                 :discrete="group.colormap.discrete || false"
                                 :nColors="group.colormap.n_colors || -1"
                               />
@@ -1307,10 +1305,8 @@ onMounted(resetCurrentStyle);
                                 <template v-slot:append>
                                   <v-chip
                                     size="small"
-                                    v-if="(item.raw as any).sample_label"
-                                    >{{
-                                      (item.raw as any).sample_label
-                                    }}</v-chip
+                                    v-if="(item as any).sample_label"
+                                    >{{ (item as any).sample_label }}</v-chip
                                   >
                                 </template>
                               </v-list-item>
@@ -1350,7 +1346,7 @@ onMounted(resetCurrentStyle);
                                 <template v-slot:append>
                                   <v-icon
                                     v-if="
-                                      item.raw.project &&
+                                      item.project &&
                                       ['owner', 'collaborator'].includes(
                                         projectPermission,
                                       )
@@ -1358,23 +1354,23 @@ onMounted(resetCurrentStyle);
                                     icon="mdi-pencil"
                                     class="ml-2"
                                     @click="
-                                      openColormapEditor(group.name, item.raw)
+                                      openColormapEditor(group.name, item)
                                     "
                                   />
                                   <v-icon
                                     v-if="
-                                      item.raw.project &&
+                                      item.project &&
                                       ['owner', 'collaborator'].includes(
                                         projectPermission,
                                       )
                                     "
                                     icon="mdi-trash-can"
                                     class="ml-2"
-                                    @click="delColormap = item.raw"
+                                    @click="delColormap = item"
                                   />
                                   <div style="width: 300px" class="ml-2">
                                     <colormap-preview
-                                      :colormap="item.raw"
+                                      :colormap="item"
                                       :discrete="
                                         group.colormap.discrete || false
                                       "
@@ -1388,7 +1384,7 @@ onMounted(resetCurrentStyle);
                               <span
                                 class="pr-15"
                                 v-if="getColormap(group.colormap)?.markers"
-                                >{{ item.title }}</span
+                                >{{ item.name }}</span
                               >
                               <div
                                 style="width: 300px"
@@ -1396,7 +1392,7 @@ onMounted(resetCurrentStyle);
                                 v-if="getColormap(group.colormap)?.markers"
                               >
                                 <colormap-preview
-                                  :colormap="item.raw"
+                                  :colormap="item"
                                   :discrete="group.colormap.discrete || false"
                                   :nColors="group.colormap.n_colors || -1"
                                 />
@@ -1700,13 +1696,13 @@ onMounted(resetCurrentStyle);
                           <template v-slot:item="{ props, item }">
                             <v-list-item
                               v-bind="props"
-                              :disabled="!(item.raw as any).range"
+                              :disabled="!(item as any).range"
                             >
                               <template v-slot:append>
                                 <v-chip
                                   size="small"
-                                  v-if="(item.raw as any).sample_label"
-                                  >{{ (item.raw as any).sample_label }}</v-chip
+                                  v-if="(item as any).sample_label"
+                                  >{{ (item as any).sample_label }}</v-chip
                                 >
                               </template>
                             </v-list-item>
@@ -1887,8 +1883,8 @@ onMounted(resetCurrentStyle);
                         <template v-slot:append>
                           <v-chip
                             size="small"
-                            v-if="(item.raw as any).sample_label"
-                            >{{ (item.raw as any).sample_label }}</v-chip
+                            v-if="(item as any).sample_label"
+                            >{{ (item as any).sample_label }}</v-chip
                           >
                         </template>
                       </v-list-item>
