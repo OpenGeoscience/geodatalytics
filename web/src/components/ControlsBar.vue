@@ -153,13 +153,13 @@ async function createNewBasemapPreview() {
   newBasemapPreview.value.setCenter(center);
   newBasemapPreview.value.setZoom(zoom);
   if (newBasemapStyleJSON.value) {
-    if (typeof newBasemapStyleJSON.value == 'string') {
+    if (typeof newBasemapStyleJSON.value == "string") {
       try {
-        const response = await fetch(newBasemapStyleJSON.value)
-        const content = await response.json()
+        const response = await fetch(newBasemapStyleJSON.value);
+        const content = await response.json();
         jsonErrors.value = validateStyleMin(content);
       } catch {
-        jsonErrors.value = [{message: 'Invalid URL.'}]
+        jsonErrors.value = [{ message: "Invalid URL." }];
       }
     } else {
       jsonErrors.value = validateStyleMin(newBasemapStyleJSON.value);
