@@ -574,7 +574,7 @@ watch(
 <style>
 .project-row {
   display: flex;
-  margin: 0px 8px;
+  margin: 8px;
   align-items: center;
   justify-content: space-between;
 }
