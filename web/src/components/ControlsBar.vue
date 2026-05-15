@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { debounce } from "lodash";
 import { ref, watch, computed } from "vue";
 import html2canvas from "html2canvas-pro";
 import { Map, type LngLatBoundsLike } from "maplibre-gl";
@@ -298,8 +299,8 @@ function copyViewStateLink(viewState: ViewState) {
 
 watch(basemapList, createBasemapPreviews);
 watch(newBasemapTab, switchBasemapCreateTab);
-watch(newBasemapTileURL, setNewBasemapStyleFromTileURL);
-watch(newBasemapStyleJSON, createNewBasemapPreview);
+watch(newBasemapTileURL, debounce(setNewBasemapStyleFromTileURL, 1000));
+watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
 </script>
 
 <template>
