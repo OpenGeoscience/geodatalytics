@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useAppStore, useLayerStore, useMapStore } from "@/store";
 import { useMapCompareStore } from "@/store/compare";
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import type { Ref } from "vue";
 import { ToggleCompare } from "vue-maplibre-compare";
 import { oauthClient } from "@/api/auth";
 import "vue-maplibre-compare/dist/vue-maplibre-compare.css";
 import { addProtocol, AttributionControl, Popup } from "maplibre-gl";
-import type { StyleSpecification, Map } from "maplibre-gl";
+import { type StyleSpecification, Map } from "maplibre-gl";
 import { useTheme } from "vuetify";
 import { Protocol } from "pmtiles";
 import { storeToRefs } from "pinia";
@@ -246,6 +246,31 @@ const swiperColor = computed(() => {
     arrow: theme.global.current.value.colors["button-text"] as string,
   };
 });
+
+onMounted(() => {
+  if (!appStore.currentUser) {
+    const lightDefault = "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+    const darkDefault = "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+    new Map({
+      container: "mapContainer",
+      attributionControl: false,
+      style: {
+        layers: [{"id": "light", "type": "raster", "source": "light"}],
+        sources: {
+          light: {
+            type: "raster",
+            tiles: [appStore.theme === 'light' ? lightDefault: darkDefault],
+            maxzoom: 19,
+            tileSize: 256
+          }
+        },
+        version: 8
+      },
+      center: [0, 0],
+      zoom: 1, // Initial zoom level
+    });
+  }
+})
 </script>
 
 <template>
@@ -288,6 +313,7 @@ const swiperColor = computed(() => {
       <MapTooltip compare-map />
     </div>
   </div>
+  <div v-else id="mapContainer" class="map"></div>
 </template>
 
 <style scoped>
