@@ -55,7 +55,9 @@ function createMap() {
   const newMap = new Map({
     container: "mapContainer",
     attributionControl: false,
-    preserveDrawingBuffer: true, // allows screenshots
+    canvasContextAttributes: {
+      preserveDrawingBuffer: true, // allows screenshots
+    },
     // transformRequest adds auth headers to tile requests
     transformRequest: (url) => {
       let headers = {};
