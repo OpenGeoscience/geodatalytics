@@ -249,28 +249,30 @@ const swiperColor = computed(() => {
 
 onMounted(() => {
   if (!appStore.currentUser) {
-    const lightDefault = "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
-    const darkDefault = "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+    const lightDefault =
+      "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+    const darkDefault =
+      "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
     new Map({
       container: "mapContainer",
       attributionControl: false,
       style: {
-        layers: [{"id": "light", "type": "raster", "source": "light"}],
+        layers: [{ id: "light", type: "raster", source: "light" }],
         sources: {
           light: {
             type: "raster",
-            tiles: [appStore.theme === 'light' ? lightDefault: darkDefault],
+            tiles: [appStore.theme === "light" ? lightDefault : darkDefault],
             maxzoom: 19,
-            tileSize: 256
-          }
+            tileSize: 256,
+          },
         },
-        version: 8
+        version: 8,
       },
       center: [0, 0],
       zoom: 1, // Initial zoom level
     });
   }
-})
+});
 </script>
 
 <template>
