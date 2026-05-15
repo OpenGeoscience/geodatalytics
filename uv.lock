@@ -1816,7 +1816,7 @@ wheels = [
 
 [[package]]
 name = "geodatalytics"
-version = "1.37.4"
+version = "1.37.5"
 source = { editable = "." }
 dependencies = [
     { name = "celery" },
@@ -2203,12 +2203,14 @@ dependencies = [
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/99/e461ccb522390cc05f8f0d33a10d66ca3febce2ebc2e06b5212263465000/imagecodecs-2026.5.10.tar.gz", hash = "sha256:1c0c46860f35e4637c2df70ebe8aa15141f6c4202a698e63757a4d7917a85acc", size = 9707764, upload-time = "2026-05-10T23:45:45.116Z" }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/e4/7ad831028df07311002d58a937891492e1b2a73a8d14b6f3b6232ce8275b/imagecodecs-2026.5.10-cp312-abi3-macosx_10_15_x86_64.whl", hash = "sha256:80fab8afdc466cd5c1d74a788ccabc310084b0e6d9debc70881b7711b612ce83", size = 14843524, upload-time = "2026-05-14T00:22:11.939Z" },
     { url = "https://files.pythonhosted.org/packages/9d/46/31b84c3b671319dac1259e8714b9a728a9e427f92c242c2fa0cf657e8c5f/imagecodecs-2026.5.10-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:bc8e1e7267bd0dbb1b7ea8dd4cb7ecaf1415b75709649e08729c526c6aa45e66", size = 12431290, upload-time = "2026-05-10T23:44:59.751Z" },
     { url = "https://files.pythonhosted.org/packages/c7/a5/ce27388cae7ea48cbfc39b542b877a415d0122be4c6183be41406bb18d9e/imagecodecs-2026.5.10-cp312-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:8278d966b55b4d97a2278136c1ef44b81db52ee59f32c4698cdc8282741c0072", size = 26771645, upload-time = "2026-05-10T23:45:04.443Z" },
     { url = "https://files.pythonhosted.org/packages/e5/0d/3caa568e37e36532cfe767ccfa6da085150497e9023fe380989790be755f/imagecodecs-2026.5.10-cp312-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:5a0a81f3fa95ce2503ab08afcc794d9fb976cc8e9465eb30db603182796d6cec", size = 27830401, upload-time = "2026-05-10T23:45:08.742Z" },
     { url = "https://files.pythonhosted.org/packages/ea/e6/9e3c8d2b76eefb6fa5c2c7a70d590005a6c27d8800f9fcddcff1c1f57574/imagecodecs-2026.5.10-cp312-abi3-win32.whl", hash = "sha256:e518a0569451de0648425e3a058538afee588a532921ab690be78c1ce9c8ebca", size = 16249481, upload-time = "2026-05-10T23:45:12.298Z" },
     { url = "https://files.pythonhosted.org/packages/01/bc/6ee42c44e4022dbed5a11ea4f368ad39c3fc17d6113f84432abf7c9cdce4/imagecodecs-2026.5.10-cp312-abi3-win_amd64.whl", hash = "sha256:200f70965c483ecf1755ba840485d42f4c5ab0467b3566685b18574947be8831", size = 19960184, upload-time = "2026-05-10T23:45:16.848Z" },
     { url = "https://files.pythonhosted.org/packages/56/e5/3e8ada169498fd55199ad1e9264fbcb4b29315fbf5f64440542ed2a7e9c9/imagecodecs-2026.5.10-cp312-abi3-win_arm64.whl", hash = "sha256:1c0fbc228506a41156fcf2bb7c8a38fed98807c59413aab8a805251e1eec0bf4", size = 15808614, upload-time = "2026-05-10T23:45:20.191Z" },
+    { url = "https://files.pythonhosted.org/packages/14/08/9042aca7672c9bb4b4f77eaee02c9d7532f834d562bf83575c65059746a5/imagecodecs-2026.5.10-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:39e8a162d05c8495bb0be72ae84dd297085569594c2c39b303e6812b485b376e", size = 15244398, upload-time = "2026-05-14T00:22:15.38Z" },
     { url = "https://files.pythonhosted.org/packages/5f/66/8bc2afc06f0f26de7a966c6962696575ce7327196d109129023ce7f5facc/imagecodecs-2026.5.10-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:60abd38c03dfdb396d09c4cd5163cb9145a66625434d7c416ac5585e85ce911f", size = 12867530, upload-time = "2026-05-10T23:45:22.969Z" },
     { url = "https://files.pythonhosted.org/packages/89/94/c0236a9b6a4b09486343adb4fb157f424b95c5d341723b61be1ab96e0946/imagecodecs-2026.5.10-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:b5b838ac2bd34aa0eaf2c8187290ad654da9c4311149230fbddf2c81386ff3ff", size = 31832193, upload-time = "2026-05-10T23:45:27.19Z" },
     { url = "https://files.pythonhosted.org/packages/01/50/85dcd719201cc31125e333361515b158833a889e8f7cb85cb12aedea06be/imagecodecs-2026.5.10-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:aff31d63b4c145d555b367cabf9ca6f7641c4215231b4c2b9cec1586ecb2b3ea", size = 32269541, upload-time = "2026-05-10T23:45:31.76Z" },
@@ -4640,6 +4642,8 @@ wheels = [
     { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/pylibtiff-0.7.0.4.7.1-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:de2842e03d5e8ddec99d96c2683dd50d33d8fbdd05932366f13592d9a4e2bf95" },
     { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/pylibtiff-0.7.0.4.7.1-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:feee8601ede9b404161a495f64e35688f98ebe32194897df6ce557a2cef55874" },
     { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/pylibtiff-0.7.0.4.7.1-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:5656118ac22a2ac00606712f08c5fdbdbe10e686092731b1b1ac16d72cac7f73" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/pylibtiff-0.7.0.4.7.1-cp315-cp315-manylinux_2_28_x86_64.whl", hash = "sha256:914dd2b4ba938d208021ccc0baa7263e7bd9dd992d6a0639f30d3a8d9d8200ad" },
+    { url = "https://github.com/girder/large_image_wheels/raw/wheelhouse/pylibtiff-0.7.0.4.7.1-cp315-cp315t-manylinux_2_28_x86_64.whl", hash = "sha256:53f3966aea66f051475666eaf16721f6ddd5a9d2433fb6c9fea0307d18783500" },
 ]
 
 [[package]]
