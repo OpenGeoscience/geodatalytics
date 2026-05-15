@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { debounce } from "lodash";
 import { ref, watch, computed } from "vue";
-import html2canvas from "html2canvas";
-import { Map } from "maplibre-gl";
+import html2canvas from "html2canvas-pro";
+import { Map, type LngLatBoundsLike } from "maplibre-gl";
 
 import JsonEditorVue from "json-editor-vue";
 import "vanilla-jsoneditor/themes/jse-theme-dark.css";
@@ -81,7 +82,7 @@ const userHasEditPermission = computed(() => {
 function createBasemapPreviews() {
   if (basemapList.value) {
     const map = mapStore.getMap();
-    const bounds = map.getBounds();
+    const bounds = map.getBounds().toArray() as LngLatBoundsLike;
     mapStore.availableBasemaps.forEach((basemap) => {
       if (basemap.id === undefined || basemap.style === undefined) return;
       if (basemapPreviews.value[basemap.id]) {
@@ -140,7 +141,7 @@ function setNewBasemapStyleFromTileURL() {
   }
 }
 
-function createNewBasemapPreview() {
+async function createNewBasemapPreview() {
   const map = mapStore.getMap();
   const center = map.getCenter();
   const zoom = map.getZoom();
@@ -153,7 +154,17 @@ function createNewBasemapPreview() {
   newBasemapPreview.value.setCenter(center);
   newBasemapPreview.value.setZoom(zoom);
   if (newBasemapStyleJSON.value) {
-    jsonErrors.value = validateStyleMin(newBasemapStyleJSON.value);
+    if (typeof newBasemapStyleJSON.value == "string") {
+      try {
+        const response = await fetch(newBasemapStyleJSON.value);
+        const content = await response.json();
+        jsonErrors.value = validateStyleMin(content);
+      } catch {
+        jsonErrors.value = [{ message: "Invalid URL." }];
+      }
+    } else {
+      jsonErrors.value = validateStyleMin(newBasemapStyleJSON.value);
+    }
     if (!jsonErrors.value?.length) {
       newBasemapPreview.value.setStyle(newBasemapStyleJSON.value);
       return;
@@ -288,8 +299,8 @@ function copyViewStateLink(viewState: ViewState) {
 
 watch(basemapList, createBasemapPreviews);
 watch(newBasemapTab, switchBasemapCreateTab);
-watch(newBasemapTileURL, setNewBasemapStyleFromTileURL);
-watch(newBasemapStyleJSON, createNewBasemapPreview);
+watch(newBasemapTileURL, debounce(setNewBasemapStyleFromTileURL, 1000));
+watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
 </script>
 
 <template>
