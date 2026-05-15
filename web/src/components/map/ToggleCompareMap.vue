@@ -249,7 +249,7 @@ const swiperColor = computed(() => {
 </script>
 
 <template>
-  <div>
+  <div v-if="appStore.currentUser">
     <ToggleCompare
       :map-style-a="mapStyleA"
       :map-style-b="mapBStyle"
