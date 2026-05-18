@@ -16,5 +16,8 @@ from .production import *  # isort: skip
 # Heroku and Render automatically set this.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Inform rate limiting that "X-Forwarded-For" should be trusted, as it's appended by Heroku.
+ALLAUTH_TRUSTED_PROXY_COUNT = 1
+
 # Heroku Redis uses self-signed certs
 CHANNEL_LAYERS["default"]["CONFIG"]["hosts"][0]["ssl_cert_reqs"] = ssl.CERT_NONE

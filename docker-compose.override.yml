@@ -9,12 +9,11 @@ services:
     ]
     # Log printing is enhanced by a TTY
     tty: true
-    environment:
-      UV_ENV_FILE: ./dev/.env.docker-compose
-    working_dir: /opt/django-project
+    working_dir: /home/vscode/geodatalytics
+    env_file: ./dev/.env.docker-compose
     volumes:
-      - .:/opt/django-project
-      - uv_cache:/var/cache/uv
+      - .:/home/vscode/geodatalytics
+      - pkg_cache:/home/vscode/pkg-cache
     ports:
       - 8000:8000
     depends_on:
@@ -41,14 +40,13 @@ services:
       "--loglevel", "INFO",
       "--without-heartbeat"
     ]
-    # Docker Compose does not set the TTY width, which causes Celery errors
+    # uv progress doesn't display properly with a Docker TTY
     tty: false
-    environment:
-      UV_ENV_FILE: ./dev/.env.docker-compose
-    working_dir: /opt/django-project
+    working_dir: /home/vscode/geodatalytics
+    env_file: ./dev/.env.docker-compose
     volumes:
-      - .:/opt/django-project
-      - uv_cache:/var/cache/uv
+      - .:/home/vscode/geodatalytics
+      - pkg_cache:/home/vscode/pkg-cache
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,8 +78,8 @@ services:
       UV_ENV_FILE: ./dev/.env.docker-compose
     working_dir: /opt/django-project
     volumes:
-      - .:/opt/django-project
-      - uv_cache:/var/cache/uv
+      - .:/home/vscode/geodatalytics
+      - pkg_cache:/home/vscode/pkg-cache
     shm_size: 1gb
     profiles: ["gpu"]  # Only runs with --profile gpu
     deploy:
@@ -102,7 +100,7 @@ services:
         condition: service_healthy
 
   web:
-    image: node:24.14.0
+    image: node:24
     command: ["sh", "-c", "npm install && npm run serve -- --host 0.0.0.0"]
     working_dir: /web
     volumes:
@@ -113,5 +111,5 @@ services:
       - 8080:8080
 
 volumes:
-  uv_cache:
+  pkg_cache:
   web_node_modules:

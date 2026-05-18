@@ -31,7 +31,7 @@ Urban areas, particularly those with underserved populations and critical assets
 
 GeoDatalytics is designed to assist urban planners, policymakers, logistics engineers, and infrastructure developers/owners in managing increasingly large, complex, and diverse datasets. By integrating climate data with other critical data types such as infrastructure, sensor, and demographic information using our advanced analytic and visualization tools, users will be empowered to make data-driven decisions.
 
-GeoDatalytics is built with Kitware's [Resonant][girder-4-cookiecutter-link] technology stack. It consists of a series of container services, managed by `docker-compose`. These services include a Django Python server, PostgreSQL/PostGIS database, Minio object store, Vue web application, and Celery task service.
+GeoDatalytics is built with Kitware's [Resonant][resonant-cookiecutter-link] technology stack. This stack includes a Django Python server, PostgreSQL/PostGIS database, Minio object store, Vue web application, and Celery task service.
 
 ## Getting Started with GeoDatalytics
 
@@ -42,4 +42,4 @@ To run GeoDatalytics locally with `docker-compose`, follow the instructions in t
 [kitware-link]: https://kitware.com
 [sds-lab-link]: https://sdslab.io
 [mass-mapper-link]: https://maps.massgis.digital.mass.gov/MassMapper/MassMapper.html
-[girder-4-cookiecutter-link]: https://github.com/girder/cookiecutter-girder-4
+[resonant-cookiecutter-link]: https://github.com/kitware-resonant/cookiecutter-resonant

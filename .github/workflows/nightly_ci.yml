@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   test-server-slow:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgis/postgis:18-3.6
@@ -22,7 +22,7 @@ jobs:
         ports:
           - 5432:5432
       rabbitmq:
-        image: rabbitmq:management-alpine
+        image: rabbitmq:4.2-management-alpine
         options: >-
           --health-cmd "rabbitmq-diagnostics ping"
           --health-start-period 30s
@@ -57,7 +57,7 @@ jobs:
         uses: astral-sh/setup-uv@v8.1.0
       - name: Run tests
         run: |
-          uv run tox -e test -- -m slow
+          uv run --locked tox -e test -- -m slow
         env:
           DJANGO_DATABASE_URL: postgres://postgres:postgres@localhost:5432/django
           DJANGO_CELERY_BROKER_URL: amqp://localhost:5672/

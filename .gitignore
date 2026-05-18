@@ -1,4 +1,3 @@
-.vscode/
 sample_data/downloads/*
 jupyter/.ipynb_checkpoints
 dev/.env.web
