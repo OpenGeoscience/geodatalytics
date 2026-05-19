@@ -140,18 +140,17 @@ watch(clickedFeature, () => {
 });
 
 async function updateClickedFeatureIsDeactivatedNode() {
-  if (clickedFeature.value === undefined) {
-    throw new Error("Clicked node is undefined!");
-  }
-  const feature = clickedFeature.value.feature;
-  const sourceId = feature.source;
-  const nodeId = clickedFeature.value.feature.properties.node_id;
-  const { dataset } = layerStore.getDBObjectsForSourceID(sourceId);
-  if (dataset) {
-    const active = await networkStore.isNodeActive(nodeId, dataset);
-    clickedFeatureIsDeactivatedNode.value = !active;
-  } else {
-    clickedFeatureIsDeactivatedNode.value = false;
+  if (clickedFeature.value) {
+    const feature = clickedFeature.value.feature;
+    const sourceId = feature.source;
+    const nodeId = clickedFeature.value.feature.properties.node_id;
+    const { dataset } = layerStore.getDBObjectsForSourceID(sourceId);
+    if (dataset) {
+      const active = await networkStore.isNodeActive(nodeId, dataset);
+      clickedFeatureIsDeactivatedNode.value = !active;
+    } else {
+      clickedFeatureIsDeactivatedNode.value = false;
+    }
   }
 }
 
