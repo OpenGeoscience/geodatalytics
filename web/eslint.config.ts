@@ -22,7 +22,6 @@ export default defineConfigWithVueTs(
       "@typescript-eslint/no-explicit-any": "off",
       // Temporary ignores until rules can be fixed
       "vue/require-v-for-key": "off",
-      "vue/valid-v-for": "off",
     },
   },
   skipFormatting,

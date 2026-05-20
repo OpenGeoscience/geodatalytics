@@ -102,6 +102,7 @@ function togglePanelVisibility(id: string) {
           v-for="(panel, index) in panelStore.panelArrangement.filter(
             (p) => p.dock == 'left',
           )"
+          :key="panel.id"
           :id="panel.id"
           :bottom="
             index ==
@@ -194,6 +195,7 @@ function togglePanelVisibility(id: string) {
               v-for="item in panelStore.panelArrangement.filter(
                 (p) => p.closeable,
               )"
+              :key="item.id"
               @click="togglePanelVisibility(item.id)"
             >
               <v-checkbox-btn
@@ -209,6 +211,7 @@ function togglePanelVisibility(id: string) {
           v-for="(panel, index) in panelStore.panelArrangement.filter(
             (p) => p.dock == 'right',
           )"
+          :key="panel.id"
           :id="panel.id"
           :bottom="
             index ==

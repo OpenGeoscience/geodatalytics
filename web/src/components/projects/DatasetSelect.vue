@@ -170,6 +170,7 @@ function submitDelete() {
             <div class="mb-2 ml-2">
               <v-chip
                 v-for="tag in dataset.tags"
+                :key="tag"
                 :text="tag"
                 variant="outlined"
                 size="small"
@@ -211,6 +212,7 @@ function submitDelete() {
             <div>
               <v-chip
                 v-for="project in getDatasetProjects(datasetToDelete.id)"
+                :key="project.id"
                 :text="project.name"
               />
             </div>

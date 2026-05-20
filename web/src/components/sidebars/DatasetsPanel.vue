@@ -119,6 +119,7 @@ function toggleSelected(items: Layer[]) {
             <div>
               <v-chip
                 v-for="tag in dataset.tags"
+                :key="tag"
                 :text="tag"
                 variant="outlined"
                 size="small"
