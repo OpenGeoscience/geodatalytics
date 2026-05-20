@@ -6,6 +6,7 @@ import type {
   Colormap,
   Layer,
   LayerStyle,
+  StyleFilter,
   StyleSpec,
 } from "@/types";
 import {
@@ -468,6 +469,11 @@ function removeFilter(filterId: number | undefined) {
   currentStyleSpec.value.filters = currentStyleSpec.value.filters.filter(
     (f) => f.id !== filterId,
   );
+}
+
+function findVectorProperty(filter: StyleFilter) {
+  if (!filter.filter_by || !vectorProperties.value) return undefined;
+  return vectorProperties.value.find((p) => p.name === filter.filter_by);
 }
 
 function updateFilterBy(filterId: number | undefined, propertyName: string) {
@@ -1930,81 +1936,73 @@ onMounted(resetCurrentStyle);
                   v-if="focusedFilterId === filter.id"
                 >
                   <tbody :class="filter.apply ? '' : 'helper-text'">
-                    <template
-                      v-if="filter.filter_by && vectorProperties"
-                      v-for="property in [
-                        vectorProperties.find(
-                          (f: any) => f.name === filter.filter_by,
-                        ),
-                      ]"
-                    >
-                      <tr v-if="property?.range">
-                        <td>Value type</td>
-                        <td>
-                          <v-btn-toggle
-                            :model-value="filter.range ? 'range' : 'single'"
-                            :disabled="!filter.apply"
-                            density="compact"
-                            variant="outlined"
-                            divided
-                            mandatory
-                            @update:model-value="
-                              (value: string) => {
-                                if (!property.range) return;
-                                if (value === 'range') {
-                                  filter.range = property.range;
-                                  filter.list = undefined;
-                                } else {
-                                  filter.range = undefined;
-                                  filter.list = [property.range[0]];
-                                }
+                    <tr v-if="findVectorProperty(filter)?.range">
+                      <td>Value type</td>
+                      <td>
+                        <v-btn-toggle
+                          :model-value="filter.range ? 'range' : 'single'"
+                          :disabled="!filter.apply"
+                          density="compact"
+                          variant="outlined"
+                          divided
+                          mandatory
+                          @update:model-value="
+                            (value: string) => {
+                              const property = findVectorProperty(filter);
+                              if (!property?.range) return;
+                              if (value === 'range') {
+                                filter.range = property.range;
+                                filter.list = undefined;
+                              } else {
+                                filter.range = undefined;
+                                filter.list = [property.range[0]];
                               }
-                            "
-                          >
-                            <v-btn :value="'single'">Single</v-btn>
-                            <v-btn :value="'range'">Range</v-btn>
-                          </v-btn-toggle>
-                        </td>
-                      </tr>
-                      <tr v-if="property">
-                        <td>Values</td>
-                        <td>
-                          <template v-if="property.range">
-                            <SliderNumericInput
-                              v-if="filter.range"
-                              :disabled="!filter.apply"
-                              :rangeModel="filter.range"
-                              :min="property.range[0]"
-                              :max="property.range[1]"
-                              @update="
-                                (v: [number, number]) => (filter.range = v)
-                              "
-                            />
-                            <SliderNumericInput
-                              v-else-if="filter.list"
-                              :disabled="!filter.apply"
-                              :model="filter.list[0]"
-                              :min="property.range[0]"
-                              :max="property.range[1]"
-                              @update="(v: number) => (filter.list = [v])"
-                            />
-                          </template>
-                          <v-select
-                            v-else
-                            v-model="filter.list"
-                            :items="property.value_set"
+                            }
+                          "
+                        >
+                          <v-btn :value="'single'">Single</v-btn>
+                          <v-btn :value="'range'">Range</v-btn>
+                        </v-btn-toggle>
+                      </td>
+                    </tr>
+                    <tr v-if="findVectorProperty(filter)">
+                      <td>Values</td>
+                      <td>
+                        <template v-if="findVectorProperty(filter)?.range">
+                          <SliderNumericInput
+                            v-if="filter.range"
                             :disabled="!filter.apply"
-                            placeholder="Select values"
-                            density="compact"
-                            variant="outlined"
-                            multiple
-                            chips
-                            closable-chips
-                            hide-details
+                            :rangeModel="filter.range"
+                            :min="findVectorProperty(filter)!.range![0]"
+                            :max="findVectorProperty(filter)!.range![1]"
+                            @update="
+                              (v: [number, number]) => (filter.range = v)
+                            "
                           />
-                        </td>
-                      </tr>
-                    </template>
+                          <SliderNumericInput
+                            v-else-if="filter.list"
+                            :disabled="!filter.apply"
+                            :model="filter.list[0]"
+                            :min="findVectorProperty(filter)!.range![0]"
+                            :max="findVectorProperty(filter)!.range![1]"
+                            @update="(v: number) => (filter.list = [v])"
+                          />
+                        </template>
+                        <v-select
+                          v-else
+                          v-model="filter.list"
+                          :items="findVectorProperty(filter)?.value_set"
+                          :disabled="!filter.apply"
+                          placeholder="Select values"
+                          density="compact"
+                          variant="outlined"
+                          multiple
+                          chips
+                          closable-chips
+                          hide-details
+                        />
+                      </td>
+                    </tr>
                     <tr>
                       <td>Filter Mode</td>
                       <td>
