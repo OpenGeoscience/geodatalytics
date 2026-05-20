@@ -87,7 +87,7 @@ const canEditProject = computed(() => {
 
 function init() {
   addLayer();
-  if (canEditProject) {
+  if (canEditProject.value) {
     addToCurrentProject.value = true;
   }
 }
@@ -184,7 +184,7 @@ function submit() {
 }
 
 watch(open, () => {
-  if (!open) cancel();
+  if (!open.value) cancel();
   else init();
 });
 </script>
