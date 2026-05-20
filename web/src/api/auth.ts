@@ -11,13 +11,13 @@ declare module "axios" {
 
 const OAUTH2_CLIENT_ID = "cBmD6D6F2YAmMWHNQZFPUr4OpaXVpW5w4Thod6Kj";
 
-export const baseURL = `${import.meta.env.VITE_APP_API_ROOT}api/v1/`;
+export const baseURL = `${import.meta.env.VITE_API_ROOT}api/v1/`;
 
 export const apiClient = axios.create({
   baseURL,
 });
 export const oauthClient = new OauthClient(
-  new URL(`${import.meta.env.VITE_APP_API_ROOT}oauth/`),
+  new URL(`${import.meta.env.VITE_API_ROOT}oauth/`),
   OAUTH2_CLIENT_ID,
   { redirectUrl: new URL(window.location.origin) },
 );
@@ -81,5 +81,5 @@ apiClient.interceptors.response.use(
 
 export const logout = async () => {
   await oauthClient.logout();
-  window.location.href = `${import.meta.env.VITE_APP_API_ROOT}accounts/logout/`;
+  window.location.href = `${import.meta.env.VITE_API_ROOT}accounts/logout/`;
 };

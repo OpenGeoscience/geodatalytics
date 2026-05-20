@@ -19,7 +19,7 @@ const appStore = useAppStore();
 const panelStore = usePanelStore();
 const projectStore = useProjectStore();
 
-const version = import.meta.env.VITE_APP_VERSION;
+const version = import.meta.env.VITE_VERSION;
 const copied: Ref<string | undefined> = ref();
 
 function copyToClipboard(content: string) {

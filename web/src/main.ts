@@ -49,7 +49,7 @@ app.use(router);
 Sentry.init({
   app,
   // This is only defined in the release build environment
-  dsn: import.meta.env.VITE_APP_SENTRY_DSN,
+  dsn: import.meta.env.VITE_SENTRY_DSN,
   sendDefaultPii: true,
   integrations: [Sentry.browserTracingIntegration({ router })],
 });
