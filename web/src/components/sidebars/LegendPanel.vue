@@ -131,6 +131,7 @@ function getColorPropsCoverage(layer: Layer) {
           {{ layer.name }}
           <div
             v-for="colormap_preview in getColormapPreviews(layer)"
+            :key="colormap_preview.name"
             class="ml-6"
           >
             <div v-if="getColormapPreviews(layer).length > 1">
@@ -171,7 +172,10 @@ function getColorPropsCoverage(layer: Layer) {
                       />
                     </v-expansion-panel-title>
                     <v-expansion-panel-text>
-                      <div v-for="row in colormap_preview.valueColors">
+                      <div
+                        v-for="(row, index) in colormap_preview.valueColors"
+                        :key="index"
+                      >
                         <div
                           v-if="row"
                           class="d-flex"

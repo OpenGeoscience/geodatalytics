@@ -224,6 +224,7 @@ watch(open, () => {
             <span class="secondary-text">Similar Existing Datasets:</span>
             <div
               v-for="dataset in similarExisting"
+              :key="dataset.id"
               style="font-size: 0.8rem; margin-left: 10px"
             >
               {{ dataset.name }}

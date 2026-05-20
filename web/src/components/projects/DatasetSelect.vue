@@ -176,7 +176,11 @@ function submitDelete() {
                 size="small"
               />
             </div>
-            <div v-for="layer in dataset.layers" class="item-title">
+            <div
+              v-for="layer in dataset.layers"
+              :key="layer.id"
+              class="item-title"
+            >
               <div style="text-wrap: wrap; align-items: center; width: 100%">
                 {{ layer.name }}
               </div>

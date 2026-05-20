@@ -126,7 +126,11 @@ function toggleSelected(items: Layer[]) {
                 class="ml-3 mb-2"
               />
             </div>
-            <div v-for="layer in dataset.layers" class="item-title">
+            <div
+              v-for="layer in dataset.layers"
+              :key="layer.id"
+              class="item-title"
+            >
               <div
                 style="
                   text-wrap: wrap;
