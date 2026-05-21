@@ -13,7 +13,7 @@ Runs Python on the host while using Docker Compose for services.
 1. Ensure services are running: `docker compose -f ./docker-compose.yml up -d`
 1. `source ./dev/export-env.sh`
 1. `./manage.py runserver`
-1. In a separate terminal: `celery --app uvdat.celery worker --loglevel INFO --without-heartbeat`
+1. In a separate terminal: `celery --app uvdat.celery worker --loglevel INFO --without-mingle --without-heartbeat --without-gossip`
 1. Access http://localhost:8000/
 
 Stop services when done: `docker compose stop`
