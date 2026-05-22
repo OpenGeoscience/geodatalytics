@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useProjectStore } from "./project";
 
-const url = `${import.meta.env.VITE_APP_API_ROOT}ws/conversion/`;
+const url = `${import.meta.env.VITE_API_ROOT}ws/conversion/`;
 
 export const useConversionStore = defineStore("conversion", () => {
   const projectStore = useProjectStore();

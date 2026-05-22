@@ -1,6 +1,6 @@
 locals {
   www_env_vars = {
-    VITE_APP_API_ROOT = "https://${module.django.fqdn}/"
+    VITE_API_ROOT = "https://${module.django.fqdn}/"
   }
 }
 
@@ -37,7 +37,7 @@ resource "cloudflare_pages_project" "www" {
       environment_variables = merge(
         local.www_env_vars,
         {
-          VITE_APP_SENTRY_DSN = "https://648b9234b2fc2df0dd59192ddb0111f7@o267860.ingest.us.sentry.io/4511108704501760"
+          VITE_SENTRY_DSN = "https://648b9234b2fc2df0dd59192ddb0111f7@o267860.ingest.us.sentry.io/4511108704501760"
         },
       )
       secrets = {

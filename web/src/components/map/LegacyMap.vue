@@ -61,7 +61,7 @@ function createMap() {
     // transformRequest adds auth headers to tile requests
     transformRequest: (url) => {
       let headers = {};
-      if (url.includes(import.meta.env.VITE_APP_API_ROOT)) {
+      if (url.includes(import.meta.env.VITE_API_ROOT)) {
         headers = oauthClient?.authHeaders;
       }
       return { url, headers };

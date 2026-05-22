@@ -159,7 +159,7 @@ watch(
 
 const transformRequest = (url: string) => {
   // Only add auth headers to our own tile requests
-  if (url.includes(import.meta.env.VITE_APP_API_ROOT)) {
+  if (url.includes(import.meta.env.VITE_API_ROOT)) {
     return {
       url,
       headers: oauthClient?.authHeaders,

@@ -10,7 +10,14 @@ import { fileURLToPath, URL } from "node:url";
 
 import packageJson from "./package.json";
 
-process.env.VITE_APP_VERSION = packageJson.version;
+// Build sanity check, to ensure environment is defined;
+// this will not load from .env files (unless we used a different Vite syntax),
+// but we set VITE_API_ROOT at the process level.
+if (!process.env.VITE_API_ROOT) {
+  throw new Error("VITE_API_ROOT must be defined.");
+}
+
+process.env.VITE_VERSION = packageJson.version;
 
 export default defineConfig({
   plugins: [
