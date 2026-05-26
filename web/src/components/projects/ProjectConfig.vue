@@ -206,7 +206,7 @@ function resetProjectEdit() {
 }
 
 function handleEditFocus(focused: boolean) {
-  if (!focused && !newProjectName) {
+  if (!focused && !newProjectName.value) {
     resetProjectEdit();
   }
 }
