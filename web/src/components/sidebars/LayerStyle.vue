@@ -110,19 +110,23 @@ const showVectorOptions = computed(() => {
   return frames.value.some((frame) => frame.vector);
 });
 
+watch(
+  () => currentFrame.value?.vector,
+  async (vector) => {
+    if (vector && !vector.summary) {
+      vector.summary = await getVectorSummary(vector.id);
+    }
+  },
+  { immediate: true },
+);
+
 const vectorProperties = computed(() => {
-  const vector = currentFrame.value?.vector;
-  if (!vector) return undefined;
-  const summary = vector.summary;
-  if (!summary) {
-    getVectorSummary(vector.id).then((result) => {
-      vector.summary = result;
-    });
-  } else
-    return Object.entries(summary.properties).map(([k, v]) => ({
-      ...v,
-      name: k,
-    }));
+  const summary = currentFrame.value?.vector?.summary;
+  if (!summary) return undefined;
+  return Object.entries(summary.properties).map(([k, v]) => ({
+    ...v,
+    name: k,
+  }));
 });
 
 const dataRange = computed(() => {

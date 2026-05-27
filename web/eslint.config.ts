@@ -24,7 +24,6 @@ export default defineConfigWithVueTs(
       "vue/require-v-for-key": "off",
       "vue/valid-v-for": "off",
       "vue/return-in-computed-property": "off",
-      "vue/no-async-in-computed-properties": "off",
       "vue/no-use-v-if-with-v-for": "off",
     },
   },
