@@ -63,6 +63,7 @@ const clickedFeatureSourceType = computed(() => {
     if (feature.source.includes(".vector")) return "vector";
     if (feature.source.includes(".bounds")) return "raster";
   }
+  return undefined;
 });
 
 const rasterValue = computed(() => {
@@ -84,6 +85,7 @@ const rasterValue = computed(() => {
       }
     }
   }
+  return undefined;
 });
 
 function zoomToFeature() {

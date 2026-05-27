@@ -21,6 +21,7 @@ const networkState = computed(() => {
   if (networkStore.currentNetwork) {
     return networkStore.networkStates[networkStore.currentNetwork.id];
   }
+  return undefined;
 });
 
 const tab = ref();
