@@ -70,15 +70,6 @@ const networkInput = computed(() => {
       (input) => input.type === "network",
     );
   }
-  if (
-    network &&
-    !networkStore.availableNetworks.map((n) => n.id).includes(network.id)
-  ) {
-    networkStore.availableNetworks = [
-      ...networkStore.availableNetworks,
-      network,
-    ];
-  }
   return network;
 });
 const selectedInputs = ref<Record<string, any>>({});
@@ -219,6 +210,18 @@ async function subscribe() {
     ).subscribers;
   }
 }
+
+watch(networkInput, (network) => {
+  if (
+    network &&
+    !networkStore.availableNetworks.map((n) => n.id).includes(network.id)
+  ) {
+    networkStore.availableNetworks = [
+      ...networkStore.availableNetworks,
+      network,
+    ];
+  }
+});
 
 watch(
   () => analysisStore.currentAnalysisType,
