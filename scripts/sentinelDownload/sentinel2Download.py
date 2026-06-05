@@ -106,6 +106,10 @@ def read_cog_window_rgb(cog_url, lon, lat, size_km=10):
         return data, meta
 
 
+def _run_checked_command(cmd: list[str]) -> None:
+    subprocess.run(cmd, check=True)  # noqa: S603
+
+
 def combine_frames_to_multiframe(frame_paths, output_path):
     """
     Combine single-frame GeoTIFFs into one multiframe GeoTIFF.
@@ -126,12 +130,11 @@ def combine_frames_to_multiframe(frame_paths, output_path):
 
     output_path = Path(output_path)
     creation_options = ["-co", "COMPRESS=LZW"]
-    subprocess.run(
+    _run_checked_command(
         [gdal_translate, *creation_options, str(frame_paths[0]), str(output_path)],
-        check=True,
     )
     for frame_path in frame_paths[1:]:
-        subprocess.run(
+        _run_checked_command(
             [
                 gdal_translate,
                 *creation_options,
@@ -140,7 +143,6 @@ def combine_frames_to_multiframe(frame_paths, output_path):
                 str(frame_path),
                 str(output_path),
             ],
-            check=True,
         )
 
 
@@ -198,10 +200,10 @@ def combine_frames_to_multiframe(frame_paths, output_path):
     default=False,
     help=(
         "Write all frames into one multiframe GeoTIFF instead of separate files. "
-        "The generated output JSON will use frame_property: \"frame\"."
+        'The generated output JSON will use frame_property: "frame".'
     ),
 )
-def download_stac_sentinel(  # noqa: PLR0913, PLR0915
+def download_stac_sentinel(  # noqa: C901, PLR0912, PLR0913, PLR0915
     lat, lon, start_date, end_date, max_results, output_name, cloud_cover, size_km, single_file
 ):
     """Download clipped Sentinel-2 L1C visual images from AWS via STAC API."""

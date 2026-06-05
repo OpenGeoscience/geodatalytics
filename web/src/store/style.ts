@@ -89,6 +89,51 @@ export function colormapMarkersSubsample(
   return markers;
 }
 
+// frame/band select which slice to read; they must be flat query params, not in style JSON
+const RASTER_SOURCE_FILTER_KEYS = new Set(["frame", "band"]);
+
+// Ingest defaults missing source_filters to { band: 1 }; that is not a real band selection.
+function isDefaultBandSourceFilter(
+  sourceFilters: Record<string, unknown>,
+): boolean {
+  const keys = Object.keys(sourceFilters);
+  return (
+    keys.length === 1 &&
+    keys[0] === "band" &&
+    (sourceFilters.band === 1 || sourceFilters.band === "1")
+  );
+}
+
+function sourceFiltersToStyleFilters(
+  sourceFilters: Record<string, unknown> | undefined,
+): StyleFilter[] {
+  if (!sourceFilters || !Object.keys(sourceFilters).length) return [];
+  if (isDefaultBandSourceFilter(sourceFilters)) return [];
+  return Object.entries(sourceFilters).map(([k, v]) => ({
+    filter_by: k,
+    list: [v],
+    include: true,
+    transparency: true,
+    apply: true,
+  }));
+}
+
+function getRasterSourceFilterParams(filters: StyleFilter[]) {
+  const params: Record<string, string | number> = {};
+  filters.forEach((f) => {
+    if (
+      f.apply &&
+      f.filter_by &&
+      f.include &&
+      f.list?.length === 1 &&
+      RASTER_SOURCE_FILTER_KEYS.has(f.filter_by)
+    ) {
+      params[f.filter_by] = f.list[0];
+    }
+  });
+  return params;
+}
+
 function getRasterTilesQuery(styleSpec: StyleSpec, colormaps: Colormap[]) {
   let query: Record<string, any> = {};
   const colorSpecs = styleSpec.colors || [];
@@ -126,11 +171,35 @@ function getRasterTilesQuery(styleSpec: StyleSpec, colormaps: Colormap[]) {
     }
   });
   styleSpec.filters.forEach((f) => {
-    if (f.apply && f.filter_by && f.include && f.list?.length === 1) {
+    if (
+      f.apply &&
+      f.filter_by &&
+      f.include &&
+      f.list?.length === 1 &&
+      !RASTER_SOURCE_FILTER_KEYS.has(f.filter_by)
+    ) {
       query[f.filter_by] = f.list[0];
     }
   });
   return query;
+}
+
+function buildRasterTileQueryParams(
+  styleSpec: StyleSpec,
+  filters: StyleFilter[],
+  colormaps: Colormap[],
+) {
+  const params: Record<string, string> = { projection: "epsg:3857" };
+  Object.entries(getRasterSourceFilterParams(filters)).forEach(
+    ([key, value]) => {
+      params[key] = String(value);
+    },
+  );
+  const styleQuery = getRasterTilesQuery({ ...styleSpec, filters }, colormaps);
+  if (Object.keys(styleQuery).length) {
+    params.style = JSON.stringify(styleQuery);
+  }
+  return params;
 }
 
 function getVectorColorPaintProperty(
@@ -441,13 +510,7 @@ export const useStyleStore = defineStore("style", () => {
     if (frame?.source_filters) {
       filters = [
         ...filters,
-        ...Object.entries(frame.source_filters).map(([k, v]) => ({
-          filter_by: k,
-          list: [v],
-          include: true,
-          transparency: true,
-          apply: true,
-        })),
+        ...sourceFiltersToStyleFilters(frame.source_filters),
       ];
     }
     const mapLayer = map.getLayer(mapLayerId) as
@@ -550,11 +613,13 @@ export const useStyleStore = defineStore("style", () => {
       const source = map.getSource(mapLayer.source) as RasterTileSource;
       const sourceURL = mapStore.rasterSourceTileURLs[mapLayer.source];
       if (source && sourceURL) {
-        const newQueryParams: { projection: string; style?: string } = {
-          projection: "epsg:3857",
-        };
-        newQueryParams.style = JSON.stringify(rasterTilesQuery);
-        const newQuery = new URLSearchParams(newQueryParams);
+        const newQuery = new URLSearchParams(
+          buildRasterTileQueryParams(
+            { ...styleSpec, filters },
+            filters,
+            colormaps.value,
+          ),
+        );
         tileURL = sourceURL.split("?")[0] + "?" + newQuery.toString();
         return { paint, tileURL };
       }
@@ -605,6 +670,9 @@ export const useStyleStore = defineStore("style", () => {
     selectedLayerStyles,
     fetchColormaps,
     getRasterTilesQuery,
+    getRasterSourceFilterParams,
+    buildRasterTileQueryParams,
+    sourceFiltersToStyleFilters,
     colormapMarkersSubsample,
     getDefaultColor,
     getDefaultStyleSpec,
