@@ -93,7 +93,7 @@ function panelUpdated() {
     :class="getPanelContainerClass()"
     :style="getPanelContainerStyle()"
   >
-    <div class="panel" :style="getPanelStyle()" ref="element">
+    <div ref="element" class="panel" :style="getPanelStyle()">
       <v-card class="fill-height">
         <div style="display: flex; align-items: center">
           <v-card-text class="pa-3" style="font-size: 18px">{{
@@ -117,7 +117,7 @@ function panelUpdated() {
               location="bottom"
               :close-on-content-click="true"
             >
-              <template v-slot:activator="{ props: menuProps }">
+              <template #activator="{ props: menuProps }">
                 <div
                   v-bind="menuProps"
                   style="position: relative; display: inline-block"
@@ -172,8 +172,8 @@ function panelUpdated() {
             />
 
             <v-icon
-              :icon="panel.collapsed ? 'mdi-chevron-down' : 'mdi-chevron-up'"
               v-tooltip="panel.collapsed ? 'Expand' : 'Collapse'"
+              :icon="panel.collapsed ? 'mdi-chevron-down' : 'mdi-chevron-up'"
               @mousedown="togglePanelCollapsed"
             ></v-icon>
             <v-icon
@@ -188,8 +188,8 @@ function panelUpdated() {
             ></v-icon>
             <v-icon
               v-if="panel.closeable"
-              icon="mdi-close"
               v-tooltip="'Close Panel'"
+              icon="mdi-close"
               @mousedown="closePanel"
             ></v-icon>
           </div>
@@ -211,8 +211,8 @@ function panelUpdated() {
       </v-card>
     </div>
     <div
-      class="draggable-divider"
       v-if="!panel.position && !props.bottom"
+      class="draggable-divider"
       @mousedown="
         (e) => {
           updatePanelElement();

@@ -285,7 +285,7 @@ watch(
         <v-card-title class="analysis-title">
           <span>{{ analysisStore.currentAnalysisType.name }}</span>
           <v-tooltip text="Close" location="bottom">
-            <template v-slot:activator="{ props }">
+            <template #activator="{ props }">
               <v-btn
                 v-bind="props"
                 icon="mdi-close"
@@ -317,7 +317,7 @@ watch(
 
         <v-window v-model="analysisStore.currentAnalysisTab">
           <v-window-item value="new">
-            <v-form class="pa-3" @submit.prevent ref="inputForm">
+            <v-form ref="inputForm" class="pa-3" @submit.prevent>
               <v-card-subtitle class="px-1">Select inputs</v-card-subtitle>
               <div
                 v-for="[key, value] in Object.entries(
@@ -371,16 +371,16 @@ watch(
                   hide-details="auto"
                   class="my-1"
                 >
-                  <template v-slot:item="{ props, item }">
+                  <template #item="{ props, item }">
                     <v-list-item
-                      v-bind="props"
                       v-tooltip="(item as any).name"
+                      v-bind="props"
                       style="max-width: 400px"
                     />
                   </template>
                 </v-select>
               </div>
-              <v-btn @click="run" style="width: 100%" variant="tonal">
+              <v-btn style="width: 100%" variant="tonal" @click="run">
                 Run Analysis
               </v-btn>
             </v-form>
@@ -466,14 +466,14 @@ watch(
                               </div>
                               <node-animation
                                 v-else-if="networkInput?.visible"
-                                :nodeFailures="
+                                :node-failures="
                                   key === 'failures' ? value : undefined
                                 "
-                                :nodeRecoveries="
+                                :node-recoveries="
                                   key === 'recoveries' ? value : undefined
                                 "
                                 :network="networkInput"
-                                :additionalAnimationLayers="
+                                :additional-animation-layers="
                                   additionalAnimationLayers
                                 "
                               />
@@ -514,18 +514,18 @@ watch(
                       <v-icon icon="mdi-check" color="success" />
                       Subscribed
                       <v-icon
-                        icon="mdi-information-outline"
                         v-tooltip="
                           'An email will be sent to you when the task is completed.'
                         "
+                        icon="mdi-information-outline"
                       />
                     </div>
                     <v-btn
                       v-else
-                      @click="subscribe"
                       v-tooltip="
                         'If subscribed, an email will be sent to you when the task is completed.'
                       "
+                      @click="subscribe"
                     >
                       Notify Me Once Completed
                     </v-btn>
@@ -543,11 +543,11 @@ watch(
           @click="analysisStore.currentAnalysisType = simType"
         >
           {{ simType.name }}
-          <template v-slot:append>
+          <template #append>
             <v-icon
+              v-tooltip="simType.description"
               icon="mdi-information-outline"
               size="small"
-              v-tooltip="simType.description"
             ></v-icon>
             <v-icon icon="mdi-earth" size="small" class="ml-2"></v-icon>
           </template>

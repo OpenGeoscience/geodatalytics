@@ -605,13 +605,13 @@ onMounted(resetCurrentStyle);
       emit('setLayerActive', props.activeLayer !== props.layer)
     "
   >
-    <template v-slot:activator="{ props }">
+    <template #activator="{ props }">
       <v-icon
-        v-bind="props"
-        icon="mdi-cog"
         v-tooltip="
           appliedStyleName ? 'Style: ' + appliedStyleName : 'Configure styling'
         "
+        v-bind="props"
+        icon="mdi-cog"
       />
     </template>
     <v-card
@@ -628,9 +628,9 @@ onMounted(resetCurrentStyle);
         <span class="secondary-text">(Layer: {{ layer.name }})</span>
 
         <v-icon
+          v-tooltip="'Warning: unsaved changes will be discarded'"
           icon="mdi-close"
           style="position: absolute; top: 10px; right: 5px"
-          v-tooltip="'Warning: unsaved changes will be discarded'"
           @click="cancel"
         />
       </div>
@@ -663,7 +663,7 @@ onMounted(resetCurrentStyle);
             :close-on-content-click="false"
             location="start"
           >
-            <template v-slot:activator="{ props }">
+            <template #activator="{ props }">
               <v-icon
                 v-bind="props"
                 :disabled="!currentLayerStyle.id"
@@ -817,8 +817,8 @@ onMounted(resetCurrentStyle);
                               ? 'mdi-eye-outline'
                               : 'mdi-eye-off-outline'
                           "
-                          @click="group.visible = !group.visible"
                           size="large"
+                          @click="group.visible = !group.visible"
                         />
                       </td>
                     </tr>
@@ -868,7 +868,7 @@ onMounted(resetCurrentStyle);
                             open-on-hover
                             location="end"
                           >
-                            <template v-slot:activator="{ props }">
+                            <template #activator="{ props }">
                               <div
                                 v-bind="props"
                                 class="color-square"
@@ -908,9 +908,9 @@ onMounted(resetCurrentStyle);
                             (v: Colormap) => setGroupColormap(group.name, v)
                           "
                         >
-                          <template v-slot:item="{ props, item }">
+                          <template #item="{ props, item }">
                             <v-list-item v-bind="props">
-                              <template v-slot:append>
+                              <template #append>
                                 <v-icon
                                   v-if="
                                     item.project &&
@@ -939,37 +939,37 @@ onMounted(resetCurrentStyle);
                                     :discrete="
                                       group.colormap?.discrete || false
                                     "
-                                    :nColors="group.colormap?.n_colors || -1"
+                                    :n-colors="group.colormap?.n_colors || -1"
                                   />
                                 </div>
                               </template>
                             </v-list-item>
                           </template>
-                          <template v-slot:selection="{ item }">
+                          <template #selection="{ item }">
                             <span
-                              class="pr-15"
                               v-if="getColormap(group.colormap)?.markers"
+                              class="pr-15"
                               >{{ item.name }}</span
                             >
                             <div
-                              style="width: 300px"
-                              class="ml-2"
                               v-if="
                                 group.colormap &&
                                 getColormap(group.colormap)?.markers
                               "
+                              style="width: 300px"
+                              class="ml-2"
                             >
                               <colormap-preview
                                 :colormap="item"
                                 :discrete="group.colormap.discrete || false"
-                                :nColors="group.colormap.n_colors || -1"
+                                :n-colors="group.colormap.n_colors || -1"
                               />
                             </div>
                             <span v-else class="secondary-text"
                               >Select Colormap</span
                             >
                           </template>
-                          <template v-slot:prepend-item>
+                          <template #prepend-item>
                             <v-list-item
                               v-if="
                                 ['owner', 'collaborator'].includes(
@@ -1076,7 +1076,7 @@ onMounted(resetCurrentStyle);
                       <td>
                         <SliderNumericInput
                           v-if="dataRange"
-                          :rangeModel="group.colormap?.range || dataRange"
+                          :range-model="group.colormap?.range || dataRange"
                           :min="dataRange[0]"
                           :max="dataRange[1]"
                           :disabled="
@@ -1103,6 +1103,9 @@ onMounted(resetCurrentStyle);
                           >Clamping</v-label
                         >
                         <v-icon
+                          v-tooltip="
+                            'When enabled, values outside the selected range will be clamped to the ends of the colormap. When disabled, those values will appear transparent.'
+                          "
                           icon="mdi-information-outline"
                           color="primary"
                           size="small"
@@ -1111,9 +1114,6 @@ onMounted(resetCurrentStyle);
                             getColormap(group.colormap)?.markers
                               ? 'ml-2'
                               : 'helper-text ml-2'
-                          "
-                          v-tooltip="
-                            'When enabled, values outside the selected range will be clamped to the ends of the colormap. When disabled, those values will appear transparent.'
                           "
                         />
                       </td>
@@ -1193,8 +1193,8 @@ onMounted(resetCurrentStyle);
                               ? 'mdi-eye-outline'
                               : 'mdi-eye-off-outline'
                           "
-                          @click="group.visible = !group.visible"
                           size="large"
+                          @click="group.visible = !group.visible"
                         />
                       </td>
                     </tr>
@@ -1216,14 +1216,14 @@ onMounted(resetCurrentStyle);
                           class="primary-control"
                           hide-details
                         >
-                          <template v-slot:label>
+                          <template #label>
                             <span> Prioritize feature color properties </span>
                             <v-icon
-                              icon="mdi-information-outline"
-                              class="ml-2"
                               v-tooltip="
                                 'When enabled, features with fill and stroke properties will use those colors. Features without those properties will use the specified color configuration.'
                               "
+                              icon="mdi-information-outline"
+                              class="ml-2"
                             />
                           </template>
                         </v-checkbox>
@@ -1261,7 +1261,7 @@ onMounted(resetCurrentStyle);
                             open-on-hover
                             location="end"
                           >
-                            <template v-slot:activator="{ props }">
+                            <template #activator="{ props }">
                               <div
                                 v-bind="props"
                                 class="color-square"
@@ -1312,12 +1312,12 @@ onMounted(resetCurrentStyle);
                               }
                             "
                           >
-                            <template v-slot:item="{ props, item }">
+                            <template #item="{ props, item }">
                               <v-list-item v-bind="props">
-                                <template v-slot:append>
+                                <template #append>
                                   <v-chip
-                                    size="small"
                                     v-if="(item as any).sample_label"
+                                    size="small"
                                     >{{ (item as any).sample_label }}</v-chip
                                   >
                                 </template>
@@ -1353,9 +1353,9 @@ onMounted(resetCurrentStyle);
                               (v: Colormap) => setGroupColormap(group.name, v)
                             "
                           >
-                            <template v-slot:item="{ props, item }">
+                            <template #item="{ props, item }">
                               <v-list-item v-bind="props">
-                                <template v-slot:append>
+                                <template #append>
                                   <v-icon
                                     v-if="
                                       item.project &&
@@ -1386,34 +1386,34 @@ onMounted(resetCurrentStyle);
                                       :discrete="
                                         group.colormap.discrete || false
                                       "
-                                      :nColors="group.colormap.n_colors || -1"
+                                      :n-colors="group.colormap.n_colors || -1"
                                     />
                                   </div>
                                 </template>
                               </v-list-item>
                             </template>
-                            <template v-slot:selection="{ item }">
+                            <template #selection="{ item }">
                               <span
-                                class="pr-15"
                                 v-if="getColormap(group.colormap)?.markers"
+                                class="pr-15"
                                 >{{ item.name }}</span
                               >
                               <div
+                                v-if="getColormap(group.colormap)?.markers"
                                 style="width: 300px"
                                 class="ml-2"
-                                v-if="getColormap(group.colormap)?.markers"
                               >
                                 <colormap-preview
                                   :colormap="item"
                                   :discrete="group.colormap.discrete || false"
-                                  :nColors="group.colormap.n_colors || -1"
+                                  :n-colors="group.colormap.n_colors || -1"
                                 />
                               </div>
                               <span v-else class="secondary-text"
                                 >Select Colormap</span
                               >
                             </template>
-                            <template v-slot:prepend-item>
+                            <template #prepend-item>
                               <v-list-item
                                 v-if="
                                   ['owner', 'collaborator'].includes(
@@ -1561,7 +1561,7 @@ onMounted(resetCurrentStyle);
                               :disabled="!group.visible"
                               location="end"
                             >
-                              <template v-slot:activator="{ props }">
+                              <template #activator="{ props }">
                                 <div
                                   v-bind="props"
                                   class="color-square"
@@ -1670,10 +1670,6 @@ onMounted(resetCurrentStyle);
                       <td>
                         <v-label>Size</v-label>
                         <v-icon
-                          icon="mdi-information-outline"
-                          color="primary"
-                          size="small"
-                          class="ml-2"
                           v-tooltip="
                             group.name === 'all'
                               ? 'Range: 1 to 10'
@@ -1681,6 +1677,10 @@ onMounted(resetCurrentStyle);
                                 ? 'Line thickness'
                                 : 'Point radius'
                           "
+                          icon="mdi-information-outline"
+                          color="primary"
+                          size="small"
+                          class="ml-2"
                         />
                       </td>
                       <td>
@@ -1706,15 +1706,15 @@ onMounted(resetCurrentStyle);
                           placeholder="Select property"
                           hide-details
                         >
-                          <template v-slot:item="{ props, item }">
+                          <template #item="{ props, item }">
                             <v-list-item
                               v-bind="props"
                               :disabled="!(item as any).range"
                             >
-                              <template v-slot:append>
+                              <template #append>
                                 <v-chip
-                                  size="small"
                                   v-if="(item as any).sample_label"
+                                  size="small"
                                   >{{ (item as any).sample_label }}</v-chip
                                 >
                               </template>
@@ -1730,20 +1730,20 @@ onMounted(resetCurrentStyle);
                         <v-label>Size Range</v-label>
                         <v-icon
                           v-if="group.name !== 'all'"
-                          icon="mdi-information-outline"
-                          color="primary"
-                          size="small"
-                          class="ml-2"
                           v-tooltip="
                             group.name === 'lines'
                               ? 'Line thickness'
                               : 'Point radius'
                           "
+                          icon="mdi-information-outline"
+                          color="primary"
+                          size="small"
+                          class="ml-2"
                         />
                       </td>
                       <td>
                         <SliderNumericInput
-                          :rangeModel="[
+                          :range-model="[
                             group.size_range.minimum,
                             group.size_range.maximum,
                           ]"
@@ -1818,13 +1818,13 @@ onMounted(resetCurrentStyle);
                         <v-label>
                           Zoom Scaling
                           <v-icon
+                            v-tooltip="
+                              'Size of features will change according to the current map zoom level, multiplied by a factor of the size value'
+                            "
                             icon="mdi-information-outline"
                             color="primary"
                             size="small"
                             class="ml-2"
-                            v-tooltip="
-                              'Size of features will change according to the current map zoom level, multiplied by a factor of the size value'
-                            "
                           />
                         </v-label>
                       </td>
@@ -1860,19 +1860,19 @@ onMounted(resetCurrentStyle);
                 <v-card-subtitle>
                   Filters ({{ currentStyleSpec.filters.length }})
                 </v-card-subtitle>
-                <v-btn color="primary" @click="addFilter" flat>
+                <v-btn color="primary" flat @click="addFilter">
                   <v-icon icon="mdi-plus" />
                   Add New Filter
                 </v-btn>
               </div>
               <v-card
                 v-for="filter in currentStyleSpec.filters"
+                :key="filter.id"
                 :class="
                   highlightFilterId === filter.id
                     ? 'filter-card highlight'
                     : 'filter-card'
                 "
-                :key="filter.id"
               >
                 <div
                   class="d-flex"
@@ -1891,12 +1891,12 @@ onMounted(resetCurrentStyle);
                     hide-details
                     @update:model-value="(v) => updateFilterBy(filter.id, v)"
                   >
-                    <template v-slot:item="{ props, item }">
+                    <template #item="{ props, item }">
                       <v-list-item v-bind="props">
-                        <template v-slot:append>
+                        <template #append>
                           <v-chip
-                            size="small"
                             v-if="(item as any).sample_label"
+                            size="small"
                             >{{ (item as any).sample_label }}</v-chip
                           >
                         </template>
@@ -1904,9 +1904,9 @@ onMounted(resetCurrentStyle);
                     </template>
                   </v-select>
                   <span
+                    v-else
                     :class="filter.apply ? '' : 'helper-text'"
                     style="white-space: wrap"
-                    v-else
                   >
                     {{ filter.filter_by }}
                     <span class="font-weight-bold">{{
@@ -1922,21 +1922,21 @@ onMounted(resetCurrentStyle);
                   <div>
                     <v-icon
                       v-if="focusedFilterId !== filter.id"
-                      @click="focusFilter(filter.id)"
                       class="ml-2"
+                      @click="focusFilter(filter.id)"
                       >mdi-pencil-outline</v-icon
                     >
-                    <v-icon @click="filter.apply = !filter.apply" class="ml-2">
+                    <v-icon class="ml-2" @click="filter.apply = !filter.apply">
                       {{ filter.apply ? "mdi-eye" : "mdi-eye-off" }}
                     </v-icon>
-                    <v-icon @click="removeFilter(filter.id)" class="ml-2"
+                    <v-icon class="ml-2" @click="removeFilter(filter.id)"
                       >mdi-delete-outline</v-icon
                     >
                   </div>
                 </div>
                 <table
-                  class="aligned-controls mt-2"
                   v-if="focusedFilterId === filter.id"
+                  class="aligned-controls mt-2"
                 >
                   <tbody :class="filter.apply ? '' : 'helper-text'">
                     <tr v-if="findVectorProperty(filter)?.range">
@@ -1975,7 +1975,7 @@ onMounted(resetCurrentStyle);
                           <SliderNumericInput
                             v-if="filter.range"
                             :disabled="!filter.apply"
-                            :rangeModel="filter.range"
+                            :range-model="filter.range"
                             :min="findVectorProperty(filter)!.range![0]"
                             :max="findVectorProperty(filter)!.range![1]"
                             @update="
@@ -2037,9 +2037,9 @@ onMounted(resetCurrentStyle);
 
       <v-card-actions class="my-1" style="float: right">
         <v-btn
+          v-tooltip="'Warning: unsaved changes will be discarded'"
           class="secondary-button"
           @click="cancel"
-          v-tooltip="'Warning: unsaved changes will be discarded'"
         >
           <v-icon color="primary" class="mr-1">mdi-close-circle</v-icon>
           Cancel
@@ -2096,8 +2096,8 @@ onMounted(resetCurrentStyle);
 
           <v-card-text>
             <v-text-field
-              label="Name"
               v-model="newName"
+              label="Name"
               autofocus
               :placeholder="
                 newNameMode === 'update' ? currentLayerStyle.name : ''

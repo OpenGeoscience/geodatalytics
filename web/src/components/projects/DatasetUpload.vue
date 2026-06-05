@@ -203,9 +203,9 @@ watch(open, () => {
           Upload Dataset
 
           <v-icon
+            v-tooltip="'Warning: unsaved changes will be discarded'"
             icon="mdi-close"
             style="position: absolute; top: 10px; right: 5px"
-            v-tooltip="'Warning: unsaved changes will be discarded'"
             @mousedown="cancel"
           />
         </div>
@@ -214,9 +214,9 @@ watch(open, () => {
           style="flex-direction: column; row-gap: 10px"
         >
           <v-text-field
+            v-model="name"
             autofocus
             label="Dataset Name"
-            v-model="name"
             :rules="mandatoryRule"
             hide-details="auto"
           />
@@ -231,38 +231,38 @@ watch(open, () => {
             </div>
           </div>
           <v-text-field
-            label="Description"
             v-model="description"
+            label="Description"
             :rules="mandatoryRule"
             hide-details="auto"
           />
           <v-combobox
-            label="Category"
             v-model="category"
+            label="Category"
             :items="categories"
             :rules="mandatoryRule"
             hide-details="auto"
           >
-            <template v-slot:append-inner>
+            <template #append-inner>
               <v-icon
                 v-if="category && !categories.includes(category)"
+                v-tooltip="'You are creating a new category'"
                 icon="mdi-information-outline"
                 class="ml-2"
                 color="primary"
-                v-tooltip="'You are creating a new category'"
               />
             </template>
           </v-combobox>
           <v-combobox
-            label="Tags"
             v-model="tags"
+            label="Tags"
             :items="projectStore.availableDatasetTags"
             hide-details="auto"
             multiple
             chips
             closable-chips
           >
-            <template v-slot:append-inner>
+            <template #append-inner>
               <v-icon
                 v-if="
                   tags.length &&
@@ -270,10 +270,10 @@ watch(open, () => {
                     (t) => !projectStore.availableDatasetTags.includes(t),
                   )
                 "
+                v-tooltip="'You are creating a new tag'"
                 icon="mdi-information-outline"
                 class="ml-2"
                 color="primary"
-                v-tooltip="'You are creating a new tag'"
               />
             </template>
           </v-combobox>
@@ -314,18 +314,18 @@ watch(open, () => {
               >
                 <div v-if="focusedLayerId === layer.id">
                   <v-text-field
-                    label="Layer Name"
                     v-model="layer.name"
+                    label="Layer Name"
                     :rules="mandatoryRule"
                     hide-details="auto"
                   />
                   <v-icon
-                    icon="mdi-information-outline"
-                    color="primary"
-                    class="upload-info-icon"
                     v-tooltip="
                       'Upload multiple files to create a sequence of frames, or upload a single file to optionally split into frames.'
                     "
+                    icon="mdi-information-outline"
+                    color="primary"
+                    class="upload-info-icon"
                   />
                   <v-file-upload
                     v-model="layer.files"
@@ -347,10 +347,10 @@ watch(open, () => {
                       }
                     "
                   >
-                    <template v-slot:icon>
+                    <template #icon>
                       <v-icon size="xs" icon="mdi-upload" color="primary" />
                     </template>
-                    <template v-slot:title>
+                    <template #title>
                       <div style="font-weight: normal; font-size: medium">
                         Drag & drop file(s) or
                         <span
@@ -360,15 +360,15 @@ watch(open, () => {
                         >
                       </div>
                     </template>
-                    <template v-slot:item="{ props: itemProps }">
+                    <template #item="{ props: itemProps }">
                       <v-file-upload-item v-bind="itemProps" lines="one" nav>
-                        <template v-slot:prepend>
+                        <template #prepend>
                           <v-icon icon="mdi-file-outline" />
                         </template>
-                        <template v-slot:title="{ title }">
+                        <template #title="{ title }">
                           <div class="text-primary">{{ title }}</div>
                         </template>
-                        <template v-slot:clear="{ props: clearProps }">
+                        <template #clear="{ props: clearProps }">
                           <v-icon
                             color="error"
                             icon="mdi-close-circle"
@@ -420,12 +420,12 @@ watch(open, () => {
                         :rules="mandatoryRule"
                         hide-details="auto"
                       >
-                        <template v-slot:append>
+                        <template #append>
                           <v-icon
-                            icon="mdi-information-outline"
                             v-tooltip="
                               'Enter the name of an ordered feature property that corresponds to frame'
                             "
+                            icon="mdi-information-outline"
                             color="primary"
                           />
                         </template>
@@ -444,10 +444,10 @@ watch(open, () => {
                   {{ layer.name || "Layer " + (index + 1) }}
 
                   <div>
-                    <v-icon @click="focusedLayerId = layer.id" class="ml-2"
+                    <v-icon class="ml-2" @click="focusedLayerId = layer.id"
                       >mdi-pencil-outline</v-icon
                     >
-                    <v-icon @click="removeLayer(layer.id)" class="ml-2"
+                    <v-icon class="ml-2" @click="removeLayer(layer.id)"
                       >mdi-delete-outline</v-icon
                     >
                   </div>

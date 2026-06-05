@@ -63,7 +63,7 @@ watch(filteredDatasets, expandAllGroups);
       append-inner-icon="mdi-magnify"
       hide-details
     />
-    <v-expansion-panels v-model="showFilter" flat v-if="props.datasets?.length">
+    <v-expansion-panels v-if="props.datasets?.length" v-model="showFilter" flat>
       <v-expansion-panel value="true" class="mb-2 bg-transparent">
         <v-expansion-panel-title class="tag-filter-title">
           Filter by Tag
@@ -115,7 +115,7 @@ watch(filteredDatasets, expandAllGroups);
         v-else-if="projectStore.loadingDatasets"
         indeterminate
       ></v-progress-linear>
-      <v-card-text class="help-text" v-else>No available Datasets.</v-card-text>
+      <v-card-text v-else class="help-text">No available Datasets.</v-card-text>
     </v-card>
   </div>
 </template>

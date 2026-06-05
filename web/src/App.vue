@@ -62,9 +62,9 @@ watch(() => appStore.currentUser, onReady);
         <v-btn
           icon
           variant="flat"
-          @click.stop="appStore.currentError = undefined"
           class="pa-3"
           style="float: right"
+          @click.stop="appStore.currentError = undefined"
         >
           <v-icon>mdi-close</v-icon>
         </v-btn>

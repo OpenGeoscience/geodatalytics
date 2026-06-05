@@ -125,8 +125,8 @@ function getColorPropsCoverage(layer: Layer) {
         <v-list-item v-for="layer in filteredLegend" :key="layer.id">
           <v-icon
             :icon="layer.visible ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
-            @click="setVisibility(layer, !layer.visible)"
             class=""
+            @click="setVisibility(layer, !layer.visible)"
           />
           {{ layer.name }}
           <div
@@ -158,7 +158,7 @@ function getColorPropsCoverage(layer: Layer) {
                   v-if="!colormap_preview.valueColors"
                   :colormap="colormap_preview.colormap"
                   :discrete="colormap_preview.discrete"
-                  :nColors="colormap_preview.nColors"
+                  :n-colors="colormap_preview.nColors"
                   :range="colormap_preview.range"
                 />
                 <v-expansion-panels v-else>
@@ -167,7 +167,7 @@ function getColorPropsCoverage(layer: Layer) {
                       <colormap-preview
                         :colormap="colormap_preview.colormap"
                         :discrete="colormap_preview.discrete"
-                        :nColors="colormap_preview.nColors"
+                        :n-colors="colormap_preview.nColors"
                         :range="colormap_preview.range"
                       />
                     </v-expansion-panel-title>

@@ -74,7 +74,7 @@ function updateRange(lower: number, upper: number) {
     hide-details
     @update:model-value="(v: number) => updateValue(v)"
   >
-    <template v-slot:append>
+    <template #append>
       <v-number-input
         :model-value="props.model"
         :min="props.min"
@@ -83,7 +83,7 @@ function updateRange(lower: number, upper: number) {
         :precision="precision"
         :style="{ width: getInputWidth() }"
         variant="outlined"
-        controlVariant="stacked"
+        control-variant="stacked"
         hide-details
         @update:model-value="updateValue"
         @keydown.enter="blur()"
@@ -102,7 +102,7 @@ function updateRange(lower: number, upper: number) {
     hide-details
     @update:model-value="([lower, upper]) => updateRange(lower, upper)"
   >
-    <template v-slot:prepend>
+    <template #prepend>
       <v-number-input
         :model-value="props.rangeModel[0]"
         :min="props.min"
@@ -111,7 +111,7 @@ function updateRange(lower: number, upper: number) {
         :precision="precision"
         :style="{ width: getInputWidth() }"
         variant="outlined"
-        controlVariant="stacked"
+        control-variant="stacked"
         hide-details
         @update:model-value="
           (v) => {
@@ -121,7 +121,7 @@ function updateRange(lower: number, upper: number) {
         @keydown.enter="blur()"
       />
     </template>
-    <template v-slot:append>
+    <template #append>
       <v-number-input
         :model-value="props.rangeModel[1]"
         :min="props.rangeModel[0]"
@@ -130,7 +130,7 @@ function updateRange(lower: number, upper: number) {
         :precision="precision"
         :style="{ width: getInputWidth() }"
         variant="outlined"
-        controlVariant="stacked"
+        control-variant="stacked"
         hide-details
         @update:model-value="
           (v) => {

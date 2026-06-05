@@ -254,8 +254,8 @@ onMounted(init);
 
     <v-card-text>
       <v-text-field
-        label="Name"
         v-model="name"
+        label="Name"
         autofocus
         :rules="[nameExistsRule]"
         @keydown.enter="submit"
@@ -272,7 +272,7 @@ onMounted(init);
           <ColormapPreview
             :colormap="currentColormap"
             :discrete="false"
-            :nColors="-1"
+            :n-colors="-1"
           />
         </div>
       </div>
@@ -283,7 +283,7 @@ onMounted(init);
           class="py-2 marker-row"
         >
           <v-menu :close-on-content-click="false" open-on-hover location="end">
-            <template v-slot:activator="{ props }">
+            <template #activator="{ props }">
               <div
                 v-bind="props"
                 class="color-square ma-0"
@@ -294,7 +294,7 @@ onMounted(init);
               <v-color-picker
                 v-model:model-value="marker.color"
                 mode="hex"
-                @update:modelValue="drawMarkers"
+                @update:model-value="drawMarkers"
               />
             </v-card>
           </v-menu>
@@ -306,9 +306,9 @@ onMounted(init);
             :precision="2"
             :style="{ width: '80px' }"
             variant="outlined"
-            controlVariant="stacked"
+            control-variant="stacked"
             hide-details
-            @update:modelValue="drawMarkers"
+            @update:model-value="drawMarkers"
           />
           <v-icon @click="removeMarker(index)">mdi-close</v-icon>
           <v-icon
@@ -337,8 +337,8 @@ onMounted(init);
       <v-btn
         class="primary-button"
         variant="tonal"
-        @click="submit"
         :disabled="!valid"
+        @click="submit"
       >
         <v-icon color="button-text" class="mr-1">mdi-plus-circle</v-icon>
         {{ props.edit ? "Save" : "Create" }} Colormap

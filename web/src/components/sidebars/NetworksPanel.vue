@@ -183,12 +183,12 @@ watch(
             <div>{{ networkStore.currentNetwork.name }}</div>
             <v-btn
               v-if="!isNetworkVisible()"
-              @click="showNetwork()"
               density="compact"
+              @click="showNetwork()"
             >
               Show
             </v-btn>
-            <v-btn @click="resetNetwork()" density="compact"> Reset </v-btn>
+            <v-btn density="compact" @click="resetNetwork()"> Reset </v-btn>
           </div>
           <v-btn
             v-tooltip="'Close'"
@@ -226,21 +226,21 @@ watch(
               @mouseover:row="(e: Event, data: any) => (hoverNode = data.item)"
               @mouseleave:row="() => (hoverNode = undefined)"
             >
-              <template v-slot:item.active="{ item }">
+              <template #item.active="{ item }">
                 <v-icon
                   :icon="item.active ? 'mdi-circle-outline' : 'mdi-close'"
                   :color="item.active ? 'green' : 'red'"
                 />
               </template>
-              <template v-slot:item.metadata="{ item }">
+              <template #item.metadata="{ item }">
                 <DetailView :details="{ ...item, type: 'networknode' }" />
               </template>
-              <template v-slot:bottom>
+              <template #bottom>
                 <v-infinite-scroll @load="loadNodes">
-                  <template v-slot:loading>
+                  <template #loading>
                     <v-progress-linear indeterminate />
                   </template>
-                  <template v-slot:empty />
+                  <template #empty />
                 </v-infinite-scroll>
               </template>
             </v-data-table>
@@ -257,21 +257,21 @@ watch(
               @mouseover:row="(e: Event, data: any) => (hoverEdge = data.item)"
               @mouseleave:row="() => (hoverEdge = undefined)"
             >
-              <template v-slot:item.active="{ item }">
+              <template #item.active="{ item }">
                 <v-icon
                   :icon="item.active ? 'mdi-circle-outline' : 'mdi-close'"
                   :color="item.active ? 'green' : 'red'"
                 />
               </template>
-              <template v-slot:item.metadata="{ item }">
+              <template #item.metadata="{ item }">
                 <DetailView :details="{ ...item, type: 'networkedge' }" />
               </template>
-              <template v-slot:bottom>
+              <template #bottom>
                 <v-infinite-scroll @load="loadEdges">
-                  <template v-slot:loading>
+                  <template #loading>
                     <v-progress-linear indeterminate />
                   </template>
-                  <template v-slot:empty />
+                  <template #empty />
                 </v-infinite-scroll>
               </template>
             </v-data-table>
@@ -286,7 +286,7 @@ watch(
             @click="networkStore.currentNetwork = network"
           >
             {{ network.name }}
-            <template v-slot:append>
+            <template #append>
               <v-icon
                 icon="mdi-transit-connection-variant"
                 size="small"
@@ -304,12 +304,12 @@ watch(
       <v-card-text v-else class="help-text">No available Networks.</v-card-text>
     </v-card>
     <v-btn
-      class="toggle-btn"
       v-if="
         networkStore.currentNetwork &&
         tab == 'nodes-tab' &&
         selectedNodes.length
       "
+      class="toggle-btn"
       @click="toggleSelected"
     >
       Toggle Selected

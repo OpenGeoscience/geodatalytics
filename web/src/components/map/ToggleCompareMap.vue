@@ -298,6 +298,7 @@ onMounted(() => {
       layer-order="bottommost"
       :attribution-control="false"
       :preserve-drawing-buffer="true"
+      class="map"
       @panend="compareStore.updateMapStats($event)"
       @zoomend="compareStore.updateMapStats($event)"
       @pitchend="compareStore.updateMapStats($event)"
@@ -305,7 +306,6 @@ onMounted(() => {
       @sliderend="compareStore.updateSlider($event)"
       @map-ready-a="handleMapReady($event, 'A')"
       @map-ready-b="handleMapReady($event, 'B')"
-      class="map"
     />
 
     <div id="map-tooltip" ref="tooltip" class="tooltip pa-0">

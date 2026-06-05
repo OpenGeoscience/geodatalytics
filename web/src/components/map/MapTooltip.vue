@@ -186,10 +186,10 @@ function toggleNodeHandler() {
       v-if="clickedFeature.feature.properties.node_id"
       block
       variant="outlined"
-      @click="toggleNodeHandler"
       :text="
         clickedFeatureIsDeactivatedNode ? 'Reactivate Node' : 'Deactivate Node'
       "
+      @click="toggleNodeHandler"
     />
   </div>
 
