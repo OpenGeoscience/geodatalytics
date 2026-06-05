@@ -23,7 +23,6 @@ export default defineConfigWithVueTs(
       // Temporary ignores until rules can be fixed
       "vue/require-v-for-key": "off",
       "vue/valid-v-for": "off",
-      "vue/no-use-v-if-with-v-for": "off",
     },
   },
   skipFormatting,
