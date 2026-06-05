@@ -277,7 +277,11 @@ onMounted(init);
         </div>
       </div>
       <div style="height: 200px; overflow-y: auto">
-        <div v-for="(marker, index) in markers" class="py-2 marker-row">
+        <div
+          v-for="(marker, index) in markers"
+          :key="index"
+          class="py-2 marker-row"
+        >
           <v-menu :close-on-content-click="false" open-on-hover location="end">
             <template v-slot:activator="{ props }">
               <div

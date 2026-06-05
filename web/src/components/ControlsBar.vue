@@ -570,7 +570,9 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
             </v-window-item>
           </v-window>
           <v-spacer />
-          <div v-for="err in jsonErrors">Error: {{ err.message }}</div>
+          <div v-for="(err, index) in jsonErrors" :key="index">
+            Error: {{ err.message }}
+          </div>
           <div v-if="!jsonErrors?.length">Map Preview:</div>
           <div
             id="basemap-preview-new"

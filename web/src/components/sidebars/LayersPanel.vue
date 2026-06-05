@@ -231,6 +231,7 @@ function setLayerActive(layer: Layer, active: boolean) {
                 />
                 <div
                   v-for="frame in getLayerCurrentFrames(element)"
+                  :key="frame.id"
                   style="display: flex; justify-content: space-between"
                 >
                   <span> <i>Frame:</i> {{ frame.name }} </span>

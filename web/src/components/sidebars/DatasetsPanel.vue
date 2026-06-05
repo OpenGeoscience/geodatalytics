@@ -119,13 +119,18 @@ function toggleSelected(items: Layer[]) {
             <div>
               <v-chip
                 v-for="tag in dataset.tags"
+                :key="tag"
                 :text="tag"
                 variant="outlined"
                 size="small"
                 class="ml-3 mb-2"
               />
             </div>
-            <div v-for="layer in dataset.layers" class="item-title">
+            <div
+              v-for="layer in dataset.layers"
+              :key="layer.id"
+              class="item-title"
+            >
               <div
                 style="
                   text-wrap: wrap;

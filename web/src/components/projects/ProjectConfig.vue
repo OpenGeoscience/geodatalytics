@@ -387,6 +387,7 @@ watch(
           <v-list class="transparent" color="primary" selectable>
             <v-list-item
               v-for="project in filteredProjects"
+              :key="project.id"
               :title="project.name"
               :active="project.id === selectedProject?.id"
               @click="() => selectProject(project)"

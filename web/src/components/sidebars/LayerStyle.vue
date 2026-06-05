@@ -796,6 +796,7 @@ onMounted(resetCurrentStyle);
                     v-for="group in currentStyleSpec.colors.filter(
                       (c) => c.name === currentGroups['color'],
                     )"
+                    :key="group.name"
                   >
                     <tr v-if="currentGroups['color'] !== 'all'">
                       <td><v-label>Band</v-label></td>
@@ -1171,6 +1172,7 @@ onMounted(resetCurrentStyle);
                     v-for="group in currentStyleSpec.colors.filter(
                       (c) => c.name === currentGroups['color'],
                     )"
+                    :key="group.name"
                   >
                     <tr v-if="currentGroups['color'] !== 'all'">
                       <td><v-label>Feature Type</v-label></td>
@@ -1639,6 +1641,7 @@ onMounted(resetCurrentStyle);
                     v-for="group in currentStyleSpec.sizes.filter(
                       (c) => c.name === currentGroups['size'],
                     )"
+                    :key="group.name"
                   >
                     <tr>
                       <td><v-label>Size Choice</v-label></td>
