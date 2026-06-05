@@ -40,6 +40,10 @@ module "django" {
 resource "heroku_addon" "redis" {
   app_id = module.django.heroku_app_id
   plan   = "heroku-redis:mini"
+
+  config = {
+    maxmemory_policy = "allkeys-lru"
+  }
 }
 
 output "dns_nameservers" {
