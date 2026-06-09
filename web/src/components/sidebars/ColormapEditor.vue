@@ -283,9 +283,9 @@ onMounted(init);
           class="py-2 marker-row"
         >
           <v-menu :close-on-content-click="false" open-on-hover location="end">
-            <template #activator="{ props }">
+            <template #activator="{ props: activatorProps }">
               <div
-                v-bind="props"
+                v-bind="activatorProps"
                 class="color-square ma-0"
                 :style="{ backgroundColor: marker.color }"
               />

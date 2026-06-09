@@ -227,8 +227,12 @@ const panels = ref(["A", "B"] as const);
       emit('setLayerActive', props.activeLayer !== props.layer)
     "
   >
-    <template #activator="{ props }">
-      <v-icon v-tooltip="appliedStyleText" v-bind="props" icon="mdi-cog" />
+    <template #activator="{ props: activatorProps }">
+      <v-icon
+        v-tooltip="appliedStyleText"
+        v-bind="activatorProps"
+        icon="mdi-cog"
+      />
     </template>
     <v-card
       v-if="currentStyleSpecs.A && currentStyleSpecs.B"
