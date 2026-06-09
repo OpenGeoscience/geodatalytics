@@ -12,6 +12,8 @@ const props = withDefaults(
     disabled?: boolean;
   }>(),
   {
+    model: undefined,
+    rangeModel: undefined,
     min: 1,
     max: 10,
     step: 1,
