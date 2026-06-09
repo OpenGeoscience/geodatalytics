@@ -180,10 +180,10 @@ const downloadReady = computed(() => {
         <div style="position: absolute; right: 10px">
           <a ref="downloadButton">
             <v-icon
+              v-show="downloadReady"
               v-tooltip="'Download'"
               icon="mdi-download"
               variant="plain"
-              v-show="downloadReady"
             />
           </a>
           <v-icon
@@ -198,18 +198,18 @@ const downloadReady = computed(() => {
           Current X Axis Slice (From {{ maxX }} values)
           <div style="display: flex">
             <v-text-field
+              v-model.number="currentXRange"
               type="number"
               label="Number of values"
               density="compact"
-              v-model.number="currentXRange"
               :max="maxX"
               min="0"
             />
             <v-text-field
+              v-model.number="currentXStart"
               type="number"
               label="Starting from"
               density="compact"
-              v-model.number="currentXStart"
               :max="maxX"
               min="0"
             />
@@ -223,11 +223,11 @@ const downloadReady = computed(() => {
           @click="analysisStore.currentChart = chart"
         >
           {{ chart.name }}
-          <template v-slot:append>
+          <template #append>
             <v-icon
+              v-tooltip="chart.description"
               icon="mdi-information-outline"
               size="small"
-              v-tooltip="chart.description"
             ></v-icon>
             <v-icon icon="mdi-poll" size="small" class="ml-2"></v-icon>
             <DetailView :details="{ ...chart, type: 'chart' }" />

@@ -11,16 +11,23 @@ export default defineConfigWithVueTs(
     name: "app/files-to-lint",
     files: ["**/*.{vue,ts,mts,tsx}"],
   },
+
   globalIgnores(["**/dist/**", "**/dist-ssr/**", "**/coverage/**"]),
-  ...pluginVue.configs["flat/essential"],
+
+  ...pluginVue.configs["flat/recommended"],
   vueTsConfigs.recommended,
+
   {
     rules: {
       // allowModifiers: Vuetify uses dot notation for column slots (v-slot:item.columnName)
       "vue/valid-v-slot": ["error", { allowModifiers: true }],
       // `any` is used everywhere and will be difficult to eliminate
       "@typescript-eslint/no-explicit-any": "off",
+      // Temporary ignores until rules can be fixed
+      "vue/no-template-shadow": "off",
+      "vue/require-default-prop": "off",
     },
   },
+
   skipFormatting,
 );
