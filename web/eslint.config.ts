@@ -25,7 +25,6 @@ export default defineConfigWithVueTs(
       "@typescript-eslint/no-explicit-any": "off",
       // Temporary ignores until rules can be fixed
       "vue/no-template-shadow": "off",
-      "vue/require-default-prop": "off",
     },
   },
 
