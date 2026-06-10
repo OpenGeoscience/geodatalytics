@@ -118,4 +118,17 @@ scrollbar changes disables default styling and rounding so corners appear square
   background-color: rgb(var(--v-theme-border));
   border-radius: 4px;
 }
+
+.v-icon {
+  color: rgb(var(--v-theme-secondary-text));
+  opacity: 1
+}
+
+.bg-primary .v-icon, .primary-button .v-icon {
+  color: rgb(var(--v-theme-button-text));
+}
+
+.secondary-button .v-icon, .text-primary.v-icon {
+  color: rgb(var(--v-theme-primary));
+}
 </style>
