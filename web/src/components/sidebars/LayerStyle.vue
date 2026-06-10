@@ -605,12 +605,12 @@ onMounted(resetCurrentStyle);
       emit('setLayerActive', props.activeLayer !== props.layer)
     "
   >
-    <template #activator="{ props }">
+    <template #activator="{ props: activatorProps }">
       <v-icon
         v-tooltip="
           appliedStyleName ? 'Style: ' + appliedStyleName : 'Configure styling'
         "
-        v-bind="props"
+        v-bind="activatorProps"
         icon="mdi-cog"
       />
     </template>
@@ -663,9 +663,9 @@ onMounted(resetCurrentStyle);
             :close-on-content-click="false"
             location="start"
           >
-            <template #activator="{ props }">
+            <template #activator="{ props: activatorProps }">
               <v-icon
-                v-bind="props"
+                v-bind="activatorProps"
                 :disabled="!currentLayerStyle.id"
                 icon="mdi-pencil"
               />
@@ -868,9 +868,9 @@ onMounted(resetCurrentStyle);
                             open-on-hover
                             location="end"
                           >
-                            <template #activator="{ props }">
+                            <template #activator="{ props: activatorProps }">
                               <div
-                                v-bind="props"
+                                v-bind="activatorProps"
                                 class="color-square"
                                 :style="{
                                   backgroundColor: group.single_color,
@@ -908,8 +908,8 @@ onMounted(resetCurrentStyle);
                             (v: Colormap) => setGroupColormap(group.name, v)
                           "
                         >
-                          <template #item="{ props, item }">
-                            <v-list-item v-bind="props">
+                          <template #item="{ props: itemProps, item }">
+                            <v-list-item v-bind="itemProps">
                               <template #append>
                                 <v-icon
                                   v-if="
@@ -1261,9 +1261,9 @@ onMounted(resetCurrentStyle);
                             open-on-hover
                             location="end"
                           >
-                            <template #activator="{ props }">
+                            <template #activator="{ props: activatorProps }">
                               <div
-                                v-bind="props"
+                                v-bind="activatorProps"
                                 class="color-square"
                                 :style="{
                                   backgroundColor: group.single_color,
@@ -1312,8 +1312,8 @@ onMounted(resetCurrentStyle);
                               }
                             "
                           >
-                            <template #item="{ props, item }">
-                              <v-list-item v-bind="props">
+                            <template #item="{ props: itemProps, item }">
+                              <v-list-item v-bind="itemProps">
                                 <template #append>
                                   <v-chip
                                     v-if="(item as any).sample_label"
@@ -1353,8 +1353,8 @@ onMounted(resetCurrentStyle);
                               (v: Colormap) => setGroupColormap(group.name, v)
                             "
                           >
-                            <template #item="{ props, item }">
-                              <v-list-item v-bind="props">
+                            <template #item="{ props: itemProps, item }">
+                              <v-list-item v-bind="itemProps">
                                 <template #append>
                                   <v-icon
                                     v-if="
@@ -1561,9 +1561,9 @@ onMounted(resetCurrentStyle);
                               :disabled="!group.visible"
                               location="end"
                             >
-                              <template #activator="{ props }">
+                              <template #activator="{ props: activatorProps }">
                                 <div
-                                  v-bind="props"
+                                  v-bind="activatorProps"
                                   class="color-square"
                                   :style="{
                                     backgroundColor: group.colormap.null_color,
@@ -1706,9 +1706,9 @@ onMounted(resetCurrentStyle);
                           placeholder="Select property"
                           hide-details
                         >
-                          <template #item="{ props, item }">
+                          <template #item="{ props: itemProps, item }">
                             <v-list-item
-                              v-bind="props"
+                              v-bind="itemProps"
                               :disabled="!(item as any).range"
                             >
                               <template #append>
@@ -1891,8 +1891,8 @@ onMounted(resetCurrentStyle);
                     hide-details
                     @update:model-value="(v) => updateFilterBy(filter.id, v)"
                   >
-                    <template #item="{ props, item }">
-                      <v-list-item v-bind="props">
+                    <template #item="{ props: itemProps, item }">
+                      <v-list-item v-bind="itemProps">
                         <template #append>
                           <v-chip
                             v-if="(item as any).sample_label"

@@ -272,9 +272,9 @@ onMounted(() => {
               }
             "
           >
-            <template #item="{ props, item }">
+            <template #item="{ props: itemProps, item }">
               <v-list-item
-                v-bind="props"
+                v-bind="itemProps"
                 :title="
                   item.first_name && item.last_name
                     ? item.first_name + ' ' + item.last_name
