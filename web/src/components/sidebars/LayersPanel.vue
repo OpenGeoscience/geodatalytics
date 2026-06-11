@@ -286,7 +286,7 @@ function setLayerActive(layer: Layer, active: boolean) {
 .frame-menu .v-input__append {
   margin-left: 15px !important;
 }
-.v-selection-control--density-default {
+.v-selection-control {
   --v-selection-control-size: 20px !important;
 }
 .v-list-item__prepend > .v-icon {

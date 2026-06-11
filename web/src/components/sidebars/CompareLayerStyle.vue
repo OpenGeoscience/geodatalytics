@@ -262,10 +262,10 @@ const panels = ref(["A", "B"] as const);
             style="position: relative"
           >
             <v-card flat color="transparent">
-              <v-card-title>{{ getPanelLabel(panel) }}</v-card-title>
               <v-card-text>
+                {{ getPanelLabel(panel) }}
                 <div
-                  class="d-flex mb-1 mt-4 mx-2"
+                  class="d-flex"
                   style="align-items: center; column-gap: 5px"
                 >
                   <v-select
@@ -288,24 +288,16 @@ const panels = ref(["A", "B"] as const);
                     @update:model-value="selectStyle($event, panel)"
                   ></v-select>
                 </div>
-                <table class="aligned-controls px-2">
-                  <tbody>
-                    <tr>
-                      <td><v-label color="primary-text">Opacity</v-label></td>
-                      <td>
-                        <SliderNumericInput
-                          :model="currentStyleSpecs[panel]?.opacity || 1"
-                          :min="0.1"
-                          :max="1"
-                          :step="0.1"
-                          @update="
-                            (v: number) => debouncedStyleSpecUpdated(panel, v)
-                          "
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <v-label class="mt-2 help-text">Opacity</v-label>
+                <SliderNumericInput
+                  :model="currentStyleSpecs[panel]?.opacity || 1"
+                  :min="0.1"
+                  :max="1"
+                  :step="0.1"
+                  @update="
+                    (v: number) => debouncedStyleSpecUpdated(panel, v)
+                  "
+                />
               </v-card-text>
             </v-card>
             <v-divider
@@ -325,10 +317,10 @@ const panels = ref(["A", "B"] as const);
           <template v-for="(panel, index) in panels" :key="panel">
             <v-row>
               <v-card width="400" flat color="transparent">
-                <v-card-title>{{ getPanelLabel(panel) }}</v-card-title>
                 <v-card-text>
+                  {{ getPanelLabel(panel) }}
                   <div
-                    class="d-flex mb-1 mt-4 mx-2"
+                    class="d-flex"
                     style="align-items: center; column-gap: 5px"
                   >
                     <v-select
@@ -351,24 +343,16 @@ const panels = ref(["A", "B"] as const);
                       @update:model-value="selectStyle($event, panel)"
                     ></v-select>
                   </div>
-                  <table class="aligned-controls px-2">
-                    <tbody>
-                      <tr>
-                        <td><v-label color="primary-text">Opacity</v-label></td>
-                        <td>
-                          <SliderNumericInput
-                            :model="currentStyleSpecs[panel]?.opacity || 1"
-                            :min="0.1"
-                            :max="1"
-                            :step="0.1"
-                            @update="
-                              (v: number) => debouncedStyleSpecUpdated(panel, v)
-                            "
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  <v-label class="mt-2 help-text">Opacity</v-label>
+                  <SliderNumericInput
+                    :model="currentStyleSpecs[panel]?.opacity || 1"
+                    :min="0.1"
+                    :max="1"
+                    :step="0.1"
+                    @update="
+                      (v: number) => debouncedStyleSpecUpdated(panel, v)
+                    "
+                  />
                 </v-card-text>
               </v-card>
             </v-row>
