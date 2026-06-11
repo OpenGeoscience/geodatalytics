@@ -135,4 +135,8 @@ scrollbar changes disables default styling and rounding so corners appear square
 .v-icon.text-error {
   color: rgb(var(--v-theme-error));
 }
+
+.v-number-input .v-field__field {
+  flex-direction: column;
+}
 </style>
