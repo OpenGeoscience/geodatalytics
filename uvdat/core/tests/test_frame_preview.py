@@ -5,7 +5,6 @@ import pytest
 from uvdat.core.raster_style import (
     apply_source_filters_to_style_query,
     build_thumbnail_style_query,
-    is_default_band_source_filter,
     raster_source_filter_kwargs,
 )
 from uvdat.core.tasks.frame_preview import (
@@ -14,20 +13,6 @@ from uvdat.core.tasks.frame_preview import (
     FRAME_PREVIEW_MIN_PX,
     resolve_preview_max_dimension,
 )
-
-
-@pytest.mark.parametrize(
-    ("source_filters", "expected"),
-    [
-        ({}, False),
-        ({"band": 1}, True),
-        ({"band": "1"}, True),
-        ({"frame": 0}, False),
-        ({"band": 2}, False),
-    ],
-)
-def test_is_default_band_source_filter(source_filters, expected):
-    assert is_default_band_source_filter(source_filters) is expected
 
 
 def test_build_thumbnail_style_query_does_not_embed_frame():
@@ -49,7 +34,8 @@ def test_raster_source_filter_kwargs_extracts_frame():
 def test_apply_source_filters_to_style_query_embeds_band_not_frame():
     query = apply_source_filters_to_style_query({}, {"frame": 3, "band": 2})
     assert query == {"band": 2}
-    assert apply_source_filters_to_style_query({}, {"frame": 3, "band": 1}) == {}
+    assert apply_source_filters_to_style_query({}, {"frame": 3, "band": 1}) == {"band": 1}
+    assert apply_source_filters_to_style_query({}, {"band": 1}) == {"band": 1}
 
 
 @pytest.mark.parametrize(

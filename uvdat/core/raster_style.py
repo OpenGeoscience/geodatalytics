@@ -55,14 +55,6 @@ def colormap_markers_subsample(
     return markers
 
 
-def is_default_band_source_filter(source_filters: dict[str, Any] | None) -> bool:
-    if not source_filters or len(source_filters) != 1:
-        return False
-    if "band" not in source_filters:
-        return False
-    return source_filters["band"] in (1, "1")
-
-
 def _build_color_query_from_spec(
     color_spec: dict[str, Any],
     colormaps_by_id: dict[int, Colormap],
@@ -133,11 +125,7 @@ def apply_source_filters_to_style_query(
     source_filters: dict[str, Any] | None,
 ) -> dict[str, Any]:
     query = dict(base_query)
-    if (
-        source_filters
-        and not is_default_band_source_filter(source_filters)
-        and "band" in source_filters
-    ):
+    if source_filters and "band" in source_filters:
         query["band"] = source_filters["band"]
     return query
 
