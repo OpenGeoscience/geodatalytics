@@ -1044,6 +1044,14 @@ onMounted(resetCurrentStyle);
                           <v-btn :value="'discrete'">Discrete</v-btn>
                           <v-btn :value="'continuous'">Continuous</v-btn>
                         </v-btn-toggle>
+                        <v-icon
+                          v-tooltip="
+                            'A discrete colormap divides data into distinct, non-overlapping color buckets. A continuous colormap maps values along a smooth gradient.'
+                          "
+                          icon="mdi-information-outline"
+                          color="primary"
+                          class="ml-2"
+                        />
                       </td>
                     </tr>
                     <tr v-if="group.colormap">
@@ -1498,6 +1506,14 @@ onMounted(resetCurrentStyle);
                             <v-btn :value="'discrete'">Discrete</v-btn>
                             <v-btn :value="'continuous'">Continuous</v-btn>
                           </v-btn-toggle>
+                          <v-icon
+                            v-tooltip="
+                              'A discrete colormap divides data into distinct, non-overlapping color buckets. A continuous colormap maps values along a smooth gradient.'
+                            "
+                            icon="mdi-information-outline"
+                            color="primary"
+                            class="ml-2"
+                          />
                         </td>
                       </tr>
                       <tr>
