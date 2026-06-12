@@ -570,6 +570,22 @@ function refreshLayer() {
   layerStore.fetchAvailableLayer(props.layer.id);
 }
 
+function newNameKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Enter') {
+    if (newName.value) {
+      if (newNameMode.value === 'update') {
+        save();
+      } else {
+        saveAsNew();
+      }
+    }
+
+  } else if (e.key === 'Escape') {
+    newNameMode.value = undefined;
+    newName.value = undefined;
+  }
+}
+
 watch(
   () => panelStore.draggingPanel,
   () => {
@@ -2107,21 +2123,7 @@ onMounted(resetCurrentStyle);
                   !availableStyles?.map((s) => s.name).includes(newName) ||
                   `Style ''${newName}'' already exists.`,
               ]"
-              @keydown.enter="
-                () => {
-                  if (newName) {
-                    if (newNameMode === 'update') {
-                      save();
-                    } else {
-                      saveAsNew();
-                    }
-                  }
-                }
-              "
-              @keydown.escape="
-                newNameMode = undefined;
-                newName = undefined;
-              "
+              @keydown="newNameKeyDown"
             />
           </v-card-text>
 
