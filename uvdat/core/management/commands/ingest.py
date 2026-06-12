@@ -17,7 +17,12 @@ from django.db.models.functions import Coalesce
 import djclick as click
 import pooch
 
-from uvdat.core.models import Chart, Dataset, FileItem, Project
+from uvdat.core.models import Chart, Dataset, FileItem, Layer, Project
+from uvdat.core.tasks.frame_preview import (
+    ensure_default_layer_style,
+    generate_layer_style_previews,
+    is_multiframe_raster_layer,
+)
 
 DATA_FOLDER = Path(os.environ.get("INGEST_BIND_MOUNT_POINT", "sample_data"))
 DOWNLOADS_FOLDER = DATA_FOLDER / "downloads"
@@ -152,6 +157,24 @@ def ingest_file(file_info, *, index=0, dataset=None, chart=None, replace=False, 
             new_file_item.file.save(file_path, File(f))
 
 
+def generate_ingest_multiframe_previews(converted_dataset_names: set[str]) -> int:
+    if not converted_dataset_names:
+        return 0
+    style_count = 0
+    for project in Project.objects.filter(datasets__name__in=converted_dataset_names).distinct():
+        layers = Layer.objects.filter(
+            dataset__name__in=converted_dataset_names,
+            dataset__in=project.datasets.all(),
+        )
+        for layer in layers:
+            if not is_multiframe_raster_layer(layer):
+                continue
+            style = ensure_default_layer_style(layer, project)
+            generate_layer_style_previews(style.id)
+            style_count += 1
+    return style_count
+
+
 def ingest_projects(data: list[ProjectItem], *, replace=False) -> None:
     for project in data:
         click.echo(f"\t- {project['name']}")
@@ -264,7 +287,8 @@ def default_conversion_process(dataset: Dataset, options: DatasetItem):
 
 def ingest_datasets(
     data: list[DatasetItem], json_file_path: Path, *, replace=False, skip_cache=False
-) -> None:
+) -> set[str]:
+    converted_dataset_names: set[str] = set()
     superuser = User.objects.filter(is_superuser=True).first()
     if superuser is None:
         raise click.ClickException("Please create at least one superuser")
@@ -320,6 +344,7 @@ def ingest_datasets(
                 f"\t\t Dataset {dataset_for_conversion.name} converted.",
                 fg="green",
             )
+            converted_dataset_names.add(dataset["name"])
         else:
             click.secho(
                 f"\t\t Dataset {dataset['name']} already exists, not importing/converting",
@@ -328,6 +353,8 @@ def ingest_datasets(
 
         dataset_for_conversion.set_tags(dataset.get("tags"))
         dataset_for_conversion.set_owner(superuser)
+
+    return converted_dataset_names
 
 
 @click.command()
@@ -385,10 +412,16 @@ def ingest(*, file_path, replace, clear, skip_cache):
         elif item["type"] == "Chart":
             charts.append(item)
     click.echo("Ingesting Datasets:")
-    ingest_datasets(datasets, file_path, replace=replace, skip_cache=skip_cache)
+    converted_dataset_names = ingest_datasets(
+        datasets, file_path, replace=replace, skip_cache=skip_cache
+    )
     click.echo("Ingesting Projects:")
     ingest_projects(projects, replace=replace)
     click.echo("Ingesting Charts:")
     ingest_charts(charts, replace=replace, skip_cache=skip_cache)
+
+    preview_count = generate_ingest_multiframe_previews(converted_dataset_names)
+    if preview_count:
+        click.echo(f"Generated multiframe raster previews for {preview_count} layer style(s).")
 
     click.secho("Ingestion complete.", fg="green")
