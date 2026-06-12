@@ -1334,6 +1334,7 @@ onMounted(resetCurrentStyle);
                                   <v-chip
                                     v-if="(item as any).sample_label"
                                     size="small"
+                                    class="sample-label"
                                     >{{ (item as any).sample_label }}</v-chip
                                   >
                                 </template>
@@ -1731,6 +1732,7 @@ onMounted(resetCurrentStyle);
                                 <v-chip
                                   v-if="(item as any).sample_label"
                                   size="small"
+                                  class="sample-label"
                                   >{{ (item as any).sample_label }}</v-chip
                                 >
                               </template>
@@ -1913,6 +1915,7 @@ onMounted(resetCurrentStyle);
                           <v-chip
                             v-if="(item as any).sample_label"
                             size="small"
+                            class="sample-label"
                             >{{ (item as any).sample_label }}</v-chip
                           >
                         </template>
@@ -2341,5 +2344,12 @@ onMounted(resetCurrentStyle);
 }
 .filter-card.highlight {
   box-shadow: 0 0 1px 2px rgb(var(--v-theme-primary)) !important;
+}
+.sample-label .v-chip__content {
+  max-width: 300px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
 }
 </style>
