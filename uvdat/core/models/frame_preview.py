@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django.db import models
+from django.dispatch import receiver
 from s3_file_field import S3FileField
 
 from .layer import LayerFrame
@@ -43,3 +44,9 @@ class RasterFramePreview(models.Model):
 
     def __str__(self):
         return f"Preview style={self.layer_style_id} frame={self.layer_frame_id} ({self.id})"
+
+
+@receiver(models.signals.post_delete, sender=RasterFramePreview)
+def delete_preview_image(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)
