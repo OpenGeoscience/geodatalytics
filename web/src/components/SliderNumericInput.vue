@@ -149,17 +149,13 @@ function updateRange(lower: number, upper: number) {
 .v-number-input input {
   padding: 8px !important;
   min-height: 0 !important;
+  max-height: 32px !important;
 }
 .v-number-input__control .v-btn {
   background-color: rgb(var(--v-theme-primary)) !important;
   padding: 0px !important;
   width: 25px !important;
-}
-.v-number-input__control .v-btn:first-child {
-  border-radius: 0px 0px 4px 0px;
-}
-.v-number-input__control .v-btn:last-child {
-  border-radius: 0px 4px 0px 0px;
+  max-height: 16px !important;
 }
 .v-number-input__control .v-btn i {
   color: rgb(var(--v-theme-button-text)) !important;
