@@ -36,11 +36,7 @@ def colormap_markers_subsample(
     n: int | None = None,
 ) -> list[dict[str, Any]]:
     markers = list(colormap.markers)
-    if (
-        n is None
-        and applied_colormap.get("discrete")
-        and applied_colormap.get("n_colors")
-    ):
+    if n is None and applied_colormap.get("discrete") and applied_colormap.get("n_colors"):
         n = applied_colormap["n_colors"]
     if n and markers:
         while n > len(markers):
