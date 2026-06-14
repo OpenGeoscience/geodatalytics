@@ -39,6 +39,11 @@ class Layer(models.Model):
             return len(prefetched) > 1
         return self.frames.filter(raster__isnull=False).count() > 1
 
+    def default_multiframe_preview_urls(self) -> list[str | None] | None:
+        if self.default_style_id is None:
+            return None
+        return self.default_style.multiframe_preview_urls(layer=self)
+
 
 class LayerFrame(models.Model):
     name = models.CharField(max_length=255, default="Layer Frame")

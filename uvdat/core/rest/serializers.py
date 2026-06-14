@@ -149,6 +149,11 @@ class ColormapSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+def _omit_null_field(data: dict, field: str) -> None:
+    if data.get(field) is None:
+        data.pop(field, None)
+
+
 class LayerStyleSerializer(serializers.ModelSerializer):
     is_default = serializers.SerializerMethodField("get_is_default")
 
@@ -178,12 +183,36 @@ class LayerStyleSerializer(serializers.ModelSerializer):
         exclude = ["default_frame", "opacity"]
 
 
+class LayerStyleWithPreviewsSerializer(LayerStyleSerializer):
+    multiframe_preview_urls = serializers.SerializerMethodField()
+
+    def get_multiframe_preview_urls(self, obj):
+        preview_layer = self.context.get("preview_layer")
+        if preview_layer is not None:
+            return obj.multiframe_preview_urls(layer=preview_layer)
+        return obj.multiframe_preview_urls()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        _omit_null_field(data, "multiframe_preview_urls")
+        return data
+
+
 class LayerSerializer(serializers.ModelSerializer):
     default_style = LayerStyleSerializer()
+    multiframe_preview_urls = serializers.SerializerMethodField()
+
+    def get_multiframe_preview_urls(self, obj):
+        return obj.default_multiframe_preview_urls()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        _omit_null_field(data, "multiframe_preview_urls")
+        return data
 
     class Meta:
         model = Layer
-        fields = ["id", "name", "metadata", "dataset", "default_style"]
+        fields = ["id", "name", "metadata", "dataset", "default_style", "multiframe_preview_urls"]
 
 
 class VectorDataSerializer(serializers.ModelSerializer):
