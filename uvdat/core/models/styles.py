@@ -224,6 +224,22 @@ class LayerStyle(models.Model):
             "filters": filters,
         }
 
+    def multiframe_preview_urls(self, layer=None) -> list[str | None] | None:
+        layer = layer or self.layer
+        frames = layer.multiframe_raster_frames()
+        if len(frames) <= 1:
+            return None
+
+        previews_by_frame_id = {
+            preview.layer_frame_id: preview for preview in self.frame_previews.all()
+        }
+        return [
+            preview.image.url
+            if (preview := previews_by_frame_id.get(frame.id)) and preview.image
+            else None
+            for frame in frames
+        ]
+
 
 def get_default_colormap():
     return Colormap.objects.filter(project__isnull=True).first()

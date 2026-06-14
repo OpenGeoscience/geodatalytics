@@ -14,7 +14,6 @@ from PIL import Image
 from uvdat.core.models import (
     Colormap,
     Layer,
-    LayerFrame,
     LayerStyle,
     Project,
     RasterData,
@@ -126,18 +125,6 @@ def generate_frame_preview_png(
     return png_bytes, image.width, image.height, _preview_bounds(source)
 
 
-def is_multiframe_raster_layer(layer: Layer) -> bool:
-    return LayerFrame.objects.filter(layer=layer, raster__isnull=False).count() > 1
-
-
-def _multiframe_raster_frames(layer_style: LayerStyle):
-    return (
-        LayerFrame.objects.filter(layer=layer_style.layer, raster__isnull=False)
-        .select_related("raster")
-        .order_by("index")
-    )
-
-
 def ensure_default_layer_style(layer: Layer, project: Project) -> LayerStyle:
     style = LayerStyle.objects.filter(layer=layer, project=project, name="Default").first()
     if style is None:
@@ -156,7 +143,7 @@ def generate_layer_style_previews(
 ):
     started = time.perf_counter()
     layer_style = LayerStyle.objects.select_related("layer").get(id=layer_style_id)
-    frames = list(_multiframe_raster_frames(layer_style))
+    frames = layer_style.layer.multiframe_raster_frames()
     if len(frames) <= 1:
         return
 

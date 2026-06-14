@@ -21,7 +21,6 @@ from uvdat.core.models import Chart, Dataset, FileItem, Layer, Project
 from uvdat.core.tasks.frame_preview import (
     ensure_default_layer_style,
     generate_layer_style_previews,
-    is_multiframe_raster_layer,
 )
 
 DATA_FOLDER = Path(os.environ.get("INGEST_BIND_MOUNT_POINT", "sample_data"))
@@ -167,7 +166,7 @@ def generate_ingest_multiframe_previews(converted_dataset_names: set[str]) -> in
             dataset__in=project.datasets.all(),
         )
         for layer in layers:
-            if not is_multiframe_raster_layer(layer):
+            if not layer.is_multiframe_raster():
                 continue
             style = ensure_default_layer_style(layer, project)
             generate_layer_style_previews(style.id)
