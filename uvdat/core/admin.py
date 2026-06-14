@@ -72,7 +72,7 @@ class LayerStyleAdmin(admin.ModelAdmin):
 
 @admin.register(RasterFramePreview)
 class RasterFramePreviewAdmin(admin.ModelAdmin):
-    list_display = ["id", "layer_style", "layer_frame", "status", "width", "height"]
+    list_display = ["id", "layer_style", "layer_frame", "width", "height"]
     list_select_related = ["layer_style", "layer_frame"]
 
 

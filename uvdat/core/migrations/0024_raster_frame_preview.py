@@ -26,18 +26,6 @@ class Migration(migrations.Migration):
                 ("height", models.PositiveIntegerField()),
                 ("bounds", models.JSONField()),
                 (
-                    "status",
-                    models.CharField(
-                        choices=[
-                            ("pending", "Pending"),
-                            ("ready", "Ready"),
-                            ("failed", "Failed"),
-                        ],
-                        default="pending",
-                        max_length=10,
-                    ),
-                ),
-                (
                     "layer_frame",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,

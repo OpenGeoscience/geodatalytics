@@ -9,11 +9,6 @@ from .styles import LayerStyle
 
 
 class RasterFramePreview(models.Model):
-    class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        READY = "ready", "Ready"
-        FAILED = "failed", "Failed"
-
     layer_style = models.ForeignKey(
         LayerStyle,
         related_name="frame_previews",
@@ -28,11 +23,6 @@ class RasterFramePreview(models.Model):
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
     bounds = models.JSONField()
-    status = models.CharField(
-        max_length=10,
-        choices=Status.choices,
-        default=Status.PENDING,
-    )
 
     class Meta:
         constraints = [

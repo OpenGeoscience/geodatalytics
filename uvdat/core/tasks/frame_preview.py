@@ -174,10 +174,6 @@ def generate_layer_style_previews(
     ready_count = 0
     failed_count = 0
     for frame in frames:
-        existing = RasterFramePreview.objects.filter(
-            layer_style=layer_style,
-            layer_frame=frame,
-        ).first()
         try:
             png_bytes, width, height, bounds = generate_frame_preview_png(
                 frame.raster,
@@ -192,7 +188,6 @@ def generate_layer_style_previews(
                     "width": width,
                     "height": height,
                     "bounds": bounds or {},
-                    "status": RasterFramePreview.Status.READY,
                 },
             )
             preview.image.save(
@@ -208,10 +203,6 @@ def generate_layer_style_previews(
                 layer_style_id,
                 frame.id,
             )
-            if existing is not None:
-                existing.status = RasterFramePreview.Status.FAILED
-                existing.save(update_fields=["status"])
-
     logger.info(
         "Multiframe raster previews for style=%s layer=%r: %d ready, %d failed in %.2fs",
         layer_style_id,
