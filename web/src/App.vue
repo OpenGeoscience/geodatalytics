@@ -132,8 +132,12 @@ scrollbar changes disables default styling and rounding so corners appear square
   color: rgb(var(--v-theme-primary));
 }
 
-.v-icon.text-error {
+.v-icon.text-error, .v-icon.text-red {
   color: rgb(var(--v-theme-error));
+}
+
+.v-icon.text-success, .v-icon.text-green {
+  color: rgb(var(--v-theme-success));
 }
 
 .v-number-input .v-field__field {
