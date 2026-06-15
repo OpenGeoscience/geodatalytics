@@ -112,15 +112,15 @@ function setLayerActive(layer: Layer, active: boolean) {
           icon="mdi-close"
           size="small"
           class="secondary-button"
-          @click="() => removeLayers(layerStore.selectedLayers)"
+          @click="() => removeLayers(filteredLayers)"
         />
         <v-checkbox-btn
           v-if="!isComparing"
           :model-value="
-            layerStore.selectedLayers.every((l: Layer) => l.visible)
+            filteredLayers.every((l: Layer) => l.visible)
           "
           style="display: inline"
-          @click="setVisibility(layerStore.selectedLayers, !allLayersVisible)"
+          @click="setVisibility(filteredLayers, !allLayersVisible)"
         />
         <span v-if="isComparing">
           <v-checkbox-btn
