@@ -3,3 +3,9 @@ variable "SENTRY_AUTH_TOKEN" {
   nullable  = false
   sensitive = true
 }
+
+variable "DJANGO_UVDAT_HF_TOKEN" {
+  type      = string
+  nullable  = true
+  sensitive = true
+}
