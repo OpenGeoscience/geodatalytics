@@ -19,9 +19,10 @@ def test_rest_list_analysis_types(user, authenticated_api_client, project):
     user.is_superuser = True
     user.save()
 
-    analysis_type_instances = [at() for at in analysis_types]
+    analysis_type_instances = [at() for at in analysis_types if at.is_enabled()]
     resp = authenticated_api_client.get(f"/api/v1/analytics/project/{project.id}/types/")
     data = resp.json()
+
     assert len(data) == len(analysis_type_instances)
     assert {type_info.get("name") for type_info in data} == {
         i.name for i in analysis_type_instances
