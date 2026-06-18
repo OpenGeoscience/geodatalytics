@@ -158,6 +158,7 @@ CHANNEL_LAYERS: dict[str, dict[str, Any]] = {
 }
 
 UVDAT_WEB_URL: str = env.url("DJANGO_UVDAT_WEB_URL").geturl()
+UVDAT_HF_TOKEN: str = env.str("DJANGO_UVDAT_HF_TOKEN", default=None)
 UVDAT_ENABLE_FLOOD_SIMULATION: bool = env.bool("DJANGO_UVDAT_ENABLE_FLOOD_SIMULATION", default=True)
 UVDAT_ENABLE_FLOOD_NETWORK_FAILURE: bool = env.bool(
     "DJANGO_UVDAT_ENABLE_FLOOD_NETWORK_FAILURE", default=True
@@ -172,6 +173,7 @@ UVDAT_ENABLE_CREATE_ROAD_NETWORK: bool = env.bool(
 UVDAT_ENABLE_UNCERTAINTY_QUANTIFICATION: bool = env.bool(
     "DJANGO_UVDAT_ENABLE_UNCERTAINTY_QUANTIFICATION", default=True
 )
+UVDAT_ENABLE_IMAGERY_ASK_QWEN: bool = env.bool("DJANGO_UVDAT_ENABLE_IMAGERY_ASK_QWEN", default=True)
 
 logging.getLogger("pyvips").setLevel(logging.ERROR)
 logging.getLogger("rasterio").setLevel(logging.ERROR)
