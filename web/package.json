@@ -35,6 +35,7 @@
     "vue": "3.5.34",
     "vue-chartjs": "5.3.3",
     "vue-maplibre-compare": "1.0.27",
+    "vue-markdown-render": "^2.3.1",
     "vue-router": "5.0.6",
     "vuedraggable": "4.1.0",
     "vuetify": "4.0.7"
