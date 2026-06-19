@@ -184,35 +184,42 @@ class LayerStyleSerializer(serializers.ModelSerializer):
 
 
 class LayerStyleWithPreviewsSerializer(LayerStyleSerializer):
-    multiframe_preview_urls = serializers.SerializerMethodField()
+    multiframe_previews = serializers.SerializerMethodField()
 
-    def get_multiframe_preview_urls(self, obj):
-        preview_layer = self.context.get("preview_layer")
-        if preview_layer is not None:
-            return obj.multiframe_preview_urls(layer=preview_layer)
-        return obj.multiframe_preview_urls()
+    def _preview_layer(self, obj):
+        return self.context.get("preview_layer") or obj.layer
+
+    def get_multiframe_previews(self, obj):
+        return obj.multiframe_previews(layer=self._preview_layer(obj))
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        _omit_null_field(data, "multiframe_preview_urls")
+        _omit_null_field(data, "multiframe_previews")
         return data
 
 
 class LayerSerializer(serializers.ModelSerializer):
     default_style = LayerStyleSerializer()
-    multiframe_preview_urls = serializers.SerializerMethodField()
+    multiframe_previews = serializers.SerializerMethodField()
 
-    def get_multiframe_preview_urls(self, obj):
-        return obj.default_multiframe_preview_urls()
+    def get_multiframe_previews(self, obj):
+        return obj.default_multiframe_previews()
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        _omit_null_field(data, "multiframe_preview_urls")
+        _omit_null_field(data, "multiframe_previews")
         return data
 
     class Meta:
         model = Layer
-        fields = ["id", "name", "metadata", "dataset", "default_style", "multiframe_preview_urls"]
+        fields = [
+            "id",
+            "name",
+            "metadata",
+            "dataset",
+            "default_style",
+            "multiframe_previews",
+        ]
 
 
 class VectorDataSerializer(serializers.ModelSerializer):

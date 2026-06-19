@@ -4,7 +4,7 @@ import io
 import json
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from celery import shared_task
 from django.core.files.base import ContentFile
@@ -24,6 +24,9 @@ from uvdat.core.raster_style import (
     build_raster_tiles_style_query,
     raster_source_filter_kwargs,
 )
+
+if TYPE_CHECKING:
+    from uvdat.core.frame_preview_types import FramePreviewBounds
 
 logger = logging.getLogger(__name__)
 
@@ -82,11 +85,11 @@ def _thumbnail_png_bytes(thumb_data: Any) -> bytes:
     raise TypeError(msg)
 
 
-def _preview_bounds(source) -> dict[str, Any] | None:
+def _preview_bounds(source) -> FramePreviewBounds | None:
     bounds = tilesource.get_bounds(source, projection="EPSG:4326")
     if not bounds:
         return None
-    result: dict[str, Any] = {
+    result: FramePreviewBounds = {
         "srs": "EPSG:4326",
         "xmin": bounds["xmin"],
         "xmax": bounds["xmax"],
@@ -105,7 +108,7 @@ def generate_frame_preview_png(
     source_filters: dict[str, Any] | None,
     base_style_query: dict[str, Any],
     resolution_fraction: float | None = None,
-) -> tuple[bytes, int, int, dict[str, Any] | None]:
+) -> tuple[bytes, int, int, FramePreviewBounds | None]:
     style_query = apply_source_filters_to_style_query(base_style_query, source_filters)
     style = json.dumps(style_query) if style_query else None
     source_kwargs = raster_source_filter_kwargs(source_filters)

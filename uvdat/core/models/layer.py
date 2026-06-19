@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from django.db import models
 
 from .data import RasterData, VectorData
 from .dataset import Dataset
 from .querysets import ProjectQuerySet
+
+if TYPE_CHECKING:
+    from uvdat.core.frame_preview_types import FramePreviewData
 
 
 def default_source_filters():
@@ -39,10 +44,10 @@ class Layer(models.Model):
             return len(prefetched) > 1
         return self.frames.filter(raster__isnull=False).count() > 1
 
-    def default_multiframe_preview_urls(self) -> list[str | None] | None:
+    def default_multiframe_previews(self) -> list[FramePreviewData | None] | None:
         if self.default_style_id is None:
             return None
-        return self.default_style.multiframe_preview_urls(layer=self)
+        return self.default_style.multiframe_previews(layer=self)
 
 
 class LayerFrame(models.Model):

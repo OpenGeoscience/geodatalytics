@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from uvdat.core.frame_preview_types import FramePreviewData
 
 from .colormap import Colormap
 from .layer import Layer
 from .project import Project
 from .querysets import ProjectQuerySet
+
+if TYPE_CHECKING:
+    from .frame_preview import RasterFramePreview
 
 
 class LayerStyle(models.Model):
@@ -224,7 +229,7 @@ class LayerStyle(models.Model):
             "filters": filters,
         }
 
-    def multiframe_preview_urls(self, layer=None) -> list[str | None] | None:
+    def _multiframe_previews_by_frame(self, layer=None) -> list[RasterFramePreview | None] | None:
         layer = layer or self.layer
         frames = layer.multiframe_raster_frames()
         if len(frames) <= 1:
@@ -234,11 +239,28 @@ class LayerStyle(models.Model):
             preview.layer_frame_id: preview for preview in self.frame_previews.all()
         }
         return [
-            preview.image.url
-            if (preview := previews_by_frame_id.get(frame.id)) and preview.image
-            else None
+            previews_by_frame_id.get(frame.id) if frame.id in previews_by_frame_id else None
             for frame in frames
         ]
+
+    @staticmethod
+    def serialize_frame_preview(
+        preview: RasterFramePreview | None,
+    ) -> FramePreviewData | None:
+        if preview is None or not preview.image:
+            return None
+        return FramePreviewData(
+            url=preview.image.url,
+            width=preview.width,
+            height=preview.height,
+            bounds=preview.bounds,
+        )
+
+    def multiframe_previews(self, layer=None) -> list[FramePreviewData | None] | None:
+        previews = self._multiframe_previews_by_frame(layer=layer)
+        if previews is None:
+            return None
+        return [self.serialize_frame_preview(preview) for preview in previews]
 
 
 def get_default_colormap():
