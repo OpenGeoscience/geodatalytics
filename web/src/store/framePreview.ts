@@ -5,7 +5,6 @@ import {
   fadeRasterOpacities,
   hidePreviewLayer,
   PREVIEW_FADE_DURATION_MS,
-  PREVIEW_TO_TILES_DELAY_MS,
   previewLayerId,
   removeAllPreviewLayersForLayerKey,
   removePreviewLayer,
@@ -15,11 +14,6 @@ import {
 } from "@/utils/framePreviewLayer";
 import { prefetchFramePreviewUrls } from "@/utils/framePreviewCache";
 import { useLayerStore, useMapStore, useStyleStore } from ".";
-
-interface PendingTransition {
-  timerId: number;
-  generation: number;
-}
 
 function layerKey(layer: Layer) {
   return `${layer.id}.${layer.copy_id}`;
@@ -65,17 +59,8 @@ function adjacentRasterFrames(
 }
 
 export const useFramePreviewStore = defineStore("framePreview", () => {
-  const pendingTransitions = new Map<string, PendingTransition>();
   const activePreviewByLayerKey = new Map<string, number>();
   const transitionGenerationByLayerKey = new Map<string, number>();
-
-  function cancelTransition(layerKeyValue: string) {
-    const pending = pendingTransitions.get(layerKeyValue);
-    if (pending) {
-      window.clearTimeout(pending.timerId);
-      pendingTransitions.delete(layerKeyValue);
-    }
-  }
 
   function bumpGeneration(layerKeyValue: string) {
     const next = (transitionGenerationByLayerKey.get(layerKeyValue) ?? 0) + 1;
@@ -239,7 +224,6 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     const tileLayerId = `${tileSourceId}.raster`;
     const targetOpacity = style?.style_spec?.opacity ?? 1;
 
-    cancelTransition(layerKeyValue);
     const generation = bumpGeneration(layerKeyValue);
     hidePreviousPreview(map, layerKeyValue);
 
@@ -288,20 +272,15 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       targetOpacity,
     );
 
-    const timerId = window.setTimeout(() => {
-      pendingTransitions.delete(layerKeyValue);
-      void transitionToTiles(
-        layer,
-        layer.current_frame_index,
-        layerKeyValue,
-        generation,
-        targetOpacity,
-        tileLayerId,
-        tileSourceId,
-      );
-    }, PREVIEW_TO_TILES_DELAY_MS);
-
-    pendingTransitions.set(layerKeyValue, { timerId, generation });
+    void transitionToTiles(
+      layer,
+      layer.current_frame_index,
+      layerKeyValue,
+      generation,
+      targetOpacity,
+      tileLayerId,
+      tileSourceId,
+    );
   }
 
   function dismissPreviewForLayer(layer: Layer) {
@@ -311,7 +290,6 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     const map = mapStore.getMap();
     const layerKeyValue = layerKey(layer);
 
-    cancelTransition(layerKeyValue);
     bumpGeneration(layerKeyValue);
     removeAllPreviewLayersForLayerKey(map, layerKeyValue);
     activePreviewByLayerKey.delete(layerKeyValue);
@@ -335,17 +313,12 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   function cleanupLayer(layer: Layer) {
     const mapStore = useMapStore();
     const layerKeyValue = layerKey(layer);
-    cancelTransition(layerKeyValue);
     transitionGenerationByLayerKey.delete(layerKeyValue);
     activePreviewByLayerKey.delete(layerKeyValue);
     removeAllPreviewLayersForLayerKey(mapStore.getMap(), layerKeyValue);
   }
 
   function clearAll() {
-    pendingTransitions.forEach((pending) =>
-      window.clearTimeout(pending.timerId),
-    );
-    pendingTransitions.clear();
     transitionGenerationByLayerKey.clear();
     activePreviewByLayerKey.clear();
   }

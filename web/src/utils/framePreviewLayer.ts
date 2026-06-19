@@ -8,7 +8,6 @@ import type { Map, MapSourceDataEvent } from "maplibre-gl";
 import proj4 from "proj4";
 import { getCachedPreviewObjectUrl } from "./framePreviewCache";
 
-export const PREVIEW_TO_TILES_DELAY_MS = 1500;
 export const PREVIEW_FADE_DURATION_MS = 400;
 
 const CORNER_KEYS = ["ul", "ur", "lr", "ll"] as const;
