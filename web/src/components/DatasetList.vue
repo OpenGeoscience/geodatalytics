@@ -181,4 +181,8 @@ watch(filteredDatasets, expandAllGroups);
 .panel-content-inner.with-tag-filter-closed {
   height: calc(100% - 80px);
 }
+
+.v-list-item__prepend .v-checkbox-btn {
+  margin-right: 5px;
+}
 </style>
