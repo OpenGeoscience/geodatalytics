@@ -39,8 +39,8 @@ function blur() {
 
 function getInputWidth() {
   let width = 50;
-  width += props.max.toPrecision(precision.value + 1).length * 6;
-  width += precision.value * 6;
+  width += props.max.toString().length * 8;
+  width += precision.value * 8;
   return width + "px";
 }
 
