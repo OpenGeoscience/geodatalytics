@@ -585,6 +585,15 @@ const debouncedStyleSpecUpdated = debounce(() => {
 watch(currentStyleSpec, debouncedStyleSpecUpdated, { deep: true });
 
 watch(() => props.activeLayer, init);
+
+watch(
+  () => props.activeLayer === props.layer,
+  (isEditing) => {
+    styleStore.setLayerStyleEditing(props.layer, isEditing);
+  },
+  { immediate: true },
+);
+
 onMounted(resetCurrentStyle);
 </script>
 

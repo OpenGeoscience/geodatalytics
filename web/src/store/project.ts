@@ -20,7 +20,9 @@ import {
   usePanelStore,
   useAppStore,
   useStyleStore,
+  useFramePreviewStore,
 } from ".";
+import { clearFramePreviewCache } from "@/utils/framePreviewCache";
 
 export const useProjectStore = defineStore("project", () => {
   const networkStore = useNetworkStore();
@@ -278,6 +280,9 @@ export const useProjectStore = defineStore("project", () => {
 
     layerStore.selectedLayers = [];
     styleStore.selectedLayerStyles = {};
+    styleStore.clearStyleEditing();
+    useFramePreviewStore().clearAll();
+    clearFramePreviewCache();
 
     mapStore.clickedFeature = undefined;
 

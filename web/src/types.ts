@@ -28,6 +28,30 @@ export interface Dataset {
   n_layers?: number;
 }
 
+export interface FramePreviewCorner {
+  x: number;
+  y: number;
+}
+
+export interface FramePreviewBounds {
+  srs: string;
+  xmin: number;
+  xmax: number;
+  ymin: number;
+  ymax: number;
+  ul?: FramePreviewCorner;
+  ur?: FramePreviewCorner;
+  lr?: FramePreviewCorner;
+  ll?: FramePreviewCorner;
+}
+
+export interface FramePreview {
+  url: string;
+  width: number;
+  height: number;
+  bounds: FramePreviewBounds;
+}
+
 export interface Layer {
   id: number;
   copy_id: number;
@@ -38,6 +62,7 @@ export interface Layer {
   visible: boolean;
   current_frame_index: number;
   default_style: LayerStyle | null;
+  multiframe_previews?: (FramePreview | null)[];
 }
 
 export interface LayerFrame {
@@ -128,6 +153,7 @@ export interface LayerStyle {
   project?: number;
   is_default: boolean;
   style_spec?: StyleSpec;
+  multiframe_previews?: (FramePreview | null)[];
 }
 
 export interface VectorData {

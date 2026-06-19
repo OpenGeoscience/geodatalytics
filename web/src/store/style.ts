@@ -22,6 +22,7 @@ import {
   useLayerStore,
   useProjectStore,
   useNetworkStore,
+  useFramePreviewStore,
 } from ".";
 
 export interface MapLayerStyleRaw {
@@ -412,11 +413,37 @@ function getVectorVisibilityPaintProperty(
 export const useStyleStore = defineStore("style", () => {
   const selectedLayerStyles = ref<Record<string, LayerStyle>>({});
   const colormaps = ref<Colormap[]>([]);
+  const editingStyleLayerKeys = ref<Set<string>>(new Set());
 
   const mapStore = useMapStore();
   const projectStore = useProjectStore();
   const layerStore = useLayerStore();
   const networkStore = useNetworkStore();
+  const framePreviewStore = useFramePreviewStore();
+
+  function layerStyleKey(layer: Layer) {
+    return `${layer.id}.${layer.copy_id}`;
+  }
+
+  function isLayerStyleEditing(layer: Layer) {
+    return editingStyleLayerKeys.value.has(layerStyleKey(layer));
+  }
+
+  function setLayerStyleEditing(layer: Layer, editing: boolean) {
+    const key = layerStyleKey(layer);
+    const next = new Set(editingStyleLayerKeys.value);
+    if (editing) {
+      next.add(key);
+      framePreviewStore.dismissPreviewForLayer(layer);
+    } else {
+      next.delete(key);
+    }
+    editingStyleLayerKeys.value = next;
+  }
+
+  function clearStyleEditing() {
+    editingStyleLayerKeys.value = new Set();
+  }
 
   function getDefaultColor(layerId: number) {
     const color = chroma.hsl(
@@ -492,6 +519,12 @@ export const useStyleStore = defineStore("style", () => {
       }
     });
     networkStore.styleVisibleNetworks();
+
+    const hasMultiframeRaster =
+      frames.length > 1 && frames.some((f) => f.raster);
+    if (hasMultiframeRaster && !isLayerStyleEditing(layer)) {
+      void framePreviewStore.showPreviewThenTiles(layer);
+    }
   }
 
   type GeneratedLayerStyle = {
@@ -668,6 +701,7 @@ export const useStyleStore = defineStore("style", () => {
   return {
     colormaps,
     selectedLayerStyles,
+    editingStyleLayerKeys,
     fetchColormaps,
     getRasterTilesQuery,
     getRasterSourceFilterParams,
@@ -677,6 +711,9 @@ export const useStyleStore = defineStore("style", () => {
     getDefaultColor,
     getDefaultStyleSpec,
     getVectorColorPaintProperty,
+    isLayerStyleEditing,
+    setLayerStyleEditing,
+    clearStyleEditing,
     updateLayerStyles,
     setMapLayerStyle,
     returnMapLayerStyle,
