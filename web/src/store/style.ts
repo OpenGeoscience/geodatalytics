@@ -434,11 +434,13 @@ export const useStyleStore = defineStore("style", () => {
     const next = new Set(editingStyleLayerKeys.value);
     if (editing) {
       next.add(key);
+      editingStyleLayerKeys.value = next;
       framePreviewStore.dismissPreviewForLayer(layer);
-    } else {
-      next.delete(key);
+      return;
     }
+    next.delete(key);
     editingStyleLayerKeys.value = next;
+    updateLayerStyles(layer);
   }
 
   function clearStyleEditing() {
