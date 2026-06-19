@@ -86,13 +86,18 @@ def _preview_bounds(source) -> dict[str, Any] | None:
     bounds = tilesource.get_bounds(source, projection="EPSG:4326")
     if not bounds:
         return None
-    return {
+    result: dict[str, Any] = {
         "srs": "EPSG:4326",
         "xmin": bounds["xmin"],
         "xmax": bounds["xmax"],
         "ymin": bounds["ymin"],
         "ymax": bounds["ymax"],
     }
+    for corner in ("ul", "ur", "lr", "ll"):
+        corner_bounds = bounds.get(corner)
+        if corner_bounds:
+            result[corner] = {"x": corner_bounds["x"], "y": corner_bounds["y"]}
+    return result
 
 
 def generate_frame_preview_png(
