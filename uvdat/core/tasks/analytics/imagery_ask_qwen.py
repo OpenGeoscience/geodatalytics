@@ -19,6 +19,7 @@ PROMPT_PREFIX = (
 )
 TOKEN_RANGE = {"min": 1000, "max": 10000, "step": 1000}
 THUMBNAIL_WIDTH = 2000
+MAX_STARTUP_WAIT = 300
 
 
 class ImageryAskQwen(AnalysisType):
@@ -45,8 +46,8 @@ class ImageryAskQwen(AnalysisType):
         self.attribution = "Unsloth AI, Kitware Inc."
 
     @classmethod
-    def is_enabled(cls):
-        return settings.UVDAT_ENABLE_IMAGERY_ASK_QWEN and settings.UVDAT_HF_TOKEN
+    def is_enabled(cls) -> bool:
+        return settings.UVDAT_ENABLE_IMAGERY_ASK_QWEN and settings.UVDAT_HF_TOKEN is not None
 
     def get_input_options(self):
         return {
@@ -89,7 +90,10 @@ class ImageryAskQwen(AnalysisType):
 @shared_task(base=AnalysisTask)
 def imagery_ask_qwen(result_id):
     # Only available with [tasks] extra
-    from huggingface_hub import get_inference_endpoint  # noqa: PLC0415
+    from huggingface_hub import (  # noqa: PLC0415
+        InferenceEndpointTimeoutError,
+        get_inference_endpoint,
+    )
 
     result = TaskResult.objects.get(id=result_id)
     imagery = RasterData.objects.get(id=result.inputs.get("imagery"))
@@ -110,7 +114,11 @@ def imagery_ask_qwen(result_id):
         token=settings.UVDAT_HF_TOKEN,
     )
     endpoint.resume()
-    endpoint.wait()
+    try:
+        endpoint.wait(timeout=MAX_STARTUP_WAIT)
+    except InferenceEndpointTimeoutError:
+        result.write_error("Endpoint failed to start in 5 minutes. Try again later.")
+        return
 
     result.write_status("Sending question to Qwen...")
     messages = [
@@ -124,10 +132,9 @@ def imagery_ask_qwen(result_id):
     ]
 
     result.write_status("Awaiting Qwen's response...")
-    chat = endpoint.client.chat.completions.create(
+    chat = endpoint.client.chat_completion(
         model="unsloth/Qwen3.5-9B-GGUF",
         messages=messages,
-        stream=False,
         max_tokens=max_tokens,
     )
     response = ""
