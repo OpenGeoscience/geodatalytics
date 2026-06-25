@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 from pathlib import Path
 from typing import Any
@@ -155,6 +156,23 @@ CHANNEL_LAYERS: dict[str, dict[str, Any]] = {
             ]
         },
     }
+}
+
+# Large image cache with Redis
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    },
+    "tiles": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env.url("DJANGO_REDIS_URL").geturl(),
+        "OPTIONS": {
+            # Use database /2 for the tile cache,
+            # in case other services use /0 in the future
+            "db": "2",
+        },
+        "TIMEOUT": int(datetime.timedelta(weeks=4).total_seconds()),
+    },
 }
 
 UVDAT_WEB_URL: str = env.url("DJANGO_UVDAT_WEB_URL").geturl()
