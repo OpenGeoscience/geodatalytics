@@ -17,11 +17,9 @@ from django.db.models.functions import Coalesce
 import djclick as click
 import pooch
 
+from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
 from uvdat.core.models import Chart, Dataset, FileItem, Layer, Project
-from uvdat.core.tasks.frame_preview import (
-    ensure_default_layer_style,
-    generate_layer_style_previews,
-)
+from uvdat.core.tasks.frame_preview import ensure_default_layer_style
 
 DATA_FOLDER = Path(os.environ.get("INGEST_BIND_MOUNT_POINT", "sample_data"))
 DOWNLOADS_FOLDER = DATA_FOLDER / "downloads"
@@ -169,7 +167,7 @@ def generate_ingest_multiframe_previews(converted_dataset_names: set[str]) -> in
             if not layer.is_multiframe_raster():
                 continue
             style = ensure_default_layer_style(layer, project)
-            generate_layer_style_previews(style.id)
+            invalidate_and_enqueue_previews(style)
             style_count += 1
     return style_count
 

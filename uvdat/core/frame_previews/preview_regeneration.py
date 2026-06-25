@@ -1,18 +1,10 @@
 from __future__ import annotations
 
-import hashlib
-import json
-
 from django.utils import timezone
 
+from uvdat.core.frame_previews.fingerprint import style_fingerprint
 from uvdat.core.models import LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
-from uvdat.core.tasks.frame_preview import generate_layer_style_previews
-
-
-def style_fingerprint(layer_style: LayerStyle) -> str:
-    payload = json.dumps(layer_style.repr_style_configs(), sort_keys=True, default=str)
-    return hashlib.sha256(payload.encode()).hexdigest()
 
 
 def style_needs_previews(layer_style: LayerStyle) -> bool:
@@ -75,11 +67,9 @@ def invalidate_and_enqueue_previews(layer_style: LayerStyle) -> TaskResult | Non
         },
     )
 
-    generate_layer_style_previews.delay(
-        layer_style.id,
-        fingerprint=fingerprint,
-        result_id=result.id,
-    )
+    from uvdat.core.tasks.frame_preview import generate_layer_style_previews  # noqa: PLC0415
+
+    generate_layer_style_previews.delay(layer_style.id, fingerprint, result.id)
     return result
 
 
