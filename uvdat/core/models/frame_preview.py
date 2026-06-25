@@ -8,6 +8,13 @@ from .layer import LayerFrame
 from .styles import LayerStyle
 
 
+class PreviewStatus(models.TextChoices):
+    CREATING = "creating", "Creating"
+    REGENERATING = "regenerating", "Regenerating"
+    COMPLETE = "complete", "Complete"
+    FAILED = "failed", "Failed"
+
+
 class RasterFramePreview(models.Model):
     layer_style = models.ForeignKey(
         LayerStyle,
@@ -19,10 +26,16 @@ class RasterFramePreview(models.Model):
         related_name="style_previews",
         on_delete=models.CASCADE,
     )
-    image = S3FileField()
-    width = models.PositiveIntegerField()
-    height = models.PositiveIntegerField()
-    bounds = models.JSONField()
+    status = models.CharField(
+        max_length=16,
+        choices=PreviewStatus.choices,
+        default=PreviewStatus.CREATING,
+    )
+    style_fingerprint = models.CharField(max_length=64, blank=True, default="")
+    image = S3FileField(blank=True, null=True)
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    bounds = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [
