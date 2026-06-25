@@ -14,7 +14,7 @@ from .analysis_type import AnalysisInputError, AnalysisTask, AnalysisType
 ENDPOINT_NAMESPACE = "Kitware"
 ENDPOINT_NAME = "qwen3-5-9b-gguf-ulh"
 MODEL_CARD_URL = "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF"
-PROMPT_PREFIX = (
+SYSTEM_PROMPT = (
     "You are a geospatial analyst. Answer the following question about the provided image."
 )
 TOKEN_RANGE = {"min": 1000, "max": 10000, "step": 1000}
@@ -31,7 +31,6 @@ class ImageryAskQwen(AnalysisType):
             "Inferencing with unsloth/Qwen3.5-9B-GGUF provided by a "
             "Kitware-hosted Huggingface Inference Endpoint. "
             f"See the model card at {MODEL_CARD_URL}. "
-            f'Prompts will be prefixed with "{PROMPT_PREFIX}".'
             "Responses may cut off mid-sentence if max_tokens is reached."
         )
         self.db_value = "imagery_ask_qwen"
@@ -123,12 +122,16 @@ def imagery_ask_qwen(result_id):
     result.write_status("Sending question to Qwen...")
     messages = [
         {
+            "role": "system",
+            "content": SYSTEM_PROMPT,
+        },
+        {
             "role": "user",
             "content": [
                 {"type": "image_url", "image_url": {"url": thumbnail_uri}},
-                {"type": "text", "text": f"{PROMPT_PREFIX} {text_prompt}"},
+                {"type": "text", "text": text_prompt},
             ],
-        }
+        },
     ]
 
     result.write_status("Awaiting Qwen's response...")
