@@ -9,7 +9,7 @@ from .dataset import Dataset
 from .querysets import ProjectQuerySet
 
 if TYPE_CHECKING:
-    from uvdat.core.frame_preview_types import FramePreviewData
+    from uvdat.core.frame_previews.types import FramePreviewData
 
 
 def default_source_filters():

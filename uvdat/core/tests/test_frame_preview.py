@@ -3,12 +3,12 @@ from __future__ import annotations
 from django.core.files.base import ContentFile
 import pytest
 
-from uvdat.core.models import RasterFramePreview
-from uvdat.core.raster_style import (
+from uvdat.core.frame_previews.raster_style import (
     apply_source_filters_to_style_query,
     build_thumbnail_style_query,
     raster_source_filter_kwargs,
 )
+from uvdat.core.models import RasterFramePreview
 from uvdat.core.tasks.frame_preview import (
     FRAME_PREVIEW_DEFAULT_RESOLUTION_FRACTION,
     FRAME_PREVIEW_MAX_PX,

@@ -11,6 +11,11 @@ from django.core.files.base import ContentFile
 from django_large_image import tilesource, utilities
 from PIL import Image
 
+from uvdat.core.frame_previews.raster_style import (
+    apply_source_filters_to_style_query,
+    build_raster_tiles_style_query,
+    raster_source_filter_kwargs,
+)
 from uvdat.core.models import (
     Colormap,
     Layer,
@@ -19,14 +24,9 @@ from uvdat.core.models import (
     RasterData,
     RasterFramePreview,
 )
-from uvdat.core.raster_style import (
-    apply_source_filters_to_style_query,
-    build_raster_tiles_style_query,
-    raster_source_filter_kwargs,
-)
 
 if TYPE_CHECKING:
-    from uvdat.core.frame_preview_types import FramePreviewBounds
+    from uvdat.core.frame_previews.types import FramePreviewBounds
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +148,9 @@ def ensure_default_layer_style(layer: Layer, project: Project) -> LayerStyle:
 def generate_layer_style_previews(
     layer_style_id: int,
     resolution_fraction: float | None = None,
+    *,
+    fingerprint: str | None = None,
+    result_id: int | None = None,
 ):
     started = time.perf_counter()
     layer_style = LayerStyle.objects.select_related("layer").get(id=layer_style_id)
