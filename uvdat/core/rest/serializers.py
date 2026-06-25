@@ -5,6 +5,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.serializers import geojson
 from rest_framework import serializers
 
+from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
 from uvdat.core.models import (
     Basemap,
     Chart,
@@ -171,12 +172,15 @@ class LayerStyleSerializer(serializers.ModelSerializer):
         style_spec = self.initial_data.pop("style_spec", None)
         instance = super().create(validated_data)
         instance.save_style_configs(style_spec)
+        invalidate_and_enqueue_previews(instance)
         return instance
 
     def update(self, instance, validated_data):
         style_spec = self.initial_data.pop("style_spec", None)
         instance.save_style_configs(style_spec)
-        return super().update(instance, validated_data)
+        instance = super().update(instance, validated_data)
+        invalidate_and_enqueue_previews(instance)
+        return instance
 
     class Meta:
         model = LayerStyle
