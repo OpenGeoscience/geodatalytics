@@ -169,6 +169,59 @@ def test_layer_style_api_includes_multiframe_previews(
     project.set_collaborators([user])
     project.datasets.set([layer_style.layer.dataset])
     frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
+    frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
+
+    preview_0 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_0,
+        status=PreviewStatus.COMPLETE,
+        width=100,
+        height=100,
+        bounds={},
+    )
+    preview_0.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_1 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_1,
+        status=PreviewStatus.COMPLETE,
+        width=100,
+        height=100,
+        bounds={},
+    )
+    preview_1.image.save("frame-1.png", ContentFile(b"png1"), save=True)
+
+    resp = authenticated_api_client.get(f"/api/v1/layer-styles/{layer_style.id}/")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["preview_status"] == "ready"
+    assert data["multiframe_previews"] == [
+        {
+            "url": preview_0.image.url,
+            "width": 100,
+            "height": 100,
+            "bounds": {},
+        },
+        {
+            "url": preview_1.image.url,
+            "width": 100,
+            "height": 100,
+            "bounds": {},
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_api_omits_previews_while_generating(
+    authenticated_api_client,
+    layer_style_factory,
+    layer_frame_factory,
+    project,
+    user,
+):
+    layer_style = layer_style_factory()
+    project.set_collaborators([user])
+    project.datasets.set([layer_style.layer.dataset])
+    frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
     layer_frame_factory(layer=layer_style.layer, index=1)
 
     preview = RasterFramePreview.objects.create(
@@ -184,15 +237,8 @@ def test_layer_style_api_includes_multiframe_previews(
     resp = authenticated_api_client.get(f"/api/v1/layer-styles/{layer_style.id}/")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["multiframe_previews"] == [
-        {
-            "url": preview.image.url,
-            "width": 100,
-            "height": 100,
-            "bounds": {},
-        },
-        None,
-    ]
+    assert data["preview_status"] == "generating"
+    assert "multiframe_previews" not in data
 
 
 @pytest.mark.django_db
@@ -210,9 +256,9 @@ def test_layer_api_includes_multiframe_previews(
     project.set_collaborators([user])
     project.datasets.set([layer.dataset])
     frame_0 = layer_frame_factory(layer=layer, index=0)
-    layer_frame_factory(layer=layer, index=1)
+    frame_1 = layer_frame_factory(layer=layer, index=1)
 
-    preview = RasterFramePreview.objects.create(
+    preview_0 = RasterFramePreview.objects.create(
         layer_style=layer_style,
         layer_frame=frame_0,
         status=PreviewStatus.COMPLETE,
@@ -220,18 +266,33 @@ def test_layer_api_includes_multiframe_previews(
         height=100,
         bounds={},
     )
-    preview.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_0.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_1 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_1,
+        status=PreviewStatus.COMPLETE,
+        width=100,
+        height=100,
+        bounds={},
+    )
+    preview_1.image.save("frame-1.png", ContentFile(b"png1"), save=True)
 
     resp = authenticated_api_client.get(f"/api/v1/layers/{layer.id}/")
     assert resp.status_code == 200
     data = resp.json()
+    assert data["preview_status"] == "ready"
     assert data["multiframe_previews"] == [
         {
-            "url": preview.image.url,
+            "url": preview_0.image.url,
             "width": 100,
             "height": 100,
             "bounds": {},
         },
-        None,
+        {
+            "url": preview_1.image.url,
+            "width": 100,
+            "height": 100,
+            "bounds": {},
+        },
     ]
     assert "multiframe_previews" not in data.get("default_style", {})

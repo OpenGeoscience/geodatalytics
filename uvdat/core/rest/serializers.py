@@ -5,7 +5,10 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.serializers import geojson
 from rest_framework import serializers
 
-from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
+from uvdat.core.frame_previews.preview_regeneration import (
+    invalidate_and_enqueue_previews,
+    preview_status_for_style,
+)
 from uvdat.core.models import (
     Basemap,
     Chart,
@@ -189,29 +192,47 @@ class LayerStyleSerializer(serializers.ModelSerializer):
 
 class LayerStyleWithPreviewsSerializer(LayerStyleSerializer):
     multiframe_previews = serializers.SerializerMethodField()
+    preview_status = serializers.SerializerMethodField()
 
     def _preview_layer(self, obj):
         return self.context.get("preview_layer") or obj.layer
 
+    def get_preview_status(self, obj):
+        return preview_status_for_style(obj)
+
     def get_multiframe_previews(self, obj):
+        if preview_status_for_style(obj) != "ready":
+            return None
         return obj.multiframe_previews(layer=self._preview_layer(obj))
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         _omit_null_field(data, "multiframe_previews")
+        _omit_null_field(data, "preview_status")
         return data
 
 
 class LayerSerializer(serializers.ModelSerializer):
     default_style = LayerStyleSerializer()
     multiframe_previews = serializers.SerializerMethodField()
+    preview_status = serializers.SerializerMethodField()
+
+    def get_preview_status(self, obj):
+        if obj.default_style_id is None:
+            return None
+        return preview_status_for_style(obj.default_style)
 
     def get_multiframe_previews(self, obj):
+        if obj.default_style_id is None:
+            return None
+        if preview_status_for_style(obj.default_style) != "ready":
+            return None
         return obj.default_multiframe_previews()
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         _omit_null_field(data, "multiframe_previews")
+        _omit_null_field(data, "preview_status")
         return data
 
     class Meta:
@@ -223,6 +244,7 @@ class LayerSerializer(serializers.ModelSerializer):
             "dataset",
             "default_style",
             "multiframe_previews",
+            "preview_status",
         ]
 
 
