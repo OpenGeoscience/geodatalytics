@@ -5,7 +5,6 @@ from django.dispatch import receiver
 from s3_file_field import S3FileField
 
 from .layer import LayerFrame
-from .styles import LayerStyle
 
 
 class PreviewStatus(models.TextChoices):
@@ -17,7 +16,7 @@ class PreviewStatus(models.TextChoices):
 
 class RasterFramePreview(models.Model):
     layer_style = models.ForeignKey(
-        LayerStyle,
+        "LayerStyle",
         related_name="frame_previews",
         on_delete=models.CASCADE,
     )
