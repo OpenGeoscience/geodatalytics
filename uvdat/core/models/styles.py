@@ -9,6 +9,7 @@ from django.db import models
 from uvdat.core.frame_previews.types import FramePreviewData
 
 from .colormap import Colormap
+from .frame_preview import PreviewStatus
 from .layer import Layer
 from .project import Project
 from .querysets import ProjectQuerySet
@@ -247,7 +248,10 @@ class LayerStyle(models.Model):
     def serialize_frame_preview(
         preview: RasterFramePreview | None,
     ) -> FramePreviewData | None:
-        if preview is None or not preview.image:
+
+        if preview is None:
+            return None
+        if preview.status != PreviewStatus.COMPLETE or not preview.image:
             return None
         return FramePreviewData(
             url=preview.image.url,

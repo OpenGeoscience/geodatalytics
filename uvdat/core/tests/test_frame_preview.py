@@ -9,6 +9,7 @@ from uvdat.core.frame_previews.raster_style import (
     raster_source_filter_kwargs,
 )
 from uvdat.core.models import RasterFramePreview
+from uvdat.core.models.frame_preview import PreviewStatus
 from uvdat.core.tasks.frame_preview import (
     FRAME_PREVIEW_DEFAULT_RESOLUTION_FRACTION,
     FRAME_PREVIEW_MAX_PX,
@@ -89,6 +90,7 @@ def test_multiframe_previews_for_style_ordered_by_frame_index(
     preview_0 = RasterFramePreview.objects.create(
         layer_style=layer_style,
         layer_frame=frame_0,
+        status=PreviewStatus.COMPLETE,
         width=100,
         height=80,
         bounds={"srs": "EPSG:4326", "xmin": -1, "xmax": 1, "ymin": -2, "ymax": 2},
@@ -97,6 +99,7 @@ def test_multiframe_previews_for_style_ordered_by_frame_index(
     preview_2 = RasterFramePreview.objects.create(
         layer_style=layer_style,
         layer_frame=frame_2,
+        status=PreviewStatus.COMPLETE,
         width=200,
         height=150,
         bounds={"srs": "EPSG:4326", "xmin": -3, "xmax": 3, "ymin": -4, "ymax": 4},
@@ -133,6 +136,7 @@ def test_preview_bounds_includes_corners(
     preview = RasterFramePreview.objects.create(
         layer_style=layer_style,
         layer_frame=frame,
+        status=PreviewStatus.COMPLETE,
         width=100,
         height=80,
         bounds={
@@ -170,6 +174,7 @@ def test_layer_style_api_includes_multiframe_previews(
     preview = RasterFramePreview.objects.create(
         layer_style=layer_style,
         layer_frame=frame_0,
+        status=PreviewStatus.COMPLETE,
         width=100,
         height=100,
         bounds={},
@@ -210,6 +215,7 @@ def test_layer_api_includes_multiframe_previews(
     preview = RasterFramePreview.objects.create(
         layer_style=layer_style,
         layer_frame=frame_0,
+        status=PreviewStatus.COMPLETE,
         width=100,
         height=100,
         bounds={},
