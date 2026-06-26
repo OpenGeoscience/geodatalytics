@@ -21,6 +21,7 @@ SYSTEM_PROMPT = (
     "assume that the user is also a geospatial analyst with the same expertise."
 )
 TOKEN_RANGE = {"min": 1000, "max": 10000, "step": 1000}
+MAX_PROMPT_LENGTH = 4000
 THUMBNAIL_SIZE = 4000
 MAX_STARTUP_WAIT = 300
 
@@ -67,6 +68,10 @@ class ImageryAskQwen(AnalysisType):
             raise AnalysisInputError(err_msg) from e
         if imagery.dataset.category != "imagery":
             err_msg = 'Selected raster is not categorized as "imagery".'
+            raise AnalysisInputError(err_msg)
+        text_prompt = str(inputs.get("text_prompt"))
+        if len(text_prompt) > MAX_PROMPT_LENGTH:
+            err_msg = f"Prompt too long. Provide a prompt with <{MAX_PROMPT_LENGTH} characters."
             raise AnalysisInputError(err_msg)
         max_tokens = int(inputs.get("max_tokens"))
         if max_tokens < TOKEN_RANGE["min"] or max_tokens > TOKEN_RANGE["max"]:
