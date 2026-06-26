@@ -167,7 +167,11 @@ def generate_ingest_multiframe_previews(converted_dataset_names: set[str]) -> in
             if not layer.is_multiframe_raster():
                 continue
             style = ensure_default_layer_style(layer, project)
-            invalidate_and_enqueue_previews(style)
+            click.echo(
+                f"\t\t Generating multiframe raster previews for style {style.name!r} "
+                f"(layer {layer.name!r})..."
+            )
+            invalidate_and_enqueue_previews(style, asynchronous=False)
             style_count += 1
     return style_count
 

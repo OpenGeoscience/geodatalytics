@@ -48,10 +48,15 @@ def mark_previews_regenerating(layer_style: LayerStyle, fingerprint: str) -> lis
     return frame_ids
 
 
-def invalidate_and_enqueue_previews(layer_style: LayerStyle) -> TaskResult | None:
+def invalidate_and_enqueue_previews(
+    layer_style: LayerStyle,
+    *,
+    asynchronous: bool = True,
+) -> TaskResult | None:
     if not style_needs_previews(layer_style):
         return None
 
+    layer_style.refresh_from_db()
     fingerprint = style_fingerprint(layer_style)
     mark_previews_regenerating(layer_style, fingerprint)
     supersede_pending_preview_tasks(layer_style.id)
@@ -69,7 +74,10 @@ def invalidate_and_enqueue_previews(layer_style: LayerStyle) -> TaskResult | Non
 
     from uvdat.core.tasks.frame_preview import generate_layer_style_previews  # noqa: PLC0415
 
-    generate_layer_style_previews.delay(layer_style.id, fingerprint, result.id)
+    if asynchronous:
+        generate_layer_style_previews.delay(layer_style.id, fingerprint, result.id)
+    else:
+        generate_layer_style_previews.apply(args=(layer_style.id, fingerprint, result.id))
     return result
 
 

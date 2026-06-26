@@ -166,6 +166,7 @@ class LayerStyle(models.Model):
             filter_config.save()
             filter_config_ids.append(filter_config.id)
         FilterConfig.objects.filter(style=self).exclude(id__in=filter_config_ids).delete()
+        self.save(update_fields=["default_frame", "opacity"])
 
     def repr_style_configs(self):
         colors = []

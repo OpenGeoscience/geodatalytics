@@ -3,14 +3,17 @@ from __future__ import annotations
 from django.core.files.base import ContentFile
 import pytest
 
+from uvdat.core.frame_previews.fingerprint import style_fingerprint
+from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
 from uvdat.core.frame_previews.raster_style import (
     apply_source_filters_to_style_query,
     build_thumbnail_style_query,
     raster_source_filter_kwargs,
 )
-from uvdat.core.models import RasterFramePreview
+from uvdat.core.models import LayerStyle, RasterFramePreview
 from uvdat.core.models.frame_preview import PreviewStatus
 from uvdat.core.tasks.frame_preview import (
+    DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
     FRAME_PREVIEW_DEFAULT_RESOLUTION_FRACTION,
     FRAME_PREVIEW_MAX_PX,
     FRAME_PREVIEW_MIN_PX,
@@ -64,6 +67,56 @@ def test_resolve_preview_max_dimension(
     assert (
         resolve_preview_max_dimension(resolution_fraction, raster_max_dimension) == expected_max_px
     )
+
+
+@pytest.mark.django_db
+def test_style_fingerprint_matches_db_after_ingest_style_setup(layer_style_factory):
+    """Enqueue fingerprint must match what the Celery task reads from the database."""
+    style = layer_style_factory()
+    style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+
+    assert style_fingerprint(style) == style_fingerprint(LayerStyle.objects.get(pk=style.pk))
+
+
+@pytest.mark.django_db
+def test_invalidate_and_enqueue_previews_uses_db_fingerprint(
+    layer_style_factory,
+    layer_frame_factory,
+    mocker,
+):
+    layer_style = layer_style_factory()
+    layer_frame_factory(layer=layer_style.layer, index=0)
+    layer_frame_factory(layer=layer_style.layer, index=1)
+    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+
+    delay = mocker.patch("uvdat.core.tasks.frame_preview.generate_layer_style_previews.delay")
+
+    invalidate_and_enqueue_previews(layer_style)
+
+    delay.assert_called_once()
+    _, fingerprint, _ = delay.call_args.args
+    assert fingerprint == style_fingerprint(LayerStyle.objects.get(pk=layer_style.pk))
+
+
+@pytest.mark.django_db
+def test_invalidate_and_enqueue_previews_runs_synchronously(
+    layer_style_factory,
+    layer_frame_factory,
+    mocker,
+):
+    layer_style = layer_style_factory()
+    layer_frame_factory(layer=layer_style.layer, index=0)
+    layer_frame_factory(layer=layer_style.layer, index=1)
+    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+
+    delay = mocker.patch("uvdat.core.tasks.frame_preview.generate_layer_style_previews.delay")
+    apply = mocker.patch("uvdat.core.tasks.frame_preview.generate_layer_style_previews.apply")
+
+    invalidate_and_enqueue_previews(layer_style, asynchronous=False)
+
+    apply.assert_called_once()
+    delay.assert_not_called()
+    assert apply.call_args.kwargs["args"][0] == layer_style.id
 
 
 @pytest.mark.django_db
