@@ -21,7 +21,7 @@ SYSTEM_PROMPT = (
     "assume that the user is also a geospatial analyst with the same expertise."
 )
 TOKEN_RANGE = {"min": 1000, "max": 10000, "step": 1000}
-THUMBNAIL_WIDTH = 2000
+THUMBNAIL_SIZE = 4000
 MAX_STARTUP_WAIT = 300
 
 
@@ -105,7 +105,7 @@ def imagery_ask_qwen(result_id):
     result.write_status("Encoding imagery...")
     imagery_path = utilities.field_file_to_local_path(imagery.cloud_optimized_geotiff)
     src = large_image.open(imagery_path)
-    thumbnail_bytes, _ = src.getThumbnail(THUMBNAIL_WIDTH, encoding="PNG")
+    thumbnail_bytes, _ = src.getThumbnail(THUMBNAIL_SIZE, THUMBNAIL_SIZE, encoding="PNG")
     thumbnail_b64 = base64.b64encode(thumbnail_bytes).decode("utf-8")
     thumbnail_uri = f"data:image/jpeg;base64,{thumbnail_b64}"
 
