@@ -131,7 +131,7 @@ def test_multiframe_previews_for_style_returns_none_for_single_frame(
 
 
 @pytest.mark.django_db
-def test_multiframe_previews_for_style_ordered_by_frame_index(
+def test_multiframe_previews_for_style_returns_none_when_partial(
     layer_style_factory,
     layer_frame_factory,
 ):
@@ -159,6 +159,47 @@ def test_multiframe_previews_for_style_ordered_by_frame_index(
     )
     preview_2.image.save("frame-2.png", ContentFile(b"png2"), save=True)
 
+    assert layer_style.multiframe_previews() is None
+
+
+@pytest.mark.django_db
+def test_multiframe_previews_for_style_ordered_by_frame_index(
+    layer_style_factory,
+    layer_frame_factory,
+):
+    layer_style = layer_style_factory()
+    frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
+    frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
+    frame_2 = layer_frame_factory(layer=layer_style.layer, index=2)
+
+    preview_0 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_0,
+        status=PreviewStatus.COMPLETE,
+        width=100,
+        height=80,
+        bounds={"srs": "EPSG:4326", "xmin": -1, "xmax": 1, "ymin": -2, "ymax": 2},
+    )
+    preview_0.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_1 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_1,
+        status=PreviewStatus.COMPLETE,
+        width=120,
+        height=90,
+        bounds={"srs": "EPSG:4326", "xmin": -2, "xmax": 2, "ymin": -3, "ymax": 3},
+    )
+    preview_1.image.save("frame-1.png", ContentFile(b"png1"), save=True)
+    preview_2 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_2,
+        status=PreviewStatus.COMPLETE,
+        width=200,
+        height=150,
+        bounds={"srs": "EPSG:4326", "xmin": -3, "xmax": 3, "ymin": -4, "ymax": 4},
+    )
+    preview_2.image.save("frame-2.png", ContentFile(b"png2"), save=True)
+
     previews = layer_style.multiframe_previews()
     assert previews == [
         {
@@ -167,7 +208,12 @@ def test_multiframe_previews_for_style_ordered_by_frame_index(
             "height": 80,
             "bounds": preview_0.bounds,
         },
-        None,
+        {
+            "url": preview_1.image.url,
+            "width": 120,
+            "height": 90,
+            "bounds": preview_1.bounds,
+        },
         {
             "url": preview_2.image.url,
             "width": 200,
@@ -183,12 +229,12 @@ def test_preview_bounds_includes_corners(
     layer_frame_factory,
 ):
     layer_style = layer_style_factory()
-    frame = layer_frame_factory(layer=layer_style.layer, index=0)
-    layer_frame_factory(layer=layer_style.layer, index=1)
+    frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
+    frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
 
-    preview = RasterFramePreview.objects.create(
+    preview_0 = RasterFramePreview.objects.create(
         layer_style=layer_style,
-        layer_frame=frame,
+        layer_frame=frame_0,
         status=PreviewStatus.COMPLETE,
         width=100,
         height=80,
@@ -204,7 +250,16 @@ def test_preview_bounds_includes_corners(
             "ll": {"x": -1, "y": -2},
         },
     )
-    preview.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_0.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_1 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_1,
+        status=PreviewStatus.COMPLETE,
+        width=100,
+        height=80,
+        bounds={},
+    )
+    preview_1.image.save("frame-1.png", ContentFile(b"png1"), save=True)
 
     previews = layer_style.multiframe_previews()
     assert previews[0]["bounds"]["ul"] == {"x": -1, "y": 2}
@@ -264,7 +319,7 @@ def test_layer_style_api_includes_multiframe_previews(
 
 
 @pytest.mark.django_db
-def test_api_omits_previews_while_generating(
+def test_api_omits_previews_while_not_ready(
     authenticated_api_client,
     layer_style_factory,
     layer_frame_factory,
@@ -290,7 +345,7 @@ def test_api_omits_previews_while_generating(
     resp = authenticated_api_client.get(f"/api/v1/layer-styles/{layer_style.id}/")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["preview_status"] == "generating"
+    assert data["preview_status"] == "notready"
     assert "multiframe_previews" not in data
 
 

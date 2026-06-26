@@ -231,7 +231,16 @@ class LayerStyle(models.Model):
             "filters": filters,
         }
 
-    def _multiframe_previews_by_frame(self, layer=None) -> list[RasterFramePreview | None] | None:
+    @staticmethod
+    def serialize_frame_preview(preview: RasterFramePreview) -> FramePreviewData:
+        return FramePreviewData(
+            url=preview.image.url,
+            width=preview.width,
+            height=preview.height,
+            bounds=preview.bounds,
+        )
+
+    def multiframe_previews(self, layer=None) -> list[FramePreviewData] | None:
         layer = layer or self.layer
         frames = layer.multiframe_raster_frames()
         if len(frames) <= 1:
@@ -240,32 +249,13 @@ class LayerStyle(models.Model):
         previews_by_frame_id = {
             preview.layer_frame_id: preview for preview in self.frame_previews.all()
         }
-        return [
-            previews_by_frame_id.get(frame.id) if frame.id in previews_by_frame_id else None
-            for frame in frames
-        ]
-
-    @staticmethod
-    def serialize_frame_preview(
-        preview: RasterFramePreview | None,
-    ) -> FramePreviewData | None:
-
-        if preview is None:
+        ordered = [previews_by_frame_id.get(frame.id) for frame in frames]
+        if not all(
+            preview is not None and preview.status == PreviewStatus.COMPLETE and preview.image
+            for preview in ordered
+        ):
             return None
-        if preview.status != PreviewStatus.COMPLETE or not preview.image:
-            return None
-        return FramePreviewData(
-            url=preview.image.url,
-            width=preview.width,
-            height=preview.height,
-            bounds=preview.bounds,
-        )
-
-    def multiframe_previews(self, layer=None) -> list[FramePreviewData | None] | None:
-        previews = self._multiframe_previews_by_frame(layer=layer)
-        if previews is None:
-            return None
-        return [self.serialize_frame_preview(preview) for preview in previews]
+        return [self.serialize_frame_preview(preview) for preview in ordered]
 
 
 def get_default_colormap():

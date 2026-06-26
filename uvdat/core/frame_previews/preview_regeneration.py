@@ -3,7 +3,7 @@ from __future__ import annotations
 from django.utils import timezone
 
 from uvdat.core.frame_previews.fingerprint import style_fingerprint
-from uvdat.core.models import LayerStyle, RasterFramePreview, TaskResult
+from uvdat.core.models import Layer, LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
 
 
@@ -102,16 +102,18 @@ def preview_status_for_style(layer_style: LayerStyle) -> str | None:
     ):
         return "ready"
 
-    statuses = [
-        previews_by_frame[frame.id].status for frame in frames if frame.id in previews_by_frame
-    ]
+    return "notready"
 
-    if any(
-        status in (PreviewStatus.CREATING, PreviewStatus.REGENERATING) for status in statuses
-    ) or any(status == PreviewStatus.COMPLETE for status in statuses):
-        result = "generating"
-    elif any(status == PreviewStatus.FAILED for status in statuses):
-        result = "failed"
-    else:
-        result = "none"
-    return result
+
+def get_layer_style_preview_status(layer_style: LayerStyle) -> str | None:
+    if "preview_status" in layer_style.__dict__:
+        return layer_style.preview_status
+    return preview_status_for_style(layer_style)
+
+
+def get_layer_preview_status(layer: Layer) -> str | None:
+    if "preview_status" in layer.__dict__:
+        return layer.preview_status
+    if layer.default_style_id is None:
+        return None
+    return get_layer_style_preview_status(layer.default_style)

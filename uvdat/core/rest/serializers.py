@@ -6,8 +6,9 @@ from django.contrib.gis.serializers import geojson
 from rest_framework import serializers
 
 from uvdat.core.frame_previews.preview_regeneration import (
+    get_layer_preview_status,
+    get_layer_style_preview_status,
     invalidate_and_enqueue_previews,
-    preview_status_for_style,
 )
 from uvdat.core.models import (
     Basemap,
@@ -198,10 +199,10 @@ class LayerStyleWithPreviewsSerializer(LayerStyleSerializer):
         return self.context.get("preview_layer") or obj.layer
 
     def get_preview_status(self, obj):
-        return preview_status_for_style(obj)
+        return get_layer_style_preview_status(obj)
 
     def get_multiframe_previews(self, obj):
-        if preview_status_for_style(obj) != "ready":
+        if get_layer_style_preview_status(obj) != "ready":
             return None
         return obj.multiframe_previews(layer=self._preview_layer(obj))
 
@@ -218,14 +219,12 @@ class LayerSerializer(serializers.ModelSerializer):
     preview_status = serializers.SerializerMethodField()
 
     def get_preview_status(self, obj):
-        if obj.default_style_id is None:
-            return None
-        return preview_status_for_style(obj.default_style)
+        return get_layer_preview_status(obj)
 
     def get_multiframe_previews(self, obj):
         if obj.default_style_id is None:
             return None
-        if preview_status_for_style(obj.default_style) != "ready":
+        if get_layer_preview_status(obj) != "ready":
             return None
         return obj.default_multiframe_previews()
 
