@@ -15,7 +15,10 @@ ENDPOINT_NAMESPACE = "Kitware"
 ENDPOINT_NAME = "qwen3-5-9b-gguf-ulh"
 MODEL_CARD_URL = "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF"
 SYSTEM_PROMPT = (
-    "You are a geospatial analyst. Answer the following question about the provided image."
+    "You are an urban planning and geospatial analysis expert specializing in "
+    "land use patterns, hydrology, transportation networks, and municipal policy. "
+    "Analyze the provided imagery to answer the user's question. In your answer, "
+    "assume that the user is also a geospatial analyst with the same expertise."
 )
 TOKEN_RANGE = {"min": 1000, "max": 10000, "step": 1000}
 THUMBNAIL_WIDTH = 2000
