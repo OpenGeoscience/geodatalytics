@@ -20,9 +20,11 @@ module "django" {
   ec2_worker_ssh_public_key    = file("${path.module}/ssh-key.pub")
 
   additional_django_vars = {
-    DJANGO_UVDAT_WEB_URL          = "https://www.geodatalytics.kitware.com/"
-    DJANGO_DATABASE_POOL_MAX_SIZE = "12"
-    DJANGO_SENTRY_DSN             = "https://5302701c88f1fa6ec056e0c269071191@o267860.ingest.us.sentry.io/4510620385804288"
+    DJANGO_UVDAT_WEB_URL           = "https://www.geodatalytics.kitware.com/"
+    DJANGO_DATABASE_POOL_MAX_SIZE  = "12"
+    DJANGO_SENTRY_DSN              = "https://5302701c88f1fa6ec056e0c269071191@o267860.ingest.us.sentry.io/4510620385804288"
+    DJANGO_UVDAT_HF_NAMESPACE      = "Kitware"
+    DJANGO_UVDAT_HF_ENDPOINT_NAMES = "qwen=qwen3-5-9b-gguf-ulh,"
   }
   additional_sensitive_django_vars = {
     DJANGO_UVDAT_HF_TOKEN = var.DJANGO_UVDAT_HF_TOKEN

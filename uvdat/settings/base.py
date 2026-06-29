@@ -159,6 +159,9 @@ CHANNEL_LAYERS: dict[str, dict[str, Any]] = {
 
 UVDAT_WEB_URL: str = env.url("DJANGO_UVDAT_WEB_URL").geturl()
 UVDAT_HF_TOKEN: str | None = env.str("DJANGO_UVDAT_HF_TOKEN", default=None)
+UVDAT_HF_NAMESPACE: str | None = env.str("DJANGO_UVDAT_HF_NAMESPACE", default=None)
+UVDAT_HF_ENDPOINT_NAMES: dict = env.dict("DJANGO_UVDAT_HF_ENDPOINT_NAMES", default={})
+
 UVDAT_ENABLE_FLOOD_SIMULATION: bool = env.bool("DJANGO_UVDAT_ENABLE_FLOOD_SIMULATION", default=True)
 UVDAT_ENABLE_FLOOD_NETWORK_FAILURE: bool = env.bool(
     "DJANGO_UVDAT_ENABLE_FLOOD_NETWORK_FAILURE", default=True

@@ -11,8 +11,6 @@ from uvdat.core.models import RasterData, TaskResult
 
 from .analysis_type import AnalysisInputError, AnalysisTask, AnalysisType
 
-ENDPOINT_NAMESPACE = "Kitware"
-ENDPOINT_NAME = "qwen3-5-9b-gguf-ulh"
 MODEL_CARD_URL = "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF"
 SYSTEM_PROMPT = (
     "You are an urban planning and geospatial analysis expert specializing in "
@@ -50,7 +48,12 @@ class ImageryAskQwen(AnalysisType):
 
     @classmethod
     def is_enabled(cls) -> bool:
-        return settings.UVDAT_ENABLE_IMAGERY_ASK_QWEN and settings.UVDAT_HF_TOKEN is not None
+        return (
+            settings.UVDAT_ENABLE_IMAGERY_ASK_QWEN
+            and settings.UVDAT_HF_TOKEN is not None
+            and settings.UVDAT_HF_NAMESPACE is not None
+            and settings.UVDAT_HF_ENDPOINT_NAMES.get("qwen") is not None
+        )
 
     def get_input_options(self):
         return {
@@ -116,8 +119,8 @@ def imagery_ask_qwen(result_id):
 
     result.write_status("Starting inference endpoint...")
     endpoint = get_inference_endpoint(
-        name=ENDPOINT_NAME,
-        namespace=ENDPOINT_NAMESPACE,
+        name=settings.UVDAT_HF_ENDPOINT_NAMES.get("qwen"),
+        namespace=settings.UVDAT_HF_NAMESPACE,
         token=settings.UVDAT_HF_TOKEN,
     )
     endpoint.resume()
