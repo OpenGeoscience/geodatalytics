@@ -8,6 +8,7 @@ import {
   getNetwork,
   subscribeToTaskResult,
 } from "@/api/rest";
+import VueMarkdown from "vue-markdown-render";
 import NodeAnimation from "./NodeAnimation.vue";
 import SliderNumericInput from "../SliderNumericInput.vue";
 
@@ -145,6 +146,7 @@ async function getFullObject(type: string, value: any) {
   } else {
     value = {
       name: value,
+      type: type,
     };
   }
   return value;
@@ -478,6 +480,11 @@ watch(
                                 "
                               />
                               <div v-else>Show network to view animation.</div>
+                            </td>
+                          </template>
+                          <template v-else-if="value?.type == 'markdown'">
+                            <td colspan="2">
+                              <vue-markdown :source="value?.name" />
                             </td>
                           </template>
                           <template v-else>
