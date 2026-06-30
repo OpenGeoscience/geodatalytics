@@ -119,7 +119,7 @@ def imagery_ask_qwen(result_id):
 
     result.write_status("Starting inference endpoint...")
     endpoint = get_inference_endpoint(
-        name=settings.UVDAT_HF_ENDPOINT_NAMES.get("qwen"),
+        name=settings.UVDAT_HF_ENDPOINT_NAMES["qwen"],
         namespace=settings.UVDAT_HF_NAMESPACE,
         token=settings.UVDAT_HF_TOKEN,
     )
