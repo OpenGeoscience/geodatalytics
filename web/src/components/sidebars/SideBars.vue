@@ -294,7 +294,6 @@ function togglePanelVisibility(id: string) {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  max-height: calc(100% - 175px);
 }
 
 .right .panel-set {

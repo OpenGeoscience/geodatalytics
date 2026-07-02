@@ -211,7 +211,7 @@ function panelUpdated() {
       </v-card>
     </div>
     <div
-      v-if="!panel.position && !props.bottom"
+      v-if="!panel.position && !panel.collapsed"
       class="draggable-divider"
       @mousedown="
         (e) => {
