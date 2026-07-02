@@ -101,7 +101,7 @@ function toggleSelected(items: Layer[]) {
                     v-tooltip="
                       dataset.n_layers +
                       ' layer' +
-                      (dataset.n_layers > 1 ? 's' : '')
+                      (dataset.n_layers && dataset.n_layers > 1 ? 's' : '')
                     "
                     icon="mdi-layers-outline"
                     size="small"
