@@ -98,7 +98,11 @@ function toggleSelected(items: Layer[]) {
                   style="min-width: 75px; text-align: right"
                 >
                   <v-icon
-                    v-tooltip="dataset.n_layers + ' layer' + (dataset.n_layers > 1 ? 's' : '')"
+                    v-tooltip="
+                      dataset.n_layers +
+                      ' layer' +
+                      (dataset.n_layers > 1 ? 's' : '')
+                    "
                     icon="mdi-layers-outline"
                     size="small"
                     class="ml-2"

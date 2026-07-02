@@ -116,9 +116,7 @@ function setLayerActive(layer: Layer, active: boolean) {
         />
         <v-checkbox-btn
           v-if="!isComparing"
-          :model-value="
-            filteredLayers.every((l: Layer) => l.visible)
-          "
+          :model-value="filteredLayers.every((l: Layer) => l.visible)"
           style="display: inline"
           @click="setVisibility(filteredLayers, !allLayersVisible)"
         />

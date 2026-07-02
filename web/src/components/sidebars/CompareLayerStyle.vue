@@ -294,9 +294,7 @@ const panels = ref(["A", "B"] as const);
                   :min="0.1"
                   :max="1"
                   :step="0.1"
-                  @update="
-                    (v: number) => debouncedStyleSpecUpdated(panel, v)
-                  "
+                  @update="(v: number) => debouncedStyleSpecUpdated(panel, v)"
                 />
               </v-card-text>
             </v-card>
@@ -349,9 +347,7 @@ const panels = ref(["A", "B"] as const);
                     :min="0.1"
                     :max="1"
                     :step="0.1"
-                    @update="
-                      (v: number) => debouncedStyleSpecUpdated(panel, v)
-                    "
+                    @update="(v: number) => debouncedStyleSpecUpdated(panel, v)"
                   />
                 </v-card-text>
               </v-card>

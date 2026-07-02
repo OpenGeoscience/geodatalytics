@@ -571,16 +571,15 @@ function refreshLayer() {
 }
 
 function newNameKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Enter') {
+  if (e.key === "Enter") {
     if (newName.value) {
-      if (newNameMode.value === 'update') {
+      if (newNameMode.value === "update") {
         save();
       } else {
         saveAsNew();
       }
     }
-
-  } else if (e.key === 'Escape') {
+  } else if (e.key === "Escape") {
     newNameMode.value = undefined;
     newName.value = undefined;
   }
