@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ref } from "vue";
 import type { FramePreview, Layer, LayerFrame, LayerStyle } from "@/types";
 import type { Map as MaplibreMap } from "maplibre-gl";
 import {
@@ -61,6 +62,31 @@ function adjacentRasterFrames(
 export const useFramePreviewStore = defineStore("framePreview", () => {
   const activePreviewByLayerKey = new Map<string, number>();
   const transitionGenerationByLayerKey = new Map<string, number>();
+
+  // Reactive set of layer keys whose preview overlay is currently visible on
+  // the map (i.e. the user is looking at a preview image, not the real tiles).
+  // Used to drive UI indicators in the layers and legend panels.
+  const displayingPreviewLayerKeys = ref<Set<string>>(new Set());
+
+  function markPreviewDisplayed(layerKeyValue: string) {
+    if (!displayingPreviewLayerKeys.value.has(layerKeyValue)) {
+      const next = new Set(displayingPreviewLayerKeys.value);
+      next.add(layerKeyValue);
+      displayingPreviewLayerKeys.value = next;
+    }
+  }
+
+  function clearPreviewDisplayed(layerKeyValue: string) {
+    if (displayingPreviewLayerKeys.value.has(layerKeyValue)) {
+      const next = new Set(displayingPreviewLayerKeys.value);
+      next.delete(layerKeyValue);
+      displayingPreviewLayerKeys.value = next;
+    }
+  }
+
+  function isDisplayingPreview(layer: Layer) {
+    return displayingPreviewLayerKeys.value.has(layerKey(layer));
+  }
 
   function bumpGeneration(layerKeyValue: string) {
     const next = (transitionGenerationByLayerKey.get(layerKeyValue) ?? 0) + 1;
@@ -164,6 +190,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       }
       removePreviewLayer(map, layerKeyValue, frameIndex);
       activePreviewByLayerKey.delete(layerKeyValue);
+      clearPreviewDisplayed(layerKeyValue);
       return;
     }
 
@@ -187,6 +214,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
     removePreviewLayer(map, layerKeyValue, frameIndex);
     activePreviewByLayerKey.delete(layerKeyValue);
+    clearPreviewDisplayed(layerKeyValue);
   }
 
   async function showPreviewThenTiles(layer: Layer) {
@@ -228,6 +256,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     hidePreviousPreview(map, layerKeyValue);
 
     if (!preview) {
+      clearPreviewDisplayed(layerKeyValue);
       if (map.getLayer(tileLayerId)) {
         map.setPaintProperty(tileLayerId, "raster-opacity", targetOpacity);
       }
@@ -251,6 +280,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       targetOpacity,
     );
     if (!previewMapLayerId) {
+      clearPreviewDisplayed(layerKeyValue);
       if (map.getLayer(tileLayerId)) {
         map.setPaintProperty(tileLayerId, "raster-opacity", targetOpacity);
       }
@@ -258,6 +288,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     }
 
     activePreviewByLayerKey.set(layerKeyValue, layer.current_frame_index);
+    markPreviewDisplayed(layerKeyValue);
 
     if (map.getLayer(tileLayerId)) {
       map.setPaintProperty(tileLayerId, "raster-opacity", 0);
@@ -293,6 +324,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     bumpGeneration(layerKeyValue);
     removeAllPreviewLayersForLayerKey(map, layerKeyValue);
     activePreviewByLayerKey.delete(layerKeyValue);
+    clearPreviewDisplayed(layerKeyValue);
 
     const frames = layerStore.layerFrames(layer);
     const currentFrame = frames.find(
@@ -315,15 +347,19 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     const layerKeyValue = layerKey(layer);
     transitionGenerationByLayerKey.delete(layerKeyValue);
     activePreviewByLayerKey.delete(layerKeyValue);
+    clearPreviewDisplayed(layerKeyValue);
     removeAllPreviewLayersForLayerKey(mapStore.getMap(), layerKeyValue);
   }
 
   function clearAll() {
     transitionGenerationByLayerKey.clear();
     activePreviewByLayerKey.clear();
+    displayingPreviewLayerKeys.value = new Set();
   }
 
   return {
+    displayingPreviewLayerKeys,
+    isDisplayingPreview,
     prefetchLayerPreviews,
     showPreviewThenTiles,
     dismissPreviewForLayer,
