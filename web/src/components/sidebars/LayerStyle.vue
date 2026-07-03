@@ -27,12 +27,14 @@ import {
   usePanelStore,
   useLayerStore,
   useAppStore,
+  useFramePreviewStore,
 } from "@/store";
 const styleStore = useStyleStore();
 const projectStore = useProjectStore();
 const panelStore = usePanelStore();
 const layerStore = useLayerStore();
 const appStore = useAppStore();
+const framePreviewStore = useFramePreviewStore();
 
 const emit = defineEmits(["setLayerActive"]);
 const props = defineProps<{
@@ -88,6 +90,16 @@ const currentLayerStyle = computed(() => {
 
 const setCurrentLayerStyle = (style: LayerStyle) => {
   styleStore.selectedLayerStyles[styleKey.value] = style;
+};
+
+// After a style save, the backend invalidates multiframe raster previews and
+// regenerates them asynchronously. Apply the saved style (which the API returns
+// with preview_status "notready" and no previews), drop any stale previews, and
+// remove the on-map preview overlay so tiles are shown until regeneration
+// completes and the WebSocket handler reattaches fresh previews.
+const markStyleSavedAndInvalidatePreviews = (style: LayerStyle) => {
+  setCurrentLayerStyle({ ...style, multiframe_previews: undefined });
+  framePreviewStore.dismissPreviewForLayer(props.layer);
 };
 
 const appliedStyleName = computed(() => {
@@ -187,6 +199,9 @@ function selectStyle(style: LayerStyle) {
   setCurrentLayerStyle(style);
   currentStyleSpec.value = style.style_spec;
   currentGroups.value = { color: undefined, size: undefined };
+  // Remove any preview overlay tied to the previously selected style so the map
+  // only shows previews that belong to the style now in effect.
+  framePreviewStore.dismissPreviewForLayer(props.layer);
 }
 
 function fetchRasterBands() {
@@ -506,7 +521,7 @@ function save() {
     style_spec: currentStyleSpec.value,
   }).then((style) => {
     if (style) {
-      setCurrentLayerStyle(style);
+      markStyleSavedAndInvalidatePreviews(style);
       newName.value = undefined;
       newNameMode.value = undefined;
       // update other styles in case default overriden
@@ -529,7 +544,7 @@ function saveAsNew() {
     style_spec: currentStyleSpec.value,
   }).then((style: LayerStyle) => {
     if (style) {
-      setCurrentLayerStyle(style);
+      markStyleSavedAndInvalidatePreviews(style);
       newName.value = undefined;
       newNameMode.value = undefined;
       // update other styles in case default overriden

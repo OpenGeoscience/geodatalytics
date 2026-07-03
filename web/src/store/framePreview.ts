@@ -1,7 +1,14 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { FramePreview, Layer, LayerFrame, LayerStyle } from "@/types";
+import type {
+  FramePreview,
+  Layer,
+  LayerFrame,
+  LayerStyle,
+  TaskResult,
+} from "@/types";
 import type { Map as MaplibreMap } from "maplibre-gl";
+import { getLayerStyle } from "@/api/rest";
 import {
   fadeRasterOpacities,
   hidePreviewLayer,
@@ -26,7 +33,32 @@ function orderedRasterFrames(frames: LayerFrame[]) {
     .toSorted((a, b) => a.index - b.index);
 }
 
+// Previews are only safe to display once the backend reports the style as
+// "ready" (every frame has a complete image). After a style save the API
+// returns "notready" and omits multiframe_previews until regeneration finishes.
+function previewsAreReady(
+  layer: Layer,
+  style: LayerStyle | undefined,
+): boolean {
+  const status =
+    style?.preview_status ??
+    (style?.id !== undefined && style.id === layer.default_style?.id
+      ? layer.preview_status
+      : undefined);
+  if (status !== undefined) {
+    return status === "ready";
+  }
+  // Backward compatibility for payloads that omit preview_status entirely.
+  return true;
+}
+
 function previewsForLayer(layer: Layer, style: LayerStyle | undefined) {
+  // Guard against falling back to the layer's default-style previews when the
+  // active style's previews are stale/regenerating; that would render another
+  // style's images against the current style.
+  if (!previewsAreReady(layer, style)) {
+    return undefined;
+  }
   return style?.multiframe_previews ?? layer.multiframe_previews;
 }
 
@@ -357,12 +389,69 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     displayingPreviewLayerKeys.value = new Set();
   }
 
+  // Called when a "frame_preview" TaskResult completes over the analytics
+  // WebSocket. Reloads the freshly generated previews and reattaches them to
+  // every selected layer copy that still has the regenerated style applied.
+  async function onPreviewTaskComplete(task: TaskResult) {
+    const layerStyleId = task.inputs?.layer_style_id;
+    const layerId = task.inputs?.layer_id;
+    if (layerStyleId === undefined || layerId === undefined) {
+      return;
+    }
+
+    const layerStore = useLayerStore();
+    const styleStore = useStyleStore();
+
+    let updatedStyle: LayerStyle;
+    try {
+      updatedStyle = await getLayerStyle(layerStyleId);
+    } catch {
+      // If the style was deleted or the fetch fails, there is nothing to attach.
+      return;
+    }
+
+    // Keep availableLayers current so re-adding this layer picks up the new
+    // default-style previews. Fire-and-forget; selected copies are updated below.
+    void layerStore.fetchAvailableLayer(layerId).catch(() => undefined);
+
+    layerStore.selectedLayers.forEach((layer) => {
+      if (layer.id !== layerId) {
+        return;
+      }
+      const key = layerKey(layer);
+      const selectedStyle = styleStore.selectedLayerStyles[key];
+      // Only reattach when this copy still has the regenerated style selected;
+      // the user may have swapped to a different style while generation ran.
+      if (!selectedStyle || selectedStyle.id !== layerStyleId) {
+        return;
+      }
+
+      styleStore.selectedLayerStyles[key] = {
+        ...selectedStyle,
+        preview_status: updatedStyle.preview_status,
+        multiframe_previews: updatedStyle.multiframe_previews,
+      };
+
+      // Mirror onto the layer object so the default-style fallback stays valid.
+      if (updatedStyle.is_default) {
+        layer.multiframe_previews = updatedStyle.multiframe_previews;
+        layer.preview_status = updatedStyle.preview_status;
+      }
+
+      prefetchLayerPreviews(layer, styleStore.selectedLayerStyles[key]);
+      if (!styleStore.isLayerStyleEditing(layer)) {
+        void showPreviewThenTiles(layer);
+      }
+    });
+  }
+
   return {
     displayingPreviewLayerKeys,
     isDisplayingPreview,
     prefetchLayerPreviews,
     showPreviewThenTiles,
     dismissPreviewForLayer,
+    onPreviewTaskComplete,
     cleanupLayer,
     clearAll,
   };

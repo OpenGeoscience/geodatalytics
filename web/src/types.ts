@@ -52,6 +52,11 @@ export interface FramePreview {
   bounds: FramePreviewBounds;
 }
 
+// Style-level preview lifecycle, derived by the API from per-frame rows.
+// "ready" means every raster frame has a complete preview image; anything
+// else (missing, generating, regenerating, failed) is reported as "notready".
+export type PreviewStatus = "ready" | "notready";
+
 export interface Layer {
   id: number;
   copy_id: number;
@@ -63,6 +68,7 @@ export interface Layer {
   current_frame_index: number;
   default_style: LayerStyle | null;
   multiframe_previews?: (FramePreview | null)[];
+  preview_status?: PreviewStatus;
 }
 
 export interface LayerFrame {
@@ -154,6 +160,7 @@ export interface LayerStyle {
   is_default: boolean;
   style_spec?: StyleSpec;
   multiframe_previews?: (FramePreview | null)[];
+  preview_status?: PreviewStatus;
 }
 
 export interface VectorData {

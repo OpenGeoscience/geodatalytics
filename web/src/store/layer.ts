@@ -226,7 +226,8 @@ export const useLayerStore = defineStore("layer", () => {
           ) {
             styleStore.selectedLayerStyles[styleId] = {
               ...layer.default_style,
-              ...(layer.multiframe_previews
+              preview_status: layer.preview_status,
+              ...(layer.preview_status === "ready" && layer.multiframe_previews
                 ? { multiframe_previews: layer.multiframe_previews }
                 : {}),
             };
