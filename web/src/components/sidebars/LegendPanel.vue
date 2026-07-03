@@ -125,12 +125,13 @@ function getColorPropsCoverage(layer: Layer) {
         <v-list-item v-for="layer in filteredLegend" :key="layer.id">
           <v-icon
             :icon="layer.visible ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
-            @click="setVisibility(layer, !layer.visible)"
             class=""
+            @click="setVisibility(layer, !layer.visible)"
           />
           {{ layer.name }}
           <div
             v-for="colormap_preview in getColormapPreviews(layer)"
+            :key="colormap_preview.name"
             class="ml-6"
           >
             <div v-if="getColormapPreviews(layer).length > 1">
@@ -157,7 +158,7 @@ function getColorPropsCoverage(layer: Layer) {
                   v-if="!colormap_preview.valueColors"
                   :colormap="colormap_preview.colormap"
                   :discrete="colormap_preview.discrete"
-                  :nColors="colormap_preview.nColors"
+                  :n-colors="colormap_preview.nColors"
                   :range="colormap_preview.range"
                 />
                 <v-expansion-panels v-else>
@@ -166,12 +167,15 @@ function getColorPropsCoverage(layer: Layer) {
                       <colormap-preview
                         :colormap="colormap_preview.colormap"
                         :discrete="colormap_preview.discrete"
-                        :nColors="colormap_preview.nColors"
+                        :n-colors="colormap_preview.nColors"
                         :range="colormap_preview.range"
                       />
                     </v-expansion-panel-title>
                     <v-expansion-panel-text>
-                      <div v-for="row in colormap_preview.valueColors">
+                      <div
+                        v-for="(row, index) in colormap_preview.valueColors"
+                        :key="index"
+                      >
                         <div
                           v-if="row"
                           class="d-flex"

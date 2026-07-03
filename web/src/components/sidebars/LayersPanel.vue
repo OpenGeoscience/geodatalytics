@@ -106,21 +106,21 @@ function setLayerActive(layer: Layer, active: boolean) {
       hide-details
     />
     <v-card class="panel-content-inner">
-      <div class="layers-header" v-if="filteredLayers?.length">
+      <div v-if="filteredLayers?.length" class="layers-header">
         <v-icon
           color="primary"
           icon="mdi-close"
           size="small"
-          @click="() => removeLayers(layerStore.selectedLayers)"
           class="secondary-button"
+          @click="() => removeLayers(layerStore.selectedLayers)"
         />
         <v-checkbox-btn
           v-if="!isComparing"
           :model-value="
             layerStore.selectedLayers.every((l: Layer) => l.visible)
           "
-          @click="setVisibility(layerStore.selectedLayers, !allLayersVisible)"
           style="display: inline"
+          @click="setVisibility(layerStore.selectedLayers, !allLayersVisible)"
         />
         <span v-if="isComparing">
           <v-checkbox-btn
@@ -130,8 +130,8 @@ function setLayerActive(layer: Layer, active: boolean) {
             :model-value="
               Object.values(visibilityCompareMap.A).every((v) => v === true)
             "
-            @update:model-value="compareStore.setAllVisibility('A', $event)"
             style="display: inline"
+            @update:model-value="compareStore.setAllVisibility('A', $event)"
           />
           <v-checkbox-btn
             v-tooltip="
@@ -140,8 +140,8 @@ function setLayerActive(layer: Layer, active: boolean) {
             :model-value="
               Object.values(visibilityCompareMap.B).every((v) => v === true)
             "
-            @update:model-value="compareStore.setAllVisibility('B', $event)"
             style="display: inline"
+            @update:model-value="compareStore.setAllVisibility('B', $event)"
           />
         </span>
       </div>
@@ -150,19 +150,19 @@ function setLayerActive(layer: Layer, active: boolean) {
           <template #item="{ element }">
             <div>
               <v-list-item class="layer" :active="activeLayer == element">
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-icon
                     color="primary"
                     icon="mdi-close"
                     size="small"
-                    @click="() => removeLayers([element])"
                     class="secondary-button"
+                    @click="() => removeLayers([element])"
                   />
                   <v-checkbox-btn
                     v-if="!isComparing"
                     :model-value="element.visible"
-                    @click="() => setVisibility([element], !element.visible)"
                     style="display: inline"
+                    @click="() => setVisibility([element], !element.visible)"
                   />
                   <span v-if="isComparing">
                     <v-checkbox-btn
@@ -170,25 +170,25 @@ function setLayerActive(layer: Layer, active: boolean) {
                         `${orientation === 'vertical' ? 'Left' : 'Top'} Map Visibility`
                       "
                       :model-value="visibilityCompareMap.A[element.name]"
+                      style="display: inline"
                       @update:model-value="
                         compareStore.setVisibility('A', element.name, $event)
                       "
-                      style="display: inline"
                     />
                     <v-checkbox-btn
                       v-tooltip="
                         `${orientation === 'vertical' ? 'Right' : 'Bottom'} Map Visibility`
                       "
                       :model-value="visibilityCompareMap.B[element.name]"
+                      style="display: inline"
                       @update:model-value="
                         compareStore.setVisibility('B', element.name, $event)
                       "
-                      style="display: inline"
                     />
                   </span>
                 </template>
                 {{ element.name }}
-                <template v-slot:append>
+                <template #append>
                   <span
                     v-if="getLayerMaxFrames(element) > 1"
                     @click="element.hideFrameMenu = !element.hideFrameMenu"
@@ -203,14 +203,18 @@ function setLayerActive(layer: Layer, active: boolean) {
                   <LayerStyle
                     v-if="!isComparing"
                     :layer="element"
-                    :activeLayer="activeLayer"
-                    @setLayerActive="(v: boolean) => setLayerActive(element, v)"
+                    :active-layer="activeLayer"
+                    @set-layer-active="
+                      (v: boolean) => setLayerActive(element, v)
+                    "
                   />
                   <CompareLayerStyle
                     v-if="isComparing"
                     :layer="element"
-                    :activeLayer="activeLayer"
-                    @setLayerActive="(v: boolean) => setLayerActive(element, v)"
+                    :active-layer="activeLayer"
+                    @set-layer-active="
+                      (v: boolean) => setLayerActive(element, v)
+                    "
                   />
                   <span
                     class="v-icon material-symbols-outlined"
@@ -231,6 +235,7 @@ function setLayerActive(layer: Layer, active: boolean) {
                 />
                 <div
                   v-for="frame in getLayerCurrentFrames(element)"
+                  :key="frame.id"
                   style="display: flex; justify-content: space-between"
                 >
                   <span> <i>Frame:</i> {{ frame.name }} </span>

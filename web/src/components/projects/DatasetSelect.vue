@@ -65,7 +65,7 @@ function submitDelete() {
 
 <template>
   <DatasetList :datasets="datasetsWithLayers">
-    <template v-slot:list="{ data }">
+    <template #list="{ data }">
       <v-expansion-panels
         multiple
         variant="accordion"
@@ -147,16 +147,16 @@ function submitDelete() {
                 style="min-width: 75px; text-align: right"
               >
                 <v-icon
+                  v-tooltip="dataset.n_layers + ' layers'"
                   icon="mdi-layers"
                   size="small"
-                  v-tooltip="dataset.n_layers + ' layers'"
                   class="ml-2"
                 ></v-icon>
                 <span class="secondary-text">{{ dataset.n_layers }}</span>
                 <v-icon
+                  v-tooltip="dataset.description"
                   icon="mdi-information-outline"
                   size="small"
-                  v-tooltip="dataset.description"
                   class="mx-1"
                 ></v-icon>
                 <DetailView
@@ -170,12 +170,17 @@ function submitDelete() {
             <div class="mb-2 ml-2">
               <v-chip
                 v-for="tag in dataset.tags"
+                :key="tag"
                 :text="tag"
                 variant="outlined"
                 size="small"
               />
             </div>
-            <div v-for="layer in dataset.layers" class="item-title">
+            <div
+              v-for="layer in dataset.layers"
+              :key="layer.id"
+              class="item-title"
+            >
               <div style="text-wrap: wrap; align-items: center; width: 100%">
                 {{ layer.name }}
               </div>
@@ -211,6 +216,7 @@ function submitDelete() {
             <div>
               <v-chip
                 v-for="project in getDatasetProjects(datasetToDelete.id)"
+                :key="project.id"
                 :text="project.name"
               />
             </div>
@@ -219,8 +225,8 @@ function submitDelete() {
             <v-btn color="red" @click="submitDelete"> Delete </v-btn>
             <v-btn
               color="primary"
-              @click="datasetToDelete = undefined"
               variant="tonal"
+              @click="datasetToDelete = undefined"
             >
               Cancel
             </v-btn>

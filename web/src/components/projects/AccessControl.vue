@@ -76,8 +76,8 @@ onMounted(() => {
       <v-list-subheader>
         Owner
         <v-icon
-          icon="mdi-information-outline"
           v-tooltip="'Permissions: Read, Write, Delete, Access Control'"
+          icon="mdi-information-outline"
         />
       </v-list-subheader>
       <v-list-item
@@ -89,7 +89,7 @@ onMounted(() => {
         "
         :subtitle="project.owner.email"
       >
-        <template v-slot:prepend>
+        <template #prepend>
           <v-btn
             flat
             icon
@@ -109,7 +109,7 @@ onMounted(() => {
             <v-icon v-else icon="mdi-account"></v-icon>
           </v-btn>
         </template>
-        <template v-slot:append>
+        <template #append>
           <v-icon
             v-if="permissions[project.id] === 'owner'"
             icon="mdi-pencil"
@@ -123,8 +123,8 @@ onMounted(() => {
       <v-list-subheader>
         Collaborators
         <v-icon
-          icon="mdi-information-outline"
           v-tooltip="'Permissions: Read & Write'"
+          icon="mdi-information-outline"
         />
       </v-list-subheader>
       <v-list-item
@@ -137,7 +137,7 @@ onMounted(() => {
         "
         :subtitle="collaborator.email"
       >
-        <template v-slot:prepend>
+        <template #prepend>
           <v-btn
             flat
             icon
@@ -154,7 +154,7 @@ onMounted(() => {
             </v-tooltip>
           </v-btn>
         </template>
-        <template v-slot:append>
+        <template #append>
           <v-icon
             v-if="permissions[project.id] === 'owner'"
             icon="mdi-trash-can"
@@ -170,8 +170,8 @@ onMounted(() => {
       <v-list-subheader>
         Followers
         <v-icon
-          icon="mdi-information-outline"
           v-tooltip="'Permissions: Read Only'"
+          icon="mdi-information-outline"
         />
       </v-list-subheader>
       <v-list-item
@@ -184,7 +184,7 @@ onMounted(() => {
         "
         :subtitle="follower.email"
       >
-        <template v-slot:prepend>
+        <template #prepend>
           <v-btn
             flat
             icon
@@ -201,7 +201,7 @@ onMounted(() => {
             </v-tooltip>
           </v-btn>
         </template>
-        <template v-slot:append>
+        <template #append>
           <v-icon
             v-if="permissions[project.id] === 'owner'"
             icon="mdi-trash-can"
@@ -272,9 +272,9 @@ onMounted(() => {
               }
             "
           >
-            <template v-slot:item="{ props, item }">
+            <template #item="{ props: itemProps, item }">
               <v-list-item
-                v-bind="props"
+                v-bind="itemProps"
                 :title="
                   item.first_name && item.last_name
                     ? item.first_name + ' ' + item.last_name
@@ -293,8 +293,8 @@ onMounted(() => {
           <v-card-actions>
             <v-btn
               color="primary"
-              @click="savePermissions"
               :disabled="!selectedUsers.length"
+              @click="savePermissions"
             >
               Submit
             </v-btn>
@@ -323,8 +323,8 @@ onMounted(() => {
           <v-btn color="red" @click="savePermissions">Delete</v-btn>
           <v-btn
             color="primary"
-            @click="userToRemove = undefined"
             variant="tonal"
+            @click="userToRemove = undefined"
           >
             Cancel
           </v-btn>

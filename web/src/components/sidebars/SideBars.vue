@@ -90,9 +90,9 @@ function togglePanelVisibility(id: string) {
           </v-menu>
         </v-toolbar-title>
         <v-icon
+          v-tooltip="'Toggle Sidebar'"
           icon="mdi-dock-left"
           class="ml-5"
-          v-tooltip="'Toggle Sidebar'"
           @click="toggleSidebar('left')"
         ></v-icon>
       </v-toolbar>
@@ -103,6 +103,7 @@ function togglePanelVisibility(id: string) {
             (p) => p.dock == 'left',
           )"
           :id="panel.id"
+          :key="panel.id"
           :bottom="
             index ==
             panelStore.panelArrangement.filter((p) => p.dock == 'left').length -
@@ -142,28 +143,28 @@ function togglePanelVisibility(id: string) {
         color="background"
       >
         <v-icon
+          v-tooltip="'Toggle Sidebar'"
           icon="mdi-dock-right"
           class="mr-5"
-          v-tooltip="'Toggle Sidebar'"
           @click="toggleSidebar('right')"
         ></v-icon>
         <div v-if="appStore.currentUser">
           {{ appStore.currentUser.first_name }}
 
           <v-menu :close-on-content-click="false">
-            <template v-slot:activator="{ props }">
+            <template #activator="{ props }">
               <v-icon v-bind="props" icon="mdi-cog" class="px-3"></v-icon>
             </template>
             <v-list>
               <v-list-item density="compact" @click="logout">
                 Logout
-                <template v-slot:append>
+                <template #append>
                   <v-icon icon="mdi-logout"></v-icon>
                 </template>
               </v-list-item>
               <v-list-item density="compact">
                 Dark Mode
-                <template v-slot:append>
+                <template #append>
                   <v-switch
                     :model-value="appStore.theme === 'dark'"
                     color="primary"
@@ -181,12 +182,12 @@ function togglePanelVisibility(id: string) {
       </v-toolbar>
       <div :style="{ height: '30px', 'text-align': 'right' }">
         <v-menu :close-on-content-click="false">
-          <template v-slot:activator="{ props }">
+          <template #activator="{ props }">
             <v-icon
+              v-tooltip="'Panel Visibility'"
               v-bind="props"
               icon="mdi-menu"
               class="mr-3 mt-1"
-              v-tooltip="'Panel Visibility'"
             ></v-icon>
           </template>
           <v-list>
@@ -194,6 +195,7 @@ function togglePanelVisibility(id: string) {
               v-for="item in panelStore.panelArrangement.filter(
                 (p) => p.closeable,
               )"
+              :key="item.id"
               @click="togglePanelVisibility(item.id)"
             >
               <v-checkbox-btn
@@ -210,6 +212,7 @@ function togglePanelVisibility(id: string) {
             (p) => p.dock == 'right',
           )"
           :id="panel.id"
+          :key="panel.id"
           :bottom="
             index ==
             panelStore.panelArrangement.filter((p) => p.dock == 'right')

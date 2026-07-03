@@ -242,11 +242,11 @@ watch(
   <div>
     <div class="project-row my-5">
       <v-select
+        v-model="projectStore.currentProject"
         placeholder="Select a Project"
         no-data-text="No available projects."
         :items="projectStore.availableProjects"
         :autofocus="!projectStore.currentProject"
-        v-model="projectStore.currentProject"
         item-title="name"
         item-value="id"
         density="compact"
@@ -290,19 +290,19 @@ watch(
         To get started, create a project and add datasets to it.
       </v-card-text>
     </v-card>
-    <div class="project-row" v-if="projectStore.currentProject">
+    <div v-if="projectStore.currentProject" class="project-row">
       <span class="item-counts">
-        <v-icon icon="mdi-database-outline" v-tooltip="'Datasets'"></v-icon>
+        <v-icon v-tooltip="'Datasets'" icon="mdi-database-outline"></v-icon>
         {{ projectStore.currentProject.item_counts.datasets || 0 }}
         <v-icon
-          icon="mdi-border-none-variant"
           v-tooltip="'Regions'"
+          icon="mdi-border-none-variant"
           class="ml-3"
         ></v-icon>
         {{ projectStore.currentProject.item_counts.regions || 0 }}
-        <v-icon icon="mdi-poll" v-tooltip="'Charts'" class="ml-3"></v-icon>
+        <v-icon v-tooltip="'Charts'" icon="mdi-poll" class="ml-3"></v-icon>
         {{ projectStore.currentProject.item_counts.charts || 0 }}
-        <v-icon icon="mdi-earth" v-tooltip="'Analyses'" class="ml-3"></v-icon>
+        <v-icon v-tooltip="'Analyses'" icon="mdi-earth" class="ml-3"></v-icon>
         {{ projectStore.currentProject.item_counts.analyses || 0 }}
       </span>
       <v-menu
@@ -311,7 +311,7 @@ watch(
         open-delay="150"
         :close-on-content-click="false"
       >
-        <template v-slot:activator="{ props }">
+        <template #activator="{ props }">
           <v-icon
             v-bind="props"
             icon="mdi-map-marker-right"
@@ -387,11 +387,12 @@ watch(
           <v-list class="transparent" color="primary" selectable>
             <v-list-item
               v-for="project in filteredProjects"
+              :key="project.id"
               :title="project.name"
               :active="project.id === selectedProject?.id"
               @click="() => selectProject(project)"
             >
-              <template v-slot:title="{ title }">
+              <template #title="{ title }">
                 <v-text-field
                   v-if="projectToEdit?.id === project.id"
                   v-model="newProjectName"
@@ -407,15 +408,15 @@ watch(
                 />
                 <span v-else>{{ title }}</span>
               </template>
-              <template v-slot:append>
+              <template #append>
                 <div
                   v-if="
                     ['owner', 'collaborator'].includes(permissions[project.id])
                   "
                 >
                   <v-icon
-                    icon="mdi-pencil"
                     v-if="!projectToEdit && !projectToDelete"
+                    icon="mdi-pencil"
                     @click.stop="projectToEdit = project"
                   />
                   <v-btn
@@ -431,8 +432,8 @@ watch(
                 </div>
                 <div v-if="['owner'].includes(permissions[project.id])">
                   <v-icon
-                    icon="mdi-trash-can"
                     v-if="!projectToEdit && !projectToDelete"
+                    icon="mdi-trash-can"
                     @click.stop="projectToDelete = project"
                   />
                 </div>
@@ -440,8 +441,8 @@ watch(
             </v-list-item>
           </v-list>
           <div
-            class="pa-2 d-flex"
             v-if="projectStore.projectConfigMode === 'new'"
+            class="pa-2 d-flex"
           >
             <v-text-field
               v-model="newProjectName"
@@ -472,8 +473,8 @@ watch(
           <v-btn
             v-if="selectedProject"
             class="options"
-            @click="loadSelectedProject"
             color="primary"
+            @click="loadSelectedProject"
           >
             Load Project
           </v-btn>
@@ -497,11 +498,11 @@ watch(
                 <div class="dataset-card">
                   <DatasetSelect
                     :datasets="projDatasets"
-                    :savingId="savingId"
+                    :saving-id="savingId"
                     :show-delete="false"
                     button-icon="mdi-close"
-                    @buttonClick="removeDatasetFromProject"
-                    @onDelete="refreshProjectDatasets"
+                    @button-click="removeDatasetFromProject"
+                    @on-delete="refreshProjectDatasets"
                   />
                 </div>
               </div>
@@ -510,21 +511,21 @@ watch(
                 <div class="d-flex">
                   <v-card-text>All Datasets</v-card-text>
                   <DatasetUpload
-                    :allDatasets="projectStore.allDatasets"
-                    :projectPermission="permissions[selectedProject.id]"
-                    @addToCurrentProject="addDatasetToProject"
+                    :all-datasets="projectStore.allDatasets"
+                    :project-permission="permissions[selectedProject.id]"
+                    @add-to-current-project="addDatasetToProject"
                     @uploaded="datasetUploaded"
                   />
                 </div>
                 <div class="dataset-card">
                   <DatasetSelect
                     :datasets="projectStore.allDatasets"
-                    :savingId="savingId"
-                    :addedIds="projDatasets?.map((d) => d.id)"
+                    :saving-id="savingId"
+                    :added-ids="projDatasets?.map((d) => d.id)"
                     :show-delete="true"
                     button-icon="mdi-plus"
-                    @buttonClick="addDatasetToProject"
-                    @onDelete="refreshProjectDatasets"
+                    @button-click="addDatasetToProject"
+                    @on-delete="refreshProjectDatasets"
                   />
                 </div>
               </div>
@@ -534,7 +535,7 @@ watch(
             <AccessControl
               :project="selectedProject"
               :permissions="permissions"
-              @updateSelectedProject="updateSelectedProject"
+              @update-selected-project="updateSelectedProject"
             />
           </div>
         </div>
@@ -559,8 +560,8 @@ watch(
             <v-btn color="red" @click="del">Delete</v-btn>
             <v-btn
               color="primary"
-              @click="projectToDelete = undefined"
               variant="tonal"
+              @click="projectToDelete = undefined"
             >
               Cancel
             </v-btn>

@@ -317,24 +317,24 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
       <v-menu activator="parent" :close-on-content-click="false" open-on-hover>
         <v-card style="max-height: 400px; overflow-y: auto">
           <v-list
+            ref="basemapList"
             :selected="[mapStore.currentBasemap]"
+            class="basemap-list"
+            density="compact"
+            mandatory
             @update:selected="
               (selected) => (mapStore.currentBasemap = selected[0])
             "
-            class="basemap-list"
-            ref="basemapList"
-            density="compact"
-            mandatory
           >
             <v-list-subheader>Base Map Options</v-list-subheader>
             <v-list-item
               key="new"
               title="Create Custom Basemap"
-              @click="showBasemapCreation = true"
               class="px-2"
               style="color: rgb(var(--v-theme-primary))"
+              @click="showBasemapCreation = true"
             >
-              <template v-slot:prepend>
+              <template #prepend>
                 <v-icon icon="mdi-plus" class="pa-0" color="primary"></v-icon>
               </template>
             </v-list-item>
@@ -345,7 +345,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
               class="px-2"
             >
               {{ basemap.name }}
-              <template v-slot:prepend>
+              <template #prepend>
                 <v-icon
                   :icon="
                     basemap.id === mapStore.currentBasemap?.id
@@ -357,8 +357,8 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
                 ></v-icon>
                 <div
                   v-if="basemap.id !== undefined"
-                  class="basemap-preview"
                   :id="'basemap-preview-' + basemap.id"
+                  class="basemap-preview"
                 />
                 <div v-else style="width: 90px" />
               </template>
@@ -367,12 +367,12 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         </v-card>
       </v-menu>
     </v-btn>
-    <v-btn class="control-btn" @click="fitMap" variant="flat">
+    <v-btn class="control-btn" variant="flat" @click="fitMap">
       <v-progress-circular v-if="loadingBounds" indeterminate />
       <v-icon
         v-else
-        icon="mdi-fit-to-page-outline"
         v-tooltip="'Fit Map to Visible Layers'"
+        icon="mdi-fit-to-page-outline"
       ></v-icon>
     </v-btn>
     <v-btn v-if="!isComparing" class="control-btn" variant="flat">
@@ -405,8 +405,8 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
       </v-menu>
     </v-btn>
     <v-btn
-      class="control-btn"
       v-if="projectStore.currentProject"
+      class="control-btn"
       variant="flat"
     >
       <v-icon icon="mdi-view-array" class="pb-1 pr-2"></v-icon>
@@ -441,26 +441,26 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
                 class="control-menu-row pa-1"
                 @click="projectStore.navigateToViewState(viewState)"
               >
-                <template v-slot:prepend>
+                <template #prepend>
                   <img :src="viewState.thumbnail" height="70px" />
                 </template>
-                <template v-slot:title>
+                <template #title>
                   <div style="width: 150px; text-wrap: wrap">
                     {{ viewState.name }}
                   </div>
                 </template>
-                <template v-slot:append>
+                <template #append>
                   <v-btn
                     v-if="userHasEditPermission"
-                    icon="mdi-delete"
                     v-tooltip="'Delete this view state'"
+                    icon="mdi-delete"
                     flat
                     variant="text"
                     @click.stop.prevent="viewStateToDelete = viewState"
                   ></v-btn>
                   <v-btn
-                    icon="mdi-share"
                     v-tooltip="'Copy shareable link'"
+                    icon="mdi-share"
                     flat
                     variant="text"
                     @click.stop.prevent="copyViewStateLink(viewState)"
@@ -570,7 +570,9 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
             </v-window-item>
           </v-window>
           <v-spacer />
-          <div v-for="err in jsonErrors">Error: {{ err.message }}</div>
+          <div v-for="(err, index) in jsonErrors" :key="index">
+            Error: {{ err.message }}
+          </div>
           <div v-if="!jsonErrors?.length">Map Preview:</div>
           <div
             id="basemap-preview-new"
@@ -578,7 +580,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
           ></div>
         </v-card-text>
         <v-card-actions style="text-align: right">
-          <v-btn @click="cancelBasemapCreate" variant="tonal"> Cancel </v-btn>
+          <v-btn variant="tonal" @click="cancelBasemapCreate"> Cancel </v-btn>
           <v-btn
             color="primary"
             :disabled="!newBasemapValid"
@@ -626,7 +628,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
           <div v-else>Loading thumbnail...</div>
         </v-card-text>
         <v-card-actions style="text-align: right">
-          <v-btn @click="cancelCreateViewState" variant="tonal"> Cancel </v-btn>
+          <v-btn variant="tonal" @click="cancelCreateViewState"> Cancel </v-btn>
           <v-btn
             color="primary"
             :disabled="!newViewStateValid || !newViewStateThumbnail"
@@ -656,7 +658,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
           }}"?
         </v-card-text>
         <v-card-actions style="text-align: right">
-          <v-btn @click="viewStateToDelete = undefined" variant="tonal">
+          <v-btn variant="tonal" @click="viewStateToDelete = undefined">
             Cancel
           </v-btn>
           <v-btn color="error" variant="tonal" @click="submitDeleteViewState()">

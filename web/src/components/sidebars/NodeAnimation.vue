@@ -115,13 +115,13 @@ watch(currentTick, async () => {
       {{ currentTick + 1 }}
     </div>
     <div class="animation-row">
-      <v-btn @click="play" icon="mdi-play" variant="text" density="compact" />
-      <v-btn @click="pause" icon="mdi-pause" variant="text" density="compact" />
+      <v-btn icon="mdi-play" variant="text" density="compact" @click="play" />
+      <v-btn icon="mdi-pause" variant="text" density="compact" @click="pause" />
       <v-btn
-        @click="rewind"
         icon="mdi-rewind"
         variant="text"
         density="compact"
+        @click="rewind"
       />
     </div>
   </div>

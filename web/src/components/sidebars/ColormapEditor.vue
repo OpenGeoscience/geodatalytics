@@ -254,8 +254,8 @@ onMounted(init);
 
     <v-card-text>
       <v-text-field
-        label="Name"
         v-model="name"
+        label="Name"
         autofocus
         :rules="[nameExistsRule]"
         @keydown.enter="submit"
@@ -272,16 +272,20 @@ onMounted(init);
           <ColormapPreview
             :colormap="currentColormap"
             :discrete="false"
-            :nColors="-1"
+            :n-colors="-1"
           />
         </div>
       </div>
       <div style="height: 200px; overflow-y: auto">
-        <div v-for="(marker, index) in markers" class="py-2 marker-row">
+        <div
+          v-for="(marker, index) in markers"
+          :key="index"
+          class="py-2 marker-row"
+        >
           <v-menu :close-on-content-click="false" open-on-hover location="end">
-            <template v-slot:activator="{ props }">
+            <template #activator="{ props: activatorProps }">
               <div
-                v-bind="props"
+                v-bind="activatorProps"
                 class="color-square ma-0"
                 :style="{ backgroundColor: marker.color }"
               />
@@ -290,7 +294,7 @@ onMounted(init);
               <v-color-picker
                 v-model:model-value="marker.color"
                 mode="hex"
-                @update:modelValue="drawMarkers"
+                @update:model-value="drawMarkers"
               />
             </v-card>
           </v-menu>
@@ -302,9 +306,9 @@ onMounted(init);
             :precision="2"
             :style="{ width: '80px' }"
             variant="outlined"
-            controlVariant="stacked"
+            control-variant="stacked"
             hide-details
-            @update:modelValue="drawMarkers"
+            @update:model-value="drawMarkers"
           />
           <v-icon @click="removeMarker(index)">mdi-close</v-icon>
           <v-icon
@@ -333,8 +337,8 @@ onMounted(init);
       <v-btn
         class="primary-button"
         variant="tonal"
-        @click="submit"
         :disabled="!valid"
+        @click="submit"
       >
         <v-icon color="button-text" class="mr-1">mdi-plus-circle</v-icon>
         {{ props.edit ? "Save" : "Create" }} Colormap

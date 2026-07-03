@@ -172,9 +172,9 @@ watch([showModal, currentDetails], fetchRelated);
 
 <template>
   <v-icon
+    v-tooltip="'View Details'"
     icon="mdi-dots-vertical"
     size="small"
-    v-tooltip="'View Details'"
     class="mx-1"
     @click.stop="showModal = true"
   ></v-icon>
@@ -188,8 +188,8 @@ watch([showModal, currentDetails], fetchRelated);
             style="max-width: 90%; margin: 4px 4em 0 0; align-items: center"
           >
             <v-icon
-              icon="mdi-arrow-left"
               v-if="stackPoppable"
+              icon="mdi-arrow-left"
               @click="popStack"
             />
             <v-icon
@@ -215,7 +215,7 @@ watch([showModal, currentDetails], fetchRelated);
               item-value="id"
               @click:select="({ id }) => addToStack(id as number)"
             >
-              <template v-slot:prepend="{ item }">
+              <template #prepend="{ item }">
                 <v-icon
                   v-if="item.prependIcon"
                   :icon="item.prependIcon"
@@ -225,10 +225,10 @@ watch([showModal, currentDetails], fetchRelated);
                   item.type.toUpperCase()
                 }}</span>
               </template>
-              <template v-slot:title="{ item }">
+              <template #title="{ item }">
                 <div v-if="item" v-tooltip="item.name">{{ item.name }}</div>
               </template>
-              <template v-slot:append="{ item }">
+              <template #append="{ item }">
                 <a v-if="item?.download" :href="item.download.url" download>
                   <v-icon
                     v-tooltip="
