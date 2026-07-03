@@ -21,6 +21,12 @@ class LayerViewSet(ReadOnlyModelViewSet):
     def get_queryset(self):
         return layer_queryset_with_previews()
 
+    def retrieve(self, request, *args, **kwargs):
+        if Layer.objects.filter(pk=kwargs.get("pk"), default_style__isnull=True).exists():
+            layer = Layer.objects.get(pk=kwargs["pk"])
+            layer.ensure_default_style()
+        return super().retrieve(request, *args, **kwargs)
+
     @action(detail=True, methods=["get"])
     def frames(self, request, **kwargs):
         layer: Layer = self.get_object()
@@ -57,7 +63,11 @@ class LayerStyleViewSet(ModelViewSet):
                 instance = serializer.save()
             except jsonschema.exceptions.ValidationError as e:
                 return Response(e.message, status=400)
-            if is_default and instance.layer.default_style != instance:
+            # Always keep a default style: adopt the new one when the layer has none,
+            # so a layer with styles is never left without a default (and no previews).
+            if (
+                is_default or instance.layer.default_style_id is None
+            ) and instance.layer.default_style != instance:
                 instance.layer.default_style = instance
                 instance.layer.save()
         return Response(serializer.data, status=200)

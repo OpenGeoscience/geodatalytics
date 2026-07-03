@@ -404,3 +404,79 @@ def test_layer_api_includes_multiframe_previews(
         },
     ]
     assert "multiframe_previews" not in data.get("default_style", {})
+
+
+@pytest.mark.django_db
+def test_dataset_layers_self_heal_missing_default_style(
+    authenticated_api_client,
+    layer_style_factory,
+    layer_frame_factory,
+    project,
+    user,
+):
+    """A layer with styles but no default_style should still surface previews.
+
+    ``default_style`` can be nulled (``on_delete=SET_NULL``) when the style it
+    pointed at is removed. The layers endpoint should adopt an existing style as
+    the default so its frame previews are not lost.
+    """
+    layer_style = layer_style_factory(name="Default")
+    layer = layer_style.layer
+    layer.default_style = None
+    layer.save(update_fields=["default_style"])
+    project.set_collaborators([user])
+    project.datasets.set([layer.dataset])
+    frame_0 = layer_frame_factory(layer=layer, index=0)
+    frame_1 = layer_frame_factory(layer=layer, index=1)
+
+    for frame in (frame_0, frame_1):
+        preview = RasterFramePreview.objects.create(
+            layer_style=layer_style,
+            layer_frame=frame,
+            status=PreviewStatus.COMPLETE,
+            width=100,
+            height=100,
+            bounds={},
+        )
+        preview.image.save(f"frame-{frame.index}.png", ContentFile(b"png"), save=True)
+
+    resp = authenticated_api_client.get(f"/api/v1/datasets/{layer.dataset_id}/layers/")
+    assert resp.status_code == 200
+    layers = resp.json()
+    assert len(layers) == 1
+    layer_data = layers[0]
+    assert layer_data["default_style"]["id"] == layer_style.id
+    assert layer_data["preview_status"] == "ready"
+    assert len(layer_data["multiframe_previews"]) == 2
+
+    layer.refresh_from_db()
+    assert layer.default_style_id == layer_style.id
+
+
+@pytest.mark.django_db
+def test_create_style_sets_default_when_layer_has_none(
+    authenticated_api_client,
+    layer_factory,
+    project,
+    user,
+):
+    """Creating the first style for a layer without a default adopts it."""
+    layer = layer_factory()
+    project.set_collaborators([user])
+    project.datasets.set([layer.dataset])
+    assert layer.default_style_id is None
+
+    resp = authenticated_api_client.post(
+        "/api/v1/layer-styles/",
+        {
+            "name": "terrain",
+            "layer": layer.id,
+            "project": project.id,
+            "style_spec": DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
+        },
+        format="json",
+    )
+    assert resp.status_code == 200
+
+    layer.refresh_from_db()
+    assert layer.default_style_id == resp.json()["id"]

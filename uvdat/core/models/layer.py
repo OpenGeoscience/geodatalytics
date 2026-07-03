@@ -44,6 +44,22 @@ class Layer(models.Model):
             return len(prefetched) > 1
         return self.frames.filter(raster__isnull=False).count() > 1
 
+    def ensure_default_style(self):
+        """Guarantee the layer has a default style whenever any style exists.
+
+        ``default_style`` uses ``on_delete=SET_NULL``, so removing the style a
+        layer pointed at (outside the viewset's reassign path) can leave the
+        layer with styles but no default, which hides its frame previews. Prefer
+        the conventional "Default" style, otherwise fall back to the oldest one.
+        """
+        if self.default_style_id is not None:
+            return self.default_style
+        style = self.styles.filter(name="Default").first() or self.styles.order_by("id").first()
+        if style is not None:
+            self.default_style = style
+            self.save(update_fields=["default_style"])
+        return style
+
     def default_multiframe_previews(self) -> list[FramePreviewData] | None:
         if self.default_style_id is None:
             return None

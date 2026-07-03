@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from uvdat.core.access_control import DatasetGuardianPermission
-from uvdat.core.models import Dataset, DatasetTag, Network
+from uvdat.core.models import Dataset, DatasetTag, Layer, Network
 from uvdat.core.rest.querysets import layer_queryset_with_previews
 from uvdat.core.rest.serializers import (
     DatasetSerializer,
@@ -44,6 +44,8 @@ class DatasetViewSet(ModelViewSet):
     @action(detail=True, methods=["get"])
     def layers(self, request, **kwargs):
         dataset: Dataset = self.get_object()
+        for layer in Layer.objects.filter(dataset=dataset, default_style__isnull=True):
+            layer.ensure_default_style()
         layers = list(layer_queryset_with_previews().filter(dataset=dataset))
         serializer = LayerSerializer(layers, many=True)
         return Response(serializer.data, status=200)
