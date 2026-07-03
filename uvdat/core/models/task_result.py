@@ -25,9 +25,7 @@ logger = logging.getLogger(__name__)
 # WebSocket notifications are meaningless: tasks run synchronously with no
 # client session listening. When set, result_post_save skips the push entirely
 # rather than attempting it and logging a warning.
-_suppress_notifications: ContextVar[bool] = ContextVar(
-    "suppress_task_notifications", default=False
-)
+_suppress_notifications: ContextVar[bool] = ContextVar("suppress_task_notifications", default=False)
 
 
 @contextlib.contextmanager
