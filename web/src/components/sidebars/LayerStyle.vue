@@ -110,7 +110,10 @@ const markStyleSavedAndInvalidatePreviews = (style: LayerStyle) => {
   setCurrentLayerStyle(invalidatedStyle);
   if (invalidatedStyle.is_default) {
     layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
-      if (layer.id !== props.layer.id || layer.copy_id !== props.layer.copy_id) {
+      if (
+        layer.id !== props.layer.id ||
+        layer.copy_id !== props.layer.copy_id
+      ) {
         return layer;
       }
       return {
