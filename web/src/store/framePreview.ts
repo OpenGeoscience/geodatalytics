@@ -40,26 +40,37 @@ function previewsAreReady(
   layer: Layer,
   style: LayerStyle | undefined,
 ): boolean {
-  const status =
-    style?.preview_status ??
-    (style?.id !== undefined && style.id === layer.default_style?.id
-      ? layer.preview_status
-      : undefined);
-  if (status !== undefined) {
-    return status === "ready";
+  if (style?.preview_status !== undefined) {
+    return style.preview_status === "ready";
+  }
+  if (
+    style?.id !== undefined &&
+    style.id === layer.default_style?.id &&
+    layer.preview_status !== undefined
+  ) {
+    return layer.preview_status === "ready";
   }
   // Backward compatibility for payloads that omit preview_status entirely.
   return true;
 }
 
 function previewsForLayer(layer: Layer, style: LayerStyle | undefined) {
-  // Guard against falling back to the layer's default-style previews when the
-  // active style's previews are stale/regenerating; that would render another
-  // style's images against the current style.
   if (!previewsAreReady(layer, style)) {
     return undefined;
   }
-  return style?.multiframe_previews ?? layer.multiframe_previews;
+  if (style?.multiframe_previews?.length) {
+    return style.multiframe_previews;
+  }
+  // Layer payloads attach previews for the default style only. Use them when the
+  // selected style is that default and the style object has no preview list.
+  if (
+    style?.id !== undefined &&
+    style.id === layer.default_style?.id &&
+    layer.multiframe_previews?.length
+  ) {
+    return layer.multiframe_previews;
+  }
+  return undefined;
 }
 
 function previewAtFrameIndex(

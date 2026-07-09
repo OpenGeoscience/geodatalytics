@@ -420,6 +420,73 @@ def test_layer_style_api_includes_multiframe_previews(
 
 
 @pytest.mark.django_db
+def test_layer_style_patch_reports_notready_after_preview_invalidation(
+    authenticated_api_client,
+    layer_style_factory,
+    layer_frame_factory,
+    project,
+    user,
+    mocker,
+):
+    layer_style = layer_style_factory()
+    project.set_collaborators([user])
+    project.datasets.set([layer_style.layer.dataset])
+    frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
+    frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
+    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+    fingerprint = style_fingerprint(layer_style)
+
+    preview_0 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_0,
+        status=PreviewStatus.COMPLETE,
+        style_fingerprint=fingerprint,
+        width=100,
+        height=100,
+        bounds={},
+    )
+    preview_0.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_1 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_1,
+        status=PreviewStatus.COMPLETE,
+        style_fingerprint=fingerprint,
+        width=100,
+        height=100,
+        bounds={},
+    )
+    preview_1.image.save("frame-1.png", ContentFile(b"png1"), save=True)
+
+    mocker.patch("uvdat.core.tasks.frame_preview.generate_layer_style_previews.delay")
+
+    updated_spec = {
+        **DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
+        "colors": [
+            {
+                "name": "all",
+                "visible": True,
+                "use_feature_props": True,
+                "single_color": "#ff0000",
+            }
+        ],
+    }
+    resp = authenticated_api_client.patch(
+        f"/api/v1/layer-styles/{layer_style.id}/",
+        {
+            "name": layer_style.name,
+            "layer": layer_style.layer_id,
+            "project": layer_style.project_id,
+            "style_spec": updated_spec,
+        },
+        format="json",
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["preview_status"] == "notready"
+    assert "multiframe_previews" not in data
+
+
+@pytest.mark.django_db
 def test_api_omits_previews_while_not_ready(
     authenticated_api_client,
     layer_style_factory,

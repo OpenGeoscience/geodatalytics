@@ -98,7 +98,28 @@ const setCurrentLayerStyle = (style: LayerStyle) => {
 // remove the on-map preview overlay so tiles are shown until regeneration
 // completes and the WebSocket handler reattaches fresh previews.
 const markStyleSavedAndInvalidatePreviews = (style: LayerStyle) => {
-  setCurrentLayerStyle({ ...style, multiframe_previews: undefined });
+  const previewStatus =
+    style.preview_status === "ready" && !style.multiframe_previews
+      ? "notready"
+      : (style.preview_status ?? "notready");
+  const invalidatedStyle: LayerStyle = {
+    ...style,
+    preview_status: previewStatus,
+    multiframe_previews: undefined,
+  };
+  setCurrentLayerStyle(invalidatedStyle);
+  if (invalidatedStyle.is_default) {
+    layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
+      if (layer.id !== props.layer.id || layer.copy_id !== props.layer.copy_id) {
+        return layer;
+      }
+      return {
+        ...layer,
+        preview_status: invalidatedStyle.preview_status,
+        multiframe_previews: undefined,
+      };
+    });
+  }
   framePreviewStore.dismissPreviewForLayer(props.layer);
 };
 

@@ -41,6 +41,16 @@ def previews_current_for_fingerprint(layer_style: LayerStyle, fingerprint: str) 
     )
 
 
+def clear_style_preview_instance_cache(layer_style: LayerStyle) -> None:
+    """Drop queryset annotations and prefetches that go stale after invalidation."""
+    layer_style.refresh_from_db()
+    layer_style.__dict__.pop("preview_status", None)
+    layer_style.__dict__.pop("_raster_frame_count", None)
+    layer_style.__dict__.pop("_complete_with_image_count", None)
+    if cache := getattr(layer_style, "_prefetched_objects_cache", None):
+        cache.pop("frame_previews", None)
+
+
 def mark_previews_regenerating(layer_style: LayerStyle, fingerprint: str) -> list[int]:
     """Upsert one preview row per multiframe frame and clear stale images."""
     frame_ids = []
@@ -81,6 +91,7 @@ def invalidate_and_enqueue_previews(
         return None
 
     mark_previews_regenerating(layer_style, fingerprint)
+    clear_style_preview_instance_cache(layer_style)
     supersede_pending_preview_tasks(layer_style.id)
 
     result = TaskResult.objects.create(
