@@ -4,7 +4,10 @@ from django.core.files.base import ContentFile
 import pytest
 
 from uvdat.core.frame_previews.fingerprint import style_fingerprint
-from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
+from uvdat.core.frame_previews.preview_regeneration import (
+    get_layer_style_preview_status,
+    invalidate_and_enqueue_previews,
+)
 from uvdat.core.frame_previews.raster_style import (
     apply_source_filters_to_style_query,
     build_thumbnail_style_query,
@@ -96,6 +99,104 @@ def test_invalidate_and_enqueue_previews_uses_db_fingerprint(
     delay.assert_called_once()
     _, fingerprint, _ = delay.call_args.args
     assert fingerprint == style_fingerprint(LayerStyle.objects.get(pk=layer_style.pk))
+
+
+@pytest.mark.django_db
+def test_invalidate_and_enqueue_previews_skips_when_previews_current(
+    layer_style_factory,
+    layer_frame_factory,
+    mocker,
+):
+    layer_style = layer_style_factory()
+    frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
+    frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
+    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+    fingerprint = style_fingerprint(layer_style)
+
+    preview_0 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_0,
+        status=PreviewStatus.COMPLETE,
+        style_fingerprint=fingerprint,
+        width=100,
+        height=80,
+        bounds={"srs": "EPSG:4326", "xmin": -1, "xmax": 1, "ymin": -2, "ymax": 2},
+    )
+    preview_0.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_1 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_1,
+        status=PreviewStatus.COMPLETE,
+        style_fingerprint=fingerprint,
+        width=120,
+        height=90,
+        bounds={"srs": "EPSG:4326", "xmin": -2, "xmax": 2, "ymin": -3, "ymax": 3},
+    )
+    preview_1.image.save("frame-1.png", ContentFile(b"png1"), save=True)
+
+    delay = mocker.patch("uvdat.core.tasks.frame_preview.generate_layer_style_previews.delay")
+
+    result = invalidate_and_enqueue_previews(layer_style)
+
+    delay.assert_not_called()
+    assert result is None
+    assert get_layer_style_preview_status(layer_style) == "ready"
+
+    preview_0.refresh_from_db()
+    preview_1.refresh_from_db()
+    assert preview_0.status == PreviewStatus.COMPLETE
+    assert preview_1.status == PreviewStatus.COMPLETE
+    assert preview_0.image.name
+    assert preview_1.image.name
+    assert preview_0.width == 100
+    assert preview_1.width == 120
+
+
+@pytest.mark.django_db
+def test_invalidate_and_enqueue_previews_runs_when_fingerprint_changed(
+    layer_style_factory,
+    layer_frame_factory,
+    mocker,
+):
+    layer_style = layer_style_factory()
+    frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
+    frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
+    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+
+    preview_0 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_0,
+        status=PreviewStatus.COMPLETE,
+        style_fingerprint="stale-fingerprint",
+        width=100,
+        height=80,
+        bounds={},
+    )
+    preview_0.image.save("frame-0.png", ContentFile(b"png0"), save=True)
+    preview_1 = RasterFramePreview.objects.create(
+        layer_style=layer_style,
+        layer_frame=frame_1,
+        status=PreviewStatus.COMPLETE,
+        style_fingerprint="stale-fingerprint",
+        width=120,
+        height=90,
+        bounds={},
+    )
+    preview_1.image.save("frame-1.png", ContentFile(b"png1"), save=True)
+
+    delay = mocker.patch("uvdat.core.tasks.frame_preview.generate_layer_style_previews.delay")
+
+    result = invalidate_and_enqueue_previews(layer_style)
+
+    delay.assert_called_once()
+    assert result is not None
+
+    preview_0.refresh_from_db()
+    preview_1.refresh_from_db()
+    assert preview_0.status == PreviewStatus.REGENERATING
+    assert preview_1.status == PreviewStatus.REGENERATING
+    assert not preview_0.image
+    assert not preview_1.image
 
 
 @pytest.mark.django_db

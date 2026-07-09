@@ -22,6 +22,25 @@ def supersede_pending_preview_tasks(layer_style_id: int) -> None:
     )
 
 
+def previews_current_for_fingerprint(layer_style: LayerStyle, fingerprint: str) -> bool:
+    """Return whether every frame already has a complete preview for this fingerprint."""
+    frames = layer_style.layer.multiframe_raster_frames()
+    if not frames:
+        return False
+
+    previews_by_frame = {
+        preview.layer_frame_id: preview for preview in layer_style.frame_previews.all()
+    }
+
+    return all(
+        (preview := previews_by_frame.get(frame.id))
+        and preview.status == PreviewStatus.COMPLETE
+        and preview.image
+        and preview.style_fingerprint == fingerprint
+        for frame in frames
+    )
+
+
 def mark_previews_regenerating(layer_style: LayerStyle, fingerprint: str) -> list[int]:
     """Upsert one preview row per multiframe frame and clear stale images."""
     frame_ids = []
@@ -58,6 +77,9 @@ def invalidate_and_enqueue_previews(
 
     layer_style.refresh_from_db()
     fingerprint = style_fingerprint(layer_style)
+    if previews_current_for_fingerprint(layer_style, fingerprint):
+        return None
+
     mark_previews_regenerating(layer_style, fingerprint)
     supersede_pending_preview_tasks(layer_style.id)
 
