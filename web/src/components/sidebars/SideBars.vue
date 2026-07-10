@@ -236,6 +236,7 @@ function togglePanelVisibility(id: string) {
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .sidebar.closed {
@@ -283,6 +284,7 @@ function togglePanelVisibility(id: string) {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  min-height: 0;
 }
 
 .right .panel-set {
