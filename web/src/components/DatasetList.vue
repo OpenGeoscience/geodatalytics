@@ -83,9 +83,11 @@ watch(filteredDatasets, expandAllGroups);
     </v-expansion-panels>
     <v-card
       :class="
-        showFilter
-          ? 'panel-content-inner with-tag-filter-open'
-          : 'panel-content-inner with-tag-filter-closed'
+        props.datasets?.length
+          ? showFilter
+            ? 'panel-content-inner with-tag-filter-open'
+            : 'panel-content-inner with-tag-filter-closed'
+          : 'panel-content-inner'
       "
     >
       <v-expansion-panels
