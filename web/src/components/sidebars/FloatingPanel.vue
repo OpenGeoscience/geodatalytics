@@ -9,7 +9,6 @@ const compareStore = useMapCompareStore();
 
 const props = defineProps<{
   id: string;
-  bottom?: boolean;
 }>();
 
 const startDrag = panelStore.startDrag;

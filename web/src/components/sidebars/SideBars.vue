@@ -99,16 +99,11 @@ function togglePanelVisibility(id: string) {
       <ProjectConfig />
       <div class="panel-set">
         <FloatingPanel
-          v-for="(panel, index) in panelStore.panelArrangement.filter(
+          v-for="panel in panelStore.panelArrangement.filter(
             (p) => p.dock == 'left',
           )"
           :id="panel.id"
           :key="panel.id"
-          :bottom="
-            index ==
-            panelStore.panelArrangement.filter((p) => p.dock == 'left').length -
-              1
-          "
         >
           <DatasetsPanel
             v-if="panel.id === 'datasets'"
@@ -208,17 +203,11 @@ function togglePanelVisibility(id: string) {
       </div>
       <div class="panel-set">
         <FloatingPanel
-          v-for="(panel, index) in panelStore.panelArrangement.filter(
+          v-for="panel in panelStore.panelArrangement.filter(
             (p) => p.dock == 'right',
           )"
           :id="panel.id"
           :key="panel.id"
-          :bottom="
-            index ==
-            panelStore.panelArrangement.filter((p) => p.dock == 'right')
-              .length -
-              1
-          "
         >
           <DatasetsPanel
             v-if="panel.id === 'datasets'"
