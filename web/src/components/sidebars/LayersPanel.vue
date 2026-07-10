@@ -43,8 +43,8 @@ const filteredLayers = computed({
     layerStore.selectedLayers = newValue;
   },
 });
-const allLayersVisible = computed(() =>
-  layerStore.selectedLayers.every((l: Layer) => l.visible),
+const allFilteredLayersVisible = computed(() =>
+  filteredLayers.value.every((l: Layer) => l.visible),
 );
 const activeLayer = ref<Layer>();
 
@@ -116,9 +116,9 @@ function setLayerActive(layer: Layer, active: boolean) {
         />
         <v-checkbox-btn
           v-if="!isComparing"
-          :model-value="filteredLayers.every((l: Layer) => l.visible)"
+          :model-value="allFilteredLayersVisible"
           style="display: inline"
-          @click="setVisibility(filteredLayers, !allLayersVisible)"
+          @click="setVisibility(filteredLayers, !allFilteredLayersVisible)"
         />
         <span v-if="isComparing">
           <v-checkbox-btn
