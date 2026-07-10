@@ -166,7 +166,7 @@ function panelUpdated() {
               v-else-if="panel.id === 'layers' && projectStore.currentProject"
               v-tooltip="'Compare Layers'"
               icon="mdi-compare"
-              :color="compareStore.isComparing ? 'primary' : ''"
+              :color="compareStore.isComparing ? 'primary' : 'secondary-text'"
               @click="compareStore.isComparing = !compareStore.isComparing"
             />
 

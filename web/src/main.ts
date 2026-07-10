@@ -29,6 +29,17 @@ const vuetify = createVuetify({
     defaultTheme,
     themes: THEMES,
   },
+  defaults: {
+    VIcon: {
+      color: "secondary-text",
+    },
+    VBtn: {
+      backgroundColor: "transparent",
+      VIcon: {
+        color: "inherit",
+      },
+    },
+  },
 });
 app.use(vuetify);
 app.use(JsonEditorVue);

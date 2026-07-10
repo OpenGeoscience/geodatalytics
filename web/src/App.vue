@@ -119,29 +119,8 @@ scrollbar changes disables default styling and rounding so corners appear square
   border-radius: 4px;
 }
 
-.v-icon {
+.v-btn.bg-transparent {
   color: rgb(var(--v-theme-secondary-text));
-  opacity: 1;
-}
-
-.bg-primary .v-icon,
-.primary-button .v-icon {
-  color: rgb(var(--v-theme-button-text));
-}
-
-.secondary-button .v-icon,
-.text-primary.v-icon {
-  color: rgb(var(--v-theme-primary));
-}
-
-.v-icon.text-error,
-.v-icon.text-red {
-  color: rgb(var(--v-theme-error));
-}
-
-.v-icon.text-success,
-.v-icon.text-green {
-  color: rgb(var(--v-theme-success));
 }
 
 .v-number-input .v-field__field {
