@@ -570,6 +570,21 @@ function refreshLayer() {
   layerStore.fetchAvailableLayer(props.layer.id);
 }
 
+function newNameKeyDown(e: KeyboardEvent) {
+  if (e.key === "Enter") {
+    if (newName.value) {
+      if (newNameMode.value === "update") {
+        save();
+      } else {
+        saveAsNew();
+      }
+    }
+  } else if (e.key === "Escape") {
+    newNameMode.value = undefined;
+    newName.value = undefined;
+  }
+}
+
 watch(
   () => panelStore.draggingPanel,
   () => {
@@ -1028,6 +1043,14 @@ onMounted(resetCurrentStyle);
                           <v-btn :value="'discrete'">Discrete</v-btn>
                           <v-btn :value="'continuous'">Continuous</v-btn>
                         </v-btn-toggle>
+                        <v-icon
+                          v-tooltip="
+                            'A discrete colormap divides data into distinct, non-overlapping color buckets. A continuous colormap maps values along a smooth gradient.'
+                          "
+                          icon="mdi-information-outline"
+                          color="primary"
+                          class="ml-2"
+                        />
                       </td>
                     </tr>
                     <tr v-if="group.colormap">
@@ -1318,6 +1341,7 @@ onMounted(resetCurrentStyle);
                                   <v-chip
                                     v-if="(item as any).sample_label"
                                     size="small"
+                                    class="sample-label"
                                     >{{ (item as any).sample_label }}</v-chip
                                   >
                                 </template>
@@ -1481,6 +1505,14 @@ onMounted(resetCurrentStyle);
                             <v-btn :value="'discrete'">Discrete</v-btn>
                             <v-btn :value="'continuous'">Continuous</v-btn>
                           </v-btn-toggle>
+                          <v-icon
+                            v-tooltip="
+                              'A discrete colormap divides data into distinct, non-overlapping color buckets. A continuous colormap maps values along a smooth gradient.'
+                            "
+                            icon="mdi-information-outline"
+                            color="primary"
+                            class="ml-2"
+                          />
                         </td>
                       </tr>
                       <tr>
@@ -1715,6 +1747,7 @@ onMounted(resetCurrentStyle);
                                 <v-chip
                                   v-if="(item as any).sample_label"
                                   size="small"
+                                  class="sample-label"
                                   >{{ (item as any).sample_label }}</v-chip
                                 >
                               </template>
@@ -1897,6 +1930,7 @@ onMounted(resetCurrentStyle);
                           <v-chip
                             v-if="(item as any).sample_label"
                             size="small"
+                            class="sample-label"
                             >{{ (item as any).sample_label }}</v-chip
                           >
                         </template>
@@ -2107,21 +2141,7 @@ onMounted(resetCurrentStyle);
                   !availableStyles?.map((s) => s.name).includes(newName) ||
                   `Style ''${newName}'' already exists.`,
               ]"
-              @keydown.enter="
-                () => {
-                  if (newName) {
-                    if (newNameMode === 'update') {
-                      save();
-                    } else {
-                      saveAsNew();
-                    }
-                  }
-                }
-              "
-              @keydown.escape="
-                newNameMode = undefined;
-                newName = undefined;
-              "
+              @keydown="newNameKeyDown"
             />
           </v-card-text>
 
@@ -2339,5 +2359,12 @@ onMounted(resetCurrentStyle);
 }
 .filter-card.highlight {
   box-shadow: 0 0 1px 2px rgb(var(--v-theme-primary)) !important;
+}
+.sample-label .v-chip__content {
+  max-width: 300px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
 }
 </style>

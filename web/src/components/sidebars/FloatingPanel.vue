@@ -9,7 +9,6 @@ const compareStore = useMapCompareStore();
 
 const props = defineProps<{
   id: string;
-  bottom?: boolean;
 }>();
 
 const startDrag = panelStore.startDrag;
@@ -167,7 +166,7 @@ function panelUpdated() {
               v-else-if="panel.id === 'layers' && projectStore.currentProject"
               v-tooltip="'Compare Layers'"
               icon="mdi-compare"
-              :color="compareStore.isComparing ? 'primary' : ''"
+              :color="compareStore.isComparing ? 'primary' : 'secondary-text'"
               @click="compareStore.isComparing = !compareStore.isComparing"
             />
 
@@ -211,7 +210,7 @@ function panelUpdated() {
       </v-card>
     </div>
     <div
-      v-if="!panel.position && !props.bottom"
+      v-if="!panel.position && !panel.collapsed"
       class="draggable-divider"
       @mousedown="
         (e) => {

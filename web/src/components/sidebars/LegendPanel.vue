@@ -161,7 +161,7 @@ function getColorPropsCoverage(layer: Layer) {
                   :n-colors="colormap_preview.nColors"
                   :range="colormap_preview.range"
                 />
-                <v-expansion-panels v-else>
+                <v-expansion-panels v-else flat>
                   <v-expansion-panel static bg-color="transparent">
                     <v-expansion-panel-title class="pa-0" min-height="0">
                       <colormap-preview

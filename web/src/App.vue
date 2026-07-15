@@ -118,4 +118,16 @@ scrollbar changes disables default styling and rounding so corners appear square
   background-color: rgb(var(--v-theme-border));
   border-radius: 4px;
 }
+
+.v-btn.bg-transparent {
+  color: rgb(var(--v-theme-secondary-text));
+}
+
+.v-number-input .v-field__field {
+  flex-direction: column;
+}
+
+.v-input {
+  --v-input-control-height: 32px;
+}
 </style>

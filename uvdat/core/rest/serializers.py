@@ -276,7 +276,7 @@ class TaskResultSerializer(serializers.ModelSerializer):
 
     def get_name(self, obj):
         if obj.name and obj.created:
-            timestamp = obj.created.strftime("%I:%M %p %d %b %Y")
+            timestamp = obj.created.strftime("%Y-%m-%d %I:%M %p UTC")
             return f"{timestamp} - {obj.name}"
         return obj.name
 
