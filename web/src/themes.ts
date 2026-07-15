@@ -29,7 +29,7 @@ export const THEMES = {
       background: "#141516",
       surface: "#343536", // sidebars, menus
       "surface-bright": "#141516", // floating panels
-      "surface-light": "#272727", // toolbars
+      "surface-light": "#1E2123", // toolbars
       "surface-variant": "#454545", // tooltip background
       "on-surface-variant": "#FFFFFF", // tooltip text
       "secondary-darken-1": "#0A0A0B", // overlay scrim
@@ -37,7 +37,7 @@ export const THEMES = {
       "secondary-text": "#CACACA",
       "helper-text": "#757575",
       "button-text": "#141516",
-      border: "#C9CBCE",
+      border: "#4E5052",
       success: "#66BB6A",
       error: "#EF5350",
       info: "#42A5F5",
