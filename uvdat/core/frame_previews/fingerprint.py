@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 
 def _fingerprint_payload(configs: dict) -> str:
     normalized = dict(configs)
-    normalized["default_frame"] = int(normalized["default_frame"])
-    normalized["opacity"] = float(normalized["opacity"])
+    normalized.pop("default_frame", None)
+    normalized.pop("opacity", None)
     return json.dumps(normalized, sort_keys=True, default=str)
 
 

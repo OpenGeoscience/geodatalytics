@@ -203,6 +203,7 @@ def ensure_default_layer_style(layer: Layer, project: Project) -> LayerStyle:
 def _fingerprint_matches(layer_style: LayerStyle, fingerprint: str) -> bool:
     """Return whether the style's current configs still match the task fingerprint.
 
+    Opacity and default_frame are ignored by the fingerprint.
     ``repr_style_configs`` always reads from the database, so this detects a
     style save that happened after this task was enqueued.
     """
@@ -351,7 +352,8 @@ def generate_layer_style_previews(
     Preview rows are created upstream with ``creating``/``regenerating`` status and
     cleared images; this task fills them in and sets ``complete`` or ``failed``.
 
-    ``fingerprint`` is a sha256 of ``repr_style_configs()`` at enqueue time. The
+    ``fingerprint`` is a sha256 of style configs (excluding opacity /
+    default_frame) at enqueue time. The
     task aborts whenever the live style no longer matches, so rapid double-saves
     only publish previews for the latest style version.
     """
