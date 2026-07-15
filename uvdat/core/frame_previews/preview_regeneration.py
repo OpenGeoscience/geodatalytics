@@ -5,6 +5,7 @@ from django.utils import timezone
 from uvdat.core.frame_previews.fingerprint import style_fingerprint
 from uvdat.core.models import Layer, LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
+from uvdat.core.tasks.frame_preview import generate_layer_style_previews
 
 
 def style_needs_previews(layer_style: LayerStyle) -> bool:
@@ -105,8 +106,6 @@ def invalidate_and_enqueue_previews(
             "fingerprint": fingerprint,
         },
     )
-
-    from uvdat.core.tasks.frame_preview import generate_layer_style_previews  # noqa: PLC0415
 
     if asynchronous:
         generate_layer_style_previews.delay(layer_style.id, fingerprint, result.id)
