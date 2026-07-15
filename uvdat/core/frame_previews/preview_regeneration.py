@@ -95,12 +95,13 @@ def invalidate_and_enqueue_previews(
     supersede_pending_preview_tasks(layer_style.id)
 
     result = TaskResult.objects.create(
-        name=f"Frame previews: {layer_style.name}",
+        name=f"Frame previews: {layer_style.layer.name} - {layer_style.name}",
         task_type="frame_preview",
         project=layer_style.project,
         inputs={
             "layer_style_id": layer_style.id,
             "layer_id": layer_style.layer_id,
+            "layer_name": layer_style.layer.name,
             "fingerprint": fingerprint,
         },
     )
