@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { watch, onMounted, computed } from "vue";
-import { oauthClient } from "./api/auth";
 import { useTheme } from "vuetify/lib/framework.mjs";
 
 import ToggleCompareMap from "./components/map/ToggleCompareMap.vue";
 import SideBars from "./components/sidebars/SideBars.vue";
 import ControlsBar from "./components/ControlsBar.vue";
+import SplashPage from "./components/SplashPage.vue";
 
 import {
   useAppStore,
@@ -31,58 +31,49 @@ function onReady() {
   }
 }
 
-const login = () => {
-  oauthClient.redirectToLogin();
-};
-
 onMounted(onReady);
 watch(() => appStore.currentUser, onReady);
 </script>
 
 <template>
   <v-app>
-    <v-overlay
-      :model-value="!appStore.currentUser"
-      absolute
-      persistent
-      :opacity="0.8"
-      scrim="secondary"
-      class="align-center justify-center"
-    >
-      <v-btn @click="login"> Log in to Continue </v-btn>
-    </v-overlay>
-    <v-overlay
-      v-if="appStore.currentUser"
-      :model-value="showError"
-      absolute
-      :opacity="0.8"
-      class="align-center justify-center"
-    >
-      <v-card class="pa-3">
-        <v-btn
-          icon
-          variant="flat"
-          class="pa-3"
-          style="float: right"
-          @click.stop="appStore.currentError = undefined"
-        >
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-        <v-card-title> Error: </v-card-title>
-        <v-card-text>
-          {{ appStore.currentError }}
-        </v-card-text>
-      </v-card>
-    </v-overlay>
-    <div>
-      <div
-        :class="panelStore.draggingPanel ? 'main-area no-select' : 'main-area'"
-        @mousemove="panelStore.dragPanel"
-        @mouseup="panelStore.stopDrag"
+    <SplashPage v-if="!appStore.currentUser" />
+    <div v-else>
+      <v-overlay
+        v-if="appStore.currentUser"
+        :model-value="showError"
+        absolute
+        :opacity="0.8"
+        class="align-center justify-center"
       >
-        <ToggleCompareMap />
-        <SideBars />
-        <ControlsBar />
+        <v-card class="pa-3">
+          <v-btn
+            icon
+            variant="flat"
+            class="pa-3"
+            style="float: right"
+            @click.stop="appStore.currentError = undefined"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+          <v-card-title> Error: </v-card-title>
+          <v-card-text>
+            {{ appStore.currentError }}
+          </v-card-text>
+        </v-card>
+      </v-overlay>
+      <div>
+        <div
+          :class="
+            panelStore.draggingPanel ? 'main-area no-select' : 'main-area'
+          "
+          @mousemove="panelStore.dragPanel"
+          @mouseup="panelStore.stopDrag"
+        >
+          <ToggleCompareMap />
+          <SideBars />
+          <ControlsBar />
+        </div>
       </div>
     </div>
   </v-app>
