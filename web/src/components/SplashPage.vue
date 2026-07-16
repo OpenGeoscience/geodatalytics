@@ -128,7 +128,7 @@ const login = () => {
                 <div>
                   <div class="bold">Multisource data integration</div>
                   Ingest vector, raster, and tabular data representing roads,
-                  utilites, amenities, satellite imagery, sensor data, etc.
+                  utilities, amenities, satellite imagery, sensor data, etc.
                 </div>
               </div>
             </div>
@@ -256,7 +256,7 @@ const login = () => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .splash-page-content {
   width: 100vw;
   height: 100vh;
@@ -271,6 +271,7 @@ const login = () => {
     rgba(var(--v-theme-surface-bright), 0.7) 100%
   );
   padding: 20px 60px;
+  overflow-y: auto;
 }
 
 .bold {
