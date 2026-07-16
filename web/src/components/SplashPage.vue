@@ -148,7 +148,7 @@ const login = () => {
                   class="bg-secondary pa-4 rounded"
                 ></v-icon>
                 <div>
-                  <div class="bold">Local Governments</div>
+                  <div class="bold">Local governments</div>
                   Municipalities planning resilient infrastructure
                 </div>
               </div>
@@ -160,7 +160,7 @@ const login = () => {
                   class="bg-secondary pa-4 rounded"
                 ></v-icon>
                 <div>
-                  <div class="bold">Urban Planners</div>
+                  <div class="bold">Urban planners</div>
                   Analysts assessing infrastructure risk and climate impacts
                 </div>
               </div>
@@ -172,7 +172,7 @@ const login = () => {
                   class="bg-secondary pa-4 rounded"
                 ></v-icon>
                 <div>
-                  <div class="bold">Service Providers</div>
+                  <div class="bold">Service providers</div>
                   Utilities and emergency management teams
                 </div>
               </div>
@@ -184,7 +184,7 @@ const login = () => {
                   class="bg-secondary pa-4 rounded"
                 ></v-icon>
                 <div>
-                  <div class="bold">Data Scientists</div>
+                  <div class="bold">Data scientists</div>
                   AI/ML developers building geospatial models
                 </div>
               </div>
@@ -230,7 +230,7 @@ const login = () => {
                   class="bg-secondary pa-4 rounded"
                 ></v-icon>
                 <div>
-                  <div class="bold">Run Models & Simulations</div>
+                  <div class="bold">Run models & simulations</div>
                   Run analytics tasks with pretrained AI models or custom
                   simulation logic
                 </div>
@@ -243,7 +243,7 @@ const login = () => {
                   class="bg-secondary pa-4 rounded"
                 ></v-icon>
                 <div>
-                  <div class="bold">Visualize & Share</div>
+                  <div class="bold">Visualize & share</div>
                   Explore results on the interactive map and share saved views
                   with your team
                 </div>
