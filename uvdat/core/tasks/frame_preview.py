@@ -215,6 +215,8 @@ def _open_task_result(result_id: int | None, layer_style_id: int) -> TaskResult 
     if result_id is None:
         return None
 
+    # Use filter().first() so a missing row yields None for the branching below
+    # (get() would raise DoesNotExist).
     result = TaskResult.objects.filter(id=result_id).first()
     if result is None or result.completed is not None:
         logger.info(
