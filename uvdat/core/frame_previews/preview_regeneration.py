@@ -5,6 +5,7 @@ from django.utils import timezone
 from uvdat.core.frame_previews.fingerprint import style_fingerprint
 from uvdat.core.models import Layer, LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
+from uvdat.core.models.task_result import suppress_task_notifications
 from uvdat.core.tasks.frame_preview import generate_layer_style_previews
 
 
@@ -110,7 +111,8 @@ def invalidate_and_enqueue_previews(
     if asynchronous:
         generate_layer_style_previews.delay(layer_style.id, fingerprint, result.id)
     else:
-        generate_layer_style_previews.apply(args=(layer_style.id, fingerprint, result.id))
+        with suppress_task_notifications():
+            generate_layer_style_previews.apply(args=(layer_style.id, fingerprint, result.id))
     return result
 
 

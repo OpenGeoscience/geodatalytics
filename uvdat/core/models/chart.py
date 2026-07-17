@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from django.db import models
 
+from uvdat.core.models.task_result import suppress_task_notifications
+
 from .project import Project
 from .querysets import ProjectQuerySet
 
@@ -34,7 +36,8 @@ class Chart(models.Model):
         if asynchronous:
             convert_chart_signature.delay()
         else:
-            convert_chart_signature.apply()
+            with suppress_task_notifications():
+                convert_chart_signature.apply()
 
     def new_line(self):
         # TODO: new line

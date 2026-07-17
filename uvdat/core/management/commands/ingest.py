@@ -19,7 +19,6 @@ import pooch
 
 from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
 from uvdat.core.models import Chart, Dataset, FileItem, Layer, Project
-from uvdat.core.models.task_result import suppress_task_notifications
 from uvdat.core.tasks.frame_preview import ensure_default_layer_style
 
 DATA_FOLDER = Path(os.environ.get("INGEST_BIND_MOUNT_POINT", "sample_data"))
@@ -172,12 +171,7 @@ def generate_ingest_multiframe_previews(converted_dataset_names: set[str]) -> in
                 f"\t\t Generating multiframe raster previews for style {style.name!r} "
                 f"(layer {layer.name!r})..."
             )
-            # Run synchronously: ingest is a one-shot CLI process, so previews
-            # must be generated inline rather than handed to a Celery worker.
-            # Suppress the TaskResult WebSocket notification: there is no client
-            # session listening and Redis is typically unreachable here.
-            with suppress_task_notifications():
-                invalidate_and_enqueue_previews(style, asynchronous=False)
+            invalidate_and_enqueue_previews(style, asynchronous=False)
             style_count += 1
     return style_count
 

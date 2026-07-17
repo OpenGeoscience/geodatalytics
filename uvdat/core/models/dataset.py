@@ -84,6 +84,10 @@ class Dataset(models.Model):
         asynchronous=True,
     ):
         # Prevent circular import
+        from uvdat.core.models.task_result import (  # noqa: PLC0415
+            TaskResult,
+            suppress_task_notifications,
+        )
         from uvdat.core.tasks.dataset import convert_dataset  # noqa: PLC0415
 
         convert_dataset_signature = convert_dataset.s(
@@ -94,9 +98,6 @@ class Dataset(models.Model):
         )
 
         if asynchronous:
-            # Prevent circular import
-            from uvdat.core.models.task_result import TaskResult  # noqa: PLC0415
-
             result = TaskResult.objects.create(
                 name=f"Conversion of Dataset {self.name}",
                 task_type="conversion",
@@ -111,5 +112,6 @@ class Dataset(models.Model):
             convert_dataset_signature.delay(result_id=result.id)
             return result
         else:
-            convert_dataset_signature.apply()
+            with suppress_task_notifications():
+                convert_dataset_signature.apply()
             return None
