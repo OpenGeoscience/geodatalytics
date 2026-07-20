@@ -198,7 +198,7 @@ async function fitMap() {
   loadingBounds.value = false;
 }
 
-async function takeScreenshot() {
+async function takeScreenshot(showSidebars: boolean) {
   copyMenuShown.value = false;
   const screenshotTarget = document.getElementById("app");
   if (screenshotTarget) {
@@ -207,7 +207,7 @@ async function takeScreenshot() {
         return (
           element.id === "controls-bar" ||
           element.classList.contains("control-menu") ||
-          (mapOnly.value && element.classList.contains("v-navigation-drawer"))
+          (!showSidebars && element.classList.contains("v-navigation-drawer"))
         );
       },
     });
@@ -219,7 +219,7 @@ async function takeScreenshot() {
 }
 
 async function copyScreenshot() {
-  const blob = await takeScreenshot();
+  const blob = await takeScreenshot(!mapOnly.value);
   if (blob) {
     const clipboardItem = new ClipboardItem({ "image/png": blob });
     navigator.clipboard.write([clipboardItem]);
@@ -228,7 +228,7 @@ async function copyScreenshot() {
 }
 
 async function saveScreenshot() {
-  const blob = await takeScreenshot();
+  const blob = await takeScreenshot(!mapOnly.value);
   if (blob) {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -251,7 +251,7 @@ function animateCameraFlash() {
 }
 
 function showViewStateDialog() {
-  takeScreenshot().then((blob) => {
+  takeScreenshot(true).then((blob) => {
     newViewStateThumbnail.value = blob;
   });
   showViewStateCreation.value = true;
