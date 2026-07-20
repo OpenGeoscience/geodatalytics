@@ -107,6 +107,7 @@ class Dataset(models.Model):
                     "region_options": region_options,
                 },
                 status="Initializing task...",
+                creator=self.owner(),
             )
             convert_dataset_signature.delay(result_id=result.id)
             return result
