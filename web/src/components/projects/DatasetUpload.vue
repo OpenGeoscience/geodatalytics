@@ -75,7 +75,7 @@ const valid = computed(() => {
       return (
         l.name &&
         l.files.length &&
-        fileUploadRules.every((rule) => rule(l.files) === undefined) &&
+        fileUploadRules.every((rule) => rule(l.files) === true) &&
         (l.frame_method === "single" || l.frame_property)
       );
     })
