@@ -92,13 +92,6 @@ function getColormapPreviews(layer: Layer) {
   });
 }
 
-function setVisibility(layer: Layer, visible = true) {
-  layerStore.selectedLayers = layerStore.selectedLayers.map((l: Layer) => {
-    if (l.id == layer.id) l.visible = visible;
-    return l;
-  });
-}
-
 function getColorPropsCoverage(layer: Layer) {
   const frame_coverages = layerStore
     .layerFrames(layer)
@@ -126,7 +119,7 @@ function getColorPropsCoverage(layer: Layer) {
           <v-icon
             :icon="layer.visible ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
             class=""
-            @click="setVisibility(layer, !layer.visible)"
+            @click="layerStore.setLayerVisibility([layer], !layer.visible)"
           />
           {{ layer.name }}
           <div

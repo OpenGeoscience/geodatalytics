@@ -199,6 +199,13 @@ export const useLayerStore = defineStore("layer", () => {
     selectedLayers.value = [newLayer, ...selectedLayers.value];
   }
 
+  function setLayerVisibility(layers: Layer[], visible = true) {
+    selectedLayers.value = selectedLayers.value.map((layer: Layer) => {
+      if (layers.includes(layer)) layer.visible = visible;
+      return layer;
+    });
+  }
+
   watch(selectedLayers, updateLayersShown);
   watch(framesByLayerId, updateLayersShown);
   function updateLayersShown() {
@@ -285,6 +292,7 @@ export const useLayerStore = defineStore("layer", () => {
     layerFrames,
     updateLayersShown,
     addLayer,
+    setLayerVisibility,
     getDBObjectsForSourceID,
     getBoundsOfVisibleLayers,
     getMapLayersFromLayerObject,
