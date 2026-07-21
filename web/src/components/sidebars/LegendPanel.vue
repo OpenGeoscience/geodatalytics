@@ -127,7 +127,10 @@ function getColorPropsCoverage(layer: Layer) {
             :key="colormap_preview.name"
             class="ml-6"
           >
-            <div v-if="getColormapPreviews(layer).length > 1">
+            <div
+              v-if="getColormapPreviews(layer).length > 1"
+              style="font-weight: bold"
+            >
               {{ colormap_preview.name }}
             </div>
             <span
