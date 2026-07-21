@@ -67,9 +67,9 @@ watch(
 
 <template>
   <div class="d-flex" style="column-gap: 5px; width: 100%">
-    <span v-if="props.range">{{ props.range[0] }}</span>
+    <span v-if="props.range">{{ props.range[0]?.toPrecision(3) }}</span>
     <canvas ref="canvas" class="colormap-canvas"></canvas>
-    <span v-if="props.range">{{ props.range[1] }}</span>
+    <span v-if="props.range">{{ props.range[1]?.toPrecision(3) }}</span>
   </div>
 </template>
 
