@@ -30,7 +30,7 @@ class TaskResult(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     completed = models.DateTimeField(null=True)
     creator = models.ForeignKey(
-        User, related_name="task_results", null=True, on_delete=models.CASCADE
+        User, related_name="task_results", null=True, on_delete=models.SET_NULL
     )
     subscribers = models.ManyToManyField(User, related_name="task_subscriptions", blank=True)
 
