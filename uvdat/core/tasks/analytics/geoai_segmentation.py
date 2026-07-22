@@ -144,6 +144,7 @@ def geoai_segmentation(result_id):  # noqa: PLR0915
         },
     )
     dataset.set_tags(["analytics", "segmentation", "imagery"])
+    dataset.set_owner(result.creator)
     raster_file_item = FileItem.objects.create(
         name=mask_path.name,
         dataset=dataset,

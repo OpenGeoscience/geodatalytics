@@ -90,6 +90,7 @@ def create_road_network(result_id):
         metadata={"creation_time": datetime.datetime.now(datetime.UTC).isoformat()},
     )
     dataset.set_tags(["analytics", "osmnx", "network"])
+    dataset.set_owner(result.creator)
     vector_data = VectorData.objects.create(name=f"{location} Roads Vector Data", dataset=dataset)
     layer = Layer.objects.create(name=f"{location} Roads", dataset=dataset)
     LayerFrame.objects.create(name="Roads", layer=layer, vector=vector_data)
