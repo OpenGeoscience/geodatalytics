@@ -59,13 +59,6 @@ function removeLayers(layers: Layer[]) {
   mapStore.removeLayers(layerIds);
 }
 
-function setVisibility(layers: Layer[], visible = true) {
-  layerStore.selectedLayers = layerStore.selectedLayers.map((layer: Layer) => {
-    if (layers.includes(layer)) layer.visible = visible;
-    return layer;
-  });
-}
-
 const debouncedUpdateFrame = debounce((layer: Layer, value: number) => {
   layerStore.selectedLayers = layerStore.selectedLayers.map((l: Layer) => {
     if (l.id === layer.id && l.copy_id === layer.copy_id) {
@@ -118,7 +111,12 @@ function setLayerActive(layer: Layer, active: boolean) {
           v-if="!isComparing"
           :model-value="allFilteredLayersVisible"
           style="display: inline"
-          @click="setVisibility(filteredLayers, !allFilteredLayersVisible)"
+          @click="
+            layerStore.setLayerVisibility(
+              filteredLayers,
+              !allFilteredLayersVisible,
+            )
+          "
         />
         <span v-if="isComparing">
           <v-checkbox-btn
@@ -160,7 +158,13 @@ function setLayerActive(layer: Layer, active: boolean) {
                     v-if="!isComparing"
                     :model-value="element.visible"
                     style="display: inline"
-                    @click="() => setVisibility([element], !element.visible)"
+                    @click="
+                      () =>
+                        layerStore.setLayerVisibility(
+                          [element],
+                          !element.visible,
+                        )
+                    "
                   />
                   <span v-if="isComparing">
                     <v-checkbox-btn
