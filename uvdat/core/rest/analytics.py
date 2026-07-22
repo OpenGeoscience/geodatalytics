@@ -107,6 +107,8 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
         except AnalysisInputError as e:
             return Response(str(e), status=400)
         result = analysis_type.run_task(project=project, **request.data)
+        result.creator = request.user
+        result.save()
         return Response(
             uvdat_serializers.TaskResultSerializer(result).data,
             status=200,

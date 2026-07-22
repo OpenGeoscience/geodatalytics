@@ -82,5 +82,7 @@ class DatasetViewSet(ModelViewSet):
             network_options=request.data.get("network_options"),
             region_options=request.data.get("region_options"),
         )
+        result.creator = request.user
+        result.save()
 
         return Response(TaskResultSerializer(result).data, status=200)

@@ -62,12 +62,13 @@ class Dataset(models.Model):
             permission__codename="owner",
         ).delete()
 
-        # Delete any existing user perms and set owner
-        UserObjectPermission.objects.filter(
-            **filters,
-            user_id__in=[user.id],
-        ).delete()
-        assign_perm("owner", user, self)
+        if user is not None:
+            # Delete any existing user perms and set owner
+            UserObjectPermission.objects.filter(
+                **filters,
+                user_id__in=[user.id],
+            ).delete()
+            assign_perm("owner", user, self)
 
     @transaction.atomic()
     def set_tags(self, tags: list[str]):
@@ -107,6 +108,7 @@ class Dataset(models.Model):
                     "region_options": region_options,
                 },
                 status="Initializing task...",
+                creator=self.owner(),
             )
             convert_dataset_signature.delay(result_id=result.id)
             return result
