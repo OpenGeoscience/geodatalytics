@@ -48,7 +48,7 @@ services:
 
   redis:
     image: redis:alpine
-    command: ["redis-server", "--maxmemory", "4096MB", "--maxmemory-policy", "volatile-lru"]
+    command: ["redis-server", "--maxmemory", "4GB", "--maxmemory-policy", "volatile-lru"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       start_period: 30s
