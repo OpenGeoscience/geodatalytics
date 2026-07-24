@@ -160,6 +160,7 @@ CHANNEL_LAYERS: dict[str, dict[str, Any]] = {
 }
 
 # Large image cache with Redis
+LARGE_IMAGE_CACHE_NAME = "tiles"
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
