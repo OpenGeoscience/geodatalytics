@@ -122,14 +122,12 @@ def sort_graph_centrality(g, measure):
         cent = nx.second_order_centrality(g)
     cent_list = list(cent.items())  # convert to np array
     cent_arr = np.array(cent_list)
-    cent_idx = np.argsort(cent_arr, 0)  # sort array of tuples by betweenness
+    # sort array of tuples by betweenness, from highest to lowest
+    cent_idx = np.argsort(cent_arr, 0, descending=True)
 
     node_list = list(g.nodes())
     nodes_sorted = [node_list[i] for i in cent_idx[:, 1]]
     edge_list = list(g.edges())
-
-    # Currently sorted from lowest to highest betweenness; let's reverse that
-    nodes_sorted.reverse()
 
     return nodes_sorted, edge_list
 
