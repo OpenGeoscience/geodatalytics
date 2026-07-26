@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from django.db import models
 
+from uvdat.core.models.task_result import suppress_task_notifications
+
 from .project import Project
 from .querysets import ProjectQuerySet
 
@@ -47,5 +49,19 @@ class Chart(models.Model):
             convert_chart_signature.delay(result_id=result.id)
             return result
         else:
-            convert_chart_signature.apply()
+            with suppress_task_notifications():
+                convert_chart_signature.apply()
             return None
+
+    def new_line(self):
+        # TODO: new line
+        pass
+
+    def rename_lines(self, new_names):
+        # TODO: rename lines
+        pass
+
+    def clear(self):
+        # TODO: clear
+        pass
+
