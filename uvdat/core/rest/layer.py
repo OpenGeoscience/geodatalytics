@@ -71,9 +71,7 @@ class LayerStyleViewSet(ModelViewSet):
     def partial_update(self, request, **kwargs):
         instance = self.get_object()
         is_default = request.data.pop("is_default", False)
-        serializer = LayerStyleWithPreviewsSerializer(
-            instance, data=request.data, partial=True
-        )
+        serializer = LayerStyleWithPreviewsSerializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
             try:

@@ -15,7 +15,7 @@ class PreviewStatus(models.TextChoices):
 
 
 class RasterFramePreview(models.Model):
-    """Cache of one rendered PNG for (frame × raster_style_params fingerprint)."""
+    """Cache of one rendered PNG for (frame x raster_style_params fingerprint)."""
 
     layer_frame = models.ForeignKey(
         LayerFrame,

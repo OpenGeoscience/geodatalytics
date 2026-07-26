@@ -1,19 +1,21 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from uvdat.core.frame_previews.fingerprint import style_fingerprint
 from uvdat.core.frame_previews.lookup import ordered_complete_previews
-from uvdat.core.frame_previews.types import FramePreviewData
 
 from .colormap import Colormap
 from .layer import Layer
 from .project import Project
 from .querysets import ProjectQuerySet
+
+if TYPE_CHECKING:
+    from uvdat.core.frame_previews.types import FramePreviewData
 
 
 class LayerStyle(models.Model):

@@ -72,8 +72,17 @@ class LayerStyleAdmin(admin.ModelAdmin):
 
 @admin.register(RasterFramePreview)
 class RasterFramePreviewAdmin(admin.ModelAdmin):
-    list_display = ["id", "layer_frame", "style_fingerprint", "raster_style_params", "width", "height", "status"]
+    list_display = [
+        "id",
+        "layer_frame",
+        "style_fingerprint",
+        "raster_style_params",
+        "width",
+        "height",
+        "status",
+    ]
     list_select_related = ["layer_frame"]
+
 
 @admin.register(Colormap)
 class ColormapAdmin(admin.ModelAdmin):

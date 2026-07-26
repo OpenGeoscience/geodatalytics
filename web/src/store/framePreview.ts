@@ -62,7 +62,10 @@ function previewsAreReady(
   if (style?.preview_status !== undefined) {
     return style.preview_status === "ready";
   }
-  if (usesLayerDefaultPreviews(layer, style) && layer.preview_status !== undefined) {
+  if (
+    usesLayerDefaultPreviews(layer, style) &&
+    layer.preview_status !== undefined
+  ) {
     return layer.preview_status === "ready";
   }
   // Backward compatibility for payloads that omit preview_status entirely.
@@ -76,7 +79,10 @@ function previewsForLayer(layer: Layer, style: LayerStyle | undefined) {
   if (style?.multiframe_previews?.length) {
     return style.multiframe_previews;
   }
-  if (usesLayerDefaultPreviews(layer, style) && layer.multiframe_previews?.length) {
+  if (
+    usesLayerDefaultPreviews(layer, style) &&
+    layer.multiframe_previews?.length
+  ) {
     return layer.multiframe_previews;
   }
   return undefined;

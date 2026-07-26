@@ -271,10 +271,7 @@ def _mark_frame_preview_failed(
     ctx: _PreviewGenerationContext,
 ) -> None:
     """Mark a row failed only when both the row and context still match this task."""
-    if (
-        preview.style_fingerprint == ctx.fingerprint
-        and _generation_still_current(ctx)
-    ):
+    if preview.style_fingerprint == ctx.fingerprint and _generation_still_current(ctx):
         preview.status = PreviewStatus.FAILED
         preview.save(update_fields=["status"])
 
@@ -375,8 +372,50 @@ def _complete_preview_task(
         locked.complete()
 
 
+def _resolve_preview_style_inputs(
+    layer_id: int,
+    fingerprint: str,
+    base_style_query: dict[str, Any] | None,
+    result_id: int | None,
+    layer_style_id: int | None,
+) -> tuple[LayerStyle | None, dict[str, Any]] | None:
+    """Resolve style params for a preview run, or abandon and return ``None``."""
+    if layer_style_id is not None:
+        layer_style = LayerStyle.objects.filter(id=layer_style_id).first()
+        if layer_style is None:
+            logger.info(
+                "Skipping preview generation for layer=%s; style %s missing",
+                layer_id,
+                layer_style_id,
+            )
+            _abandon_task_result(
+                result_id,
+                "Style deleted; preview generation aborted.",
+            )
+            return None
+        if style_fingerprint(layer_style) != fingerprint:
+            logger.info(
+                "Skipping superseded preview generation for style=%s",
+                layer_style_id,
+            )
+            _abandon_task_result(
+                result_id,
+                "Superseded by newer preview request.",
+            )
+            return None
+        return layer_style, dict(layer_style.raster_style_params or {})
+
+    query = dict(base_style_query or {})
+    if params_fingerprint(query) != fingerprint:
+        logger.warning(
+            "base_style_query fingerprint mismatch for layer=%s; using provided fingerprint",
+            layer_id,
+        )
+    return None, query
+
+
 @shared_task
-def generate_frame_previews(
+def generate_frame_previews(  # noqa: PLR0913
     layer_id: int,
     fingerprint: str,
     base_style_query: dict[str, Any] | None = None,
@@ -397,38 +436,16 @@ def generate_frame_previews(
         _abandon_task_result(result_id, "Layer is not multiframe; nothing to preview.")
         return
 
-    layer_style = None
-    if layer_style_id is not None:
-        layer_style = LayerStyle.objects.filter(id=layer_style_id).first()
-        if layer_style is None:
-            logger.info(
-                "Skipping preview generation for layer=%s; style %s missing",
-                layer_id,
-                layer_style_id,
-            )
-            _abandon_task_result(
-                result_id,
-                "Style deleted; preview generation aborted.",
-            )
-            return
-        if style_fingerprint(layer_style) != fingerprint:
-            logger.info(
-                "Skipping superseded preview generation for style=%s",
-                layer_style_id,
-            )
-            _abandon_task_result(
-                result_id,
-                "Superseded by newer preview request.",
-            )
-            return
-        query = dict(layer_style.raster_style_params or {})
-    else:
-        query = dict(base_style_query or {})
-        if params_fingerprint(query) != fingerprint:
-            logger.warning(
-                "base_style_query fingerprint mismatch for layer=%s; using provided fingerprint",
-                layer_id,
-            )
+    resolved = _resolve_preview_style_inputs(
+        layer_id,
+        fingerprint,
+        base_style_query,
+        result_id,
+        layer_style_id,
+    )
+    if resolved is None:
+        return
+    layer_style, query = resolved
 
     result = _open_task_result(result_id, layer_id)
     if result_id is not None and result is None:

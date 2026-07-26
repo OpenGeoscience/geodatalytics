@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import inspect
+
 from django.core.files.base import ContentFile
 import pytest
 
@@ -20,14 +22,15 @@ from uvdat.core.frame_previews.raster_style import (
 )
 from uvdat.core.models import LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
+from uvdat.core.tasks.analytics import flood_simulation as flood_mod
 from uvdat.core.tasks.frame_preview import (
     DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
     FRAME_PREVIEW_DEFAULT_RESOLUTION_FRACTION,
     FRAME_PREVIEW_MAX_PX,
     FRAME_PREVIEW_MIN_PX,
+    _complete_preview_task,
     _PreviewGenerationContext,
     _PreviewGenerationStats,
-    _complete_preview_task,
     generate_frame_previews,
     resolve_preview_max_dimension,
 )
@@ -39,17 +42,23 @@ def _patch_preview_delay(mocker, celery_task_id: str = "celery-task-id"):
     return delay
 
 
-def _make_preview(layer_frame, *, fingerprint=None, params=None, status=PreviewStatus.COMPLETE, **kwargs):
+def _make_preview(
+    layer_frame,
+    *,
+    fingerprint=None,
+    params=None,
+    status=PreviewStatus.COMPLETE,
+    **kwargs,
+):
     params = dict(params or {})
     fingerprint = fingerprint if fingerprint is not None else params_fingerprint(params)
-    preview = RasterFramePreview.objects.create(
+    return RasterFramePreview.objects.create(
         layer_frame=layer_frame,
         style_fingerprint=fingerprint,
         raster_style_params=params,
         status=status,
         **kwargs,
     )
-    return preview
 
 
 @pytest.mark.django_db
@@ -853,9 +862,7 @@ def test_supersede_pending_preview_tasks_revokes_celery_and_closes_layer_default
         },
     )
 
-    revoke = mocker.patch(
-        "uvdat.core.tasks.frame_preview.generate_frame_previews.AsyncResult"
-    )
+    revoke = mocker.patch("uvdat.core.tasks.frame_preview.generate_frame_previews.AsyncResult")
 
     supersede_pending_preview_tasks(
         layer_id=layer_style.layer_id,
@@ -876,10 +883,6 @@ def test_supersede_pending_preview_tasks_revokes_celery_and_closes_layer_default
 
 def test_flood_simulation_enqueues_style_previews_after_params():
     """Regression: flood default style params must trigger preview generation."""
-    import inspect
-
-    from uvdat.core.tasks.analytics import flood_simulation as flood_mod
-
     source = inspect.getsource(flood_mod.flood_simulation)
     assert "invalidate_and_enqueue_previews(style)" in source
     assert "raster_style_params" in source
