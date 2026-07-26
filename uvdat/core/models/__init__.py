@@ -6,6 +6,7 @@ from .colormap import Colormap
 from .data import RasterData, VectorData, VectorFeature
 from .dataset import Dataset, DatasetTag
 from .file_item import FileItem
+from .frame_preview import RasterFramePreview
 from .layer import Layer, LayerFrame
 from .networks import Network, NetworkEdge, NetworkNode
 from .project import Project
@@ -39,6 +40,7 @@ __all__ = [
     "NetworkNode",
     "Project",
     "RasterData",
+    "RasterFramePreview",
     "Region",
     "SizeConfig",
     "SizeRangeConfig",

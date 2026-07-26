@@ -1,0 +1,69 @@
+# Generated for content-addressed frame style previews
+from __future__ import annotations
+
+from django.db import migrations, models
+import django.db.models.deletion
+import s3_file_field.fields
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ("core", "0024_taskresult_creator"),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name="layerstyle",
+            name="raster_style_params",
+            field=models.JSONField(blank=True, default=None, null=True),
+        ),
+        migrations.CreateModel(
+            name="RasterFramePreview",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("creating", "Creating"),
+                            ("regenerating", "Regenerating"),
+                            ("complete", "Complete"),
+                            ("failed", "Failed"),
+                        ],
+                        default="creating",
+                        max_length=16,
+                    ),
+                ),
+                ("style_fingerprint", models.CharField(max_length=64)),
+                (
+                    "raster_style_params",
+                    models.JSONField(blank=True, default=dict),
+                ),
+                ("image", s3_file_field.fields.S3FileField(blank=True, null=True)),
+                ("width", models.PositiveIntegerField(blank=True, null=True)),
+                ("height", models.PositiveIntegerField(blank=True, null=True)),
+                ("bounds", models.JSONField(blank=True, default=dict)),
+                (
+                    "layer_frame",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="previews",
+                        to="core.layerframe",
+                    ),
+                ),
+            ],
+            options={
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("layer_frame", "style_fingerprint"),
+                        name="unique_layer_frame_style_fingerprint_preview",
+                    )
+                ],
+            },
+        ),
+    ]
