@@ -266,6 +266,10 @@ export async function getLayerStyles(layerId: number): Promise<LayerStyle[]> {
   return (await apiClient.get(`layer-styles/?layer=${layerId}`)).data.results;
 }
 
+export async function getLayerStyle(styleId: number): Promise<LayerStyle> {
+  return (await apiClient.get(`layer-styles/${styleId}/`)).data;
+}
+
 export async function createLayerStyle(data: LayerStyle): Promise<LayerStyle> {
   return (await apiClient.post("layer-styles/", data)).data;
 }
