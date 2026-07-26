@@ -23,32 +23,72 @@ def style_needs_previews(layer_style: LayerStyle) -> bool:
     return layer_needs_previews(layer_style.layer)
 
 
+def _pending_preview_tasks_to_supersede(
+    *,
+    layer_id: int,
+    fingerprint: str,
+    layer_style_id: int | None = None,
+) -> list[TaskResult]:
+    """Select in-flight preview tasks that a newer enqueue should replace.
+
+    Style-scoped enqueues supersede that style's pending tasks and any
+    layer-default (no ``layer_style_id``) tasks for the same layer, so conversion
+    and style regeneration cannot race on the same frames. Layer-default enqueues
+    supersede other layer-default tasks with the same fingerprint.
+    """
+    candidates = TaskResult.objects.filter(
+        task_type="frame_preview",
+        completed__isnull=True,
+        inputs__layer_id=layer_id,
+    )
+    to_supersede: list[TaskResult] = []
+    for task in candidates:
+        inputs = task.inputs or {}
+        task_style_id = inputs.get("layer_style_id")
+        if layer_style_id is not None:
+            if task_style_id == layer_style_id or task_style_id is None:
+                to_supersede.append(task)
+        elif task_style_id is None and inputs.get("fingerprint") == fingerprint:
+            to_supersede.append(task)
+    return to_supersede
+
+
 def supersede_pending_preview_tasks(
     *,
     layer_id: int,
     fingerprint: str,
     layer_style_id: int | None = None,
 ) -> None:
-    """Close in-flight preview tasks superseded by a newer enqueue.
-
-    Prefer matching ``layer_style_id`` when present (style save). Otherwise match
-    ``layer_id`` + ``fingerprint`` (dataset/ingest enqueue).
-    """
-    pending = TaskResult.objects.filter(
-        task_type="frame_preview",
-        completed__isnull=True,
+    """Close in-flight preview tasks superseded by a newer enqueue and revoke Celery."""
+    pending = _pending_preview_tasks_to_supersede(
+        layer_id=layer_id,
+        fingerprint=fingerprint,
+        layer_style_id=layer_style_id,
     )
-    if layer_style_id is not None:
-        pending = pending.filter(inputs__layer_style_id=layer_style_id)
-    else:
-        pending = pending.filter(
-            inputs__layer_id=layer_id,
-            inputs__fingerprint=fingerprint,
-        )
-    pending.update(
+    if not pending:
+        return
+
+    celery_task_ids = [
+        celery_id
+        for task in pending
+        if isinstance((celery_id := (task.inputs or {}).get("celery_task_id")), str)
+    ]
+    TaskResult.objects.filter(
+        id__in=[task.id for task in pending],
+        completed__isnull=True,
+    ).update(
         completed=timezone.now(),
         status="Superseded by newer preview request.",
     )
+
+    if not celery_task_ids:
+        return
+
+    # Lazy import: avoid tasks <-> preview_regeneration cycle at module load.
+    from uvdat.core.tasks.frame_preview import generate_frame_previews  # noqa: PLC0415
+
+    for celery_task_id in celery_task_ids:
+        generate_frame_previews.AsyncResult(celery_task_id).revoke(terminate=False)
 
 
 def previews_current_for_fingerprint(layer: Layer, fingerprint: str) -> bool:
@@ -181,7 +221,14 @@ def invalidate_and_enqueue_layer_previews(
     from uvdat.core.tasks.frame_preview import generate_frame_previews  # noqa: PLC0415
 
     if asynchronous:
-        generate_frame_previews.delay(layer.id, fingerprint, params, result.id, **task_kwargs)
+        async_result = generate_frame_previews.delay(
+            layer.id, fingerprint, params, result.id, **task_kwargs
+        )
+        celery_task_id = getattr(async_result, "id", None)
+        if isinstance(celery_task_id, str):
+            inputs["celery_task_id"] = celery_task_id
+            result.inputs = inputs
+            result.save(update_fields=["inputs"])
     else:
         with suppress_task_notifications():
             generate_frame_previews.apply(

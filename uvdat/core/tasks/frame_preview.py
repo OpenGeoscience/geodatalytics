@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any
 
 from celery import shared_task
 from django.core.files.base import ContentFile
+from django.db import transaction
+from django.utils import timezone
 from django_large_image import tilesource, utilities
 from PIL import Image
 
@@ -64,6 +66,7 @@ class _PreviewGenerationContext:
     base_style_query: dict[str, Any]
     layer_style: LayerStyle | None = None
     resolution_fraction: float | None = None
+    task_result: TaskResult | None = None
 
     @property
     def layer_id(self) -> int:
@@ -204,6 +207,29 @@ def _fingerprint_still_valid(ctx: _PreviewGenerationContext) -> bool:
     return style_fingerprint(ctx.layer_style) == ctx.fingerprint
 
 
+def _task_result_still_open(result: TaskResult | None) -> bool:
+    """Return whether ``result`` is still the active run (not superseded/closed)."""
+    if result is None:
+        return True
+    result.refresh_from_db(fields=["completed"])
+    return result.completed is None
+
+
+def _generation_still_current(ctx: _PreviewGenerationContext) -> bool:
+    """Abort when the style changed or a newer enqueue closed this TaskResult."""
+    return _fingerprint_still_valid(ctx) and _task_result_still_open(ctx.task_result)
+
+
+def _abandon_task_result(result_id: int | None, status: str) -> None:
+    """Close an open TaskResult without marking it successfully completed."""
+    if result_id is None:
+        return
+    TaskResult.objects.filter(id=result_id, completed__isnull=True).update(
+        completed=timezone.now(),
+        status=status,
+    )
+
+
 def _open_task_result(result_id: int | None, layer_id: int) -> TaskResult | None:
     """Load the TaskResult for this run, or None if it was already superseded."""
     if result_id is None:
@@ -245,7 +271,10 @@ def _mark_frame_preview_failed(
     ctx: _PreviewGenerationContext,
 ) -> None:
     """Mark a row failed only when both the row and context still match this task."""
-    if preview.style_fingerprint == ctx.fingerprint and _fingerprint_still_valid(ctx):
+    if (
+        preview.style_fingerprint == ctx.fingerprint
+        and _generation_still_current(ctx)
+    ):
         preview.status = PreviewStatus.FAILED
         preview.save(update_fields=["status"])
 
@@ -255,7 +284,7 @@ def _process_frame_preview(ctx: _PreviewGenerationContext, frame) -> str:
 
     Returns ``ready``, ``failed``, ``skipped``, or ``superseded``.
     """
-    if not _fingerprint_still_valid(ctx):
+    if not _generation_still_current(ctx):
         return "superseded"
 
     try:
@@ -288,7 +317,9 @@ def _process_frame_preview(ctx: _PreviewGenerationContext, frame) -> str:
         _mark_frame_preview_failed(preview, ctx)
         return "failed"
 
-    if not _fingerprint_still_valid(ctx):
+    # Re-check after the expensive render so a superseding enqueue cannot be
+    # overwritten by this worker writing stale PNGs into regenerating rows.
+    if not _generation_still_current(ctx):
         return "superseded"
 
     _save_frame_preview(
@@ -307,14 +338,13 @@ def _complete_preview_task(
     stats: _PreviewGenerationStats,
 ) -> None:
     """Finalize the TaskResult, which triggers a WebSocket notification."""
-    if not _fingerprint_still_valid(ctx):
+    if result is None:
+        return
+    if not _generation_still_current(ctx):
         logger.info(
-            "Skipping task completion for layer=%s; style superseded after loop",
+            "Skipping task completion for layer=%s; preview run superseded",
             ctx.layer_id,
         )
-        return
-
-    if result is None:
         return
 
     outputs: dict[str, Any] = {
@@ -325,8 +355,24 @@ def _complete_preview_task(
     }
     if ctx.layer_style is not None:
         outputs["layer_style_id"] = ctx.layer_style.id
-    result.write_outputs(outputs)
-    result.complete()
+
+    # Lock so a concurrent supersede cannot be overwritten with "Completed".
+    with transaction.atomic():
+        locked = (
+            TaskResult.objects.select_for_update()
+            .filter(id=result.id, completed__isnull=True)
+            .first()
+        )
+        if locked is None:
+            logger.info(
+                "Skipping task completion for layer=%s; task result %s already closed",
+                ctx.layer_id,
+                result.id,
+            )
+            return
+        locked.outputs = outputs
+        locked.save(update_fields=["outputs"])
+        locked.complete()
 
 
 @shared_task
@@ -348,6 +394,7 @@ def generate_frame_previews(
     layer = Layer.objects.get(id=layer_id)
     frames = layer.raster_frames()
     if len(frames) <= 1:
+        _abandon_task_result(result_id, "Layer is not multiframe; nothing to preview.")
         return
 
     layer_style = None
@@ -359,11 +406,19 @@ def generate_frame_previews(
                 layer_id,
                 layer_style_id,
             )
+            _abandon_task_result(
+                result_id,
+                "Style deleted; preview generation aborted.",
+            )
             return
         if style_fingerprint(layer_style) != fingerprint:
             logger.info(
                 "Skipping superseded preview generation for style=%s",
                 layer_style_id,
+            )
+            _abandon_task_result(
+                result_id,
+                "Superseded by newer preview request.",
             )
             return
         query = dict(layer_style.raster_style_params or {})
@@ -392,6 +447,7 @@ def generate_frame_previews(
         base_style_query=query,
         layer_style=layer_style,
         resolution_fraction=resolution_fraction,
+        task_result=result,
     )
 
     ready_count = 0
@@ -400,7 +456,7 @@ def generate_frame_previews(
         outcome = _process_frame_preview(ctx, frame)
         if outcome == "superseded":
             logger.info(
-                "Aborting preview generation for layer=%s; style superseded",
+                "Aborting preview generation for layer=%s; preview run superseded",
                 layer_id,
             )
             return
