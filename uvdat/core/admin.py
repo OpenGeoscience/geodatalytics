@@ -147,7 +147,7 @@ class NetworkNodeAdmin(admin.ModelAdmin):
 
 @admin.register(TaskResult)
 class TaskResultAdmin(admin.ModelAdmin):
-    list_display = ["id", "task_type", "inputs"]
+    list_display = ["id", "creator", "task_type", "inputs"]
 
 
 @admin.register(ViewState)

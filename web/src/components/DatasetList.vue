@@ -83,9 +83,11 @@ watch(filteredDatasets, expandAllGroups);
     </v-expansion-panels>
     <v-card
       :class="
-        showFilter
-          ? 'panel-content-inner with-tag-filter-open'
-          : 'panel-content-inner with-tag-filter-closed'
+        props.datasets?.length
+          ? showFilter
+            ? 'panel-content-inner with-tag-filter-open'
+            : 'panel-content-inner with-tag-filter-closed'
+          : 'panel-content-inner'
       "
     >
       <v-expansion-panels
@@ -180,5 +182,9 @@ watch(filteredDatasets, expandAllGroups);
 
 .panel-content-inner.with-tag-filter-closed {
   height: calc(100% - 80px);
+}
+
+.v-list-item__prepend .v-checkbox-btn {
+  margin-right: 5px;
 }
 </style>

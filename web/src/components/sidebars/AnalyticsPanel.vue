@@ -508,7 +508,7 @@ watch(
                       </tbody>
                     </v-table>
                   </div>
-                  <div v-else>
+                  <div v-else style="text-align: center">
                     <div
                       v-if="
                         appStore.currentUser &&
@@ -516,7 +516,6 @@ watch(
                           appStore.currentUser.id,
                         )
                       "
-                      style="text-align: center"
                     >
                       <v-icon icon="mdi-check" color="success" />
                       Subscribed

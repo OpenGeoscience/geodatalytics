@@ -6,3 +6,5 @@
 package-lock.json linguist-generated=true
 uv.lock linguist-generated=true
 docs/assets/** filter=lfs diff=lfs merge=lfs -text
+web/src/assets/splash_bg.png filter=lfs diff=lfs merge=lfs -text
+web/src/assets/Kitware.png filter=lfs diff=lfs merge=lfs -text

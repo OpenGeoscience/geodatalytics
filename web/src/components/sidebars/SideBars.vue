@@ -99,16 +99,11 @@ function togglePanelVisibility(id: string) {
       <ProjectConfig />
       <div class="panel-set">
         <FloatingPanel
-          v-for="(panel, index) in panelStore.panelArrangement.filter(
+          v-for="panel in panelStore.panelArrangement.filter(
             (p) => p.dock == 'left',
           )"
           :id="panel.id"
           :key="panel.id"
-          :bottom="
-            index ==
-            panelStore.panelArrangement.filter((p) => p.dock == 'left').length -
-              1
-          "
         >
           <DatasetsPanel
             v-if="panel.id === 'datasets'"
@@ -208,17 +203,11 @@ function togglePanelVisibility(id: string) {
       </div>
       <div class="panel-set">
         <FloatingPanel
-          v-for="(panel, index) in panelStore.panelArrangement.filter(
+          v-for="panel in panelStore.panelArrangement.filter(
             (p) => p.dock == 'right',
           )"
           :id="panel.id"
           :key="panel.id"
-          :bottom="
-            index ==
-            panelStore.panelArrangement.filter((p) => p.dock == 'right')
-              .length -
-              1
-          "
         >
           <DatasetsPanel
             v-if="panel.id === 'datasets'"
@@ -247,6 +236,7 @@ function togglePanelVisibility(id: string) {
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .sidebar.closed {
@@ -294,7 +284,7 @@ function togglePanelVisibility(id: string) {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  max-height: calc(100% - 175px);
+  min-height: 0;
 }
 
 .right .panel-set {

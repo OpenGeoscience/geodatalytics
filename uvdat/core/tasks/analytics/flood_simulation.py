@@ -156,6 +156,7 @@ def flood_simulation(result_id):
             metadata=metadata,
         )
         dataset.set_tags(["analytics", "flood", "simulation"])
+        dataset.set_owner(result.creator)
         file_item = FileItem.objects.create(
             name=output_path.name,
             dataset=dataset,

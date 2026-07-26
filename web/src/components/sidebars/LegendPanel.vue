@@ -93,13 +93,6 @@ function getColormapPreviews(layer: Layer) {
   });
 }
 
-function setVisibility(layer: Layer, visible = true) {
-  layerStore.selectedLayers = layerStore.selectedLayers.map((l: Layer) => {
-    if (l.id == layer.id) l.visible = visible;
-    return l;
-  });
-}
-
 function getColorPropsCoverage(layer: Layer) {
   const frame_coverages = layerStore
     .layerFrames(layer)
@@ -127,7 +120,7 @@ function getColorPropsCoverage(layer: Layer) {
           <v-icon
             :icon="layer.visible ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
             class=""
-            @click="setVisibility(layer, !layer.visible)"
+            @click="layerStore.setLayerVisibility([layer], !layer.visible)"
           />
           {{ layer.name }}
           <v-icon
@@ -145,7 +138,10 @@ function getColorPropsCoverage(layer: Layer) {
             :key="colormap_preview.name"
             class="ml-6"
           >
-            <div v-if="getColormapPreviews(layer).length > 1">
+            <div
+              v-if="getColormapPreviews(layer).length > 1"
+              style="font-weight: bold"
+            >
               {{ colormap_preview.name }}
             </div>
             <span
@@ -172,7 +168,7 @@ function getColorPropsCoverage(layer: Layer) {
                   :n-colors="colormap_preview.nColors"
                   :range="colormap_preview.range"
                 />
-                <v-expansion-panels v-else>
+                <v-expansion-panels v-else flat>
                   <v-expansion-panel static bg-color="transparent">
                     <v-expansion-panel-title class="pa-0" min-height="0">
                       <colormap-preview

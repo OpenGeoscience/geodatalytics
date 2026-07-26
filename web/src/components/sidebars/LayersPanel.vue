@@ -44,8 +44,8 @@ const filteredLayers = computed({
     layerStore.selectedLayers = newValue;
   },
 });
-const allLayersVisible = computed(() =>
-  layerStore.selectedLayers.every((l: Layer) => l.visible),
+const allFilteredLayersVisible = computed(() =>
+  filteredLayers.value.every((l: Layer) => l.visible),
 );
 const activeLayer = ref<Layer>();
 
@@ -58,13 +58,6 @@ function removeLayers(layers: Layer[]) {
     .map((layer) => layerStore.getMapLayersFromLayerObject(layer))
     .flat();
   mapStore.removeLayers(layerIds);
-}
-
-function setVisibility(layers: Layer[], visible = true) {
-  layerStore.selectedLayers = layerStore.selectedLayers.map((layer: Layer) => {
-    if (layers.includes(layer)) layer.visible = visible;
-    return layer;
-  });
 }
 
 const debouncedUpdateFrame = debounce((layer: Layer, value: number) => {
@@ -113,15 +106,18 @@ function setLayerActive(layer: Layer, active: boolean) {
           icon="mdi-close"
           size="small"
           class="secondary-button"
-          @click="() => removeLayers(layerStore.selectedLayers)"
+          @click="() => removeLayers(filteredLayers)"
         />
         <v-checkbox-btn
           v-if="!isComparing"
-          :model-value="
-            layerStore.selectedLayers.every((l: Layer) => l.visible)
-          "
+          :model-value="allFilteredLayersVisible"
           style="display: inline"
-          @click="setVisibility(layerStore.selectedLayers, !allLayersVisible)"
+          @click="
+            layerStore.setLayerVisibility(
+              filteredLayers,
+              !allFilteredLayersVisible,
+            )
+          "
         />
         <span v-if="isComparing">
           <v-checkbox-btn
@@ -163,7 +159,13 @@ function setLayerActive(layer: Layer, active: boolean) {
                     v-if="!isComparing"
                     :model-value="element.visible"
                     style="display: inline"
-                    @click="() => setVisibility([element], !element.visible)"
+                    @click="
+                      () =>
+                        layerStore.setLayerVisibility(
+                          [element],
+                          !element.visible,
+                        )
+                    "
                   />
                   <span v-if="isComparing">
                     <v-checkbox-btn
@@ -302,7 +304,7 @@ function setLayerActive(layer: Layer, active: boolean) {
 .frame-menu .v-input__append {
   margin-left: 15px !important;
 }
-.v-selection-control--density-default {
+.v-selection-control {
   --v-selection-control-size: 20px !important;
 }
 .v-list-item__prepend > .v-icon {
