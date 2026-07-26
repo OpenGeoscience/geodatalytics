@@ -15,11 +15,9 @@ from PIL import Image
 from uvdat.core.frame_previews.fingerprint import style_fingerprint
 from uvdat.core.frame_previews.raster_style import (
     apply_source_filters_to_style_query,
-    build_raster_tiles_style_query,
     raster_source_filter_kwargs,
 )
 from uvdat.core.models import (
-    Colormap,
     Layer,
     LayerStyle,
     Project,
@@ -116,13 +114,6 @@ def resolve_preview_max_dimension(
     return max(2, min(max(fractional, floor), raster_max_dimension))
 
 
-def _colormaps_for_style(layer_style: LayerStyle) -> dict[int, Colormap]:
-    colormaps = Colormap.objects.filter(project=layer_style.project) | Colormap.objects.filter(
-        project__isnull=True
-    )
-    return {colormap.id: colormap for colormap in colormaps}
-
-
 def _thumbnail_png_bytes(thumb_data: Any) -> bytes:
     if isinstance(thumb_data, bytes):
         return thumb_data
@@ -194,6 +185,9 @@ def ensure_default_layer_style(layer: Layer, project: Project) -> LayerStyle:
     if style is None:
         style = LayerStyle.objects.create(name="Default", layer=layer, project=project)
         style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+        # Default ingest style has no colormap/palette; empty large-image style JSON.
+        style.raster_style_params = {}
+        style.save(update_fields=["raster_style_params"])
     if layer.default_style_id is None:
         layer.default_style = style
         layer.save(update_fields=["default_style"])
@@ -383,12 +377,10 @@ def generate_layer_style_previews(
         layer_style.layer.name,
     )
 
-    style_spec = layer_style.repr_style_configs()
-    colormaps_by_id = _colormaps_for_style(layer_style)
     ctx = _PreviewGenerationContext(
         layer_style=layer_style,
         fingerprint=fingerprint,
-        base_style_query=build_raster_tiles_style_query(style_spec, colormaps_by_id),
+        base_style_query=dict(layer_style.raster_style_params or {}),
         resolution_fraction=resolution_fraction,
     )
 

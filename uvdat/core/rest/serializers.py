@@ -161,6 +161,8 @@ def _omit_null_field(data: dict, field: str) -> None:
 
 class LayerStyleSerializer(serializers.ModelSerializer):
     is_default = serializers.SerializerMethodField("get_is_default")
+    # Client-computed django-large-image style JSON; write-only (used for previews).
+    raster_style_params = serializers.JSONField(required=False, allow_null=True, write_only=True)
 
     def get_is_default(self, obj):
         if obj.layer.default_style is None:
