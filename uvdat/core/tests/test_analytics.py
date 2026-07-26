@@ -54,7 +54,10 @@ def test_rest_run_analysis_task_no_inputs(authenticated_api_client, user, projec
 
 
 @pytest.mark.django_db
-def test_rest_run_analysis_task_creator(authenticated_api_client, user, project):
+def test_rest_run_analysis_task_creator(authenticated_api_client, user, project, mocker):
+    # Eager Celery would otherwise call Overpass via OSMnx; this test only
+    # asserts the API attaches the requesting user as TaskResult.creator.
+    mocker.patch("uvdat.core.tasks.analytics.create_road_network.create_road_network.delay")
     project.set_collaborators([user])
     resp = authenticated_api_client.post(
         f"/api/v1/analytics/project/{project.id}/types/create_road_network/run/",
