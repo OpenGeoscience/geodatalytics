@@ -5,6 +5,12 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.serializers import geojson
 from rest_framework import serializers
 
+from uvdat.core.frame_previews.lookup import layer_default_multiframe_previews
+from uvdat.core.frame_previews.preview_regeneration import (
+    get_layer_preview_status,
+    get_layer_style_preview_status,
+    invalidate_and_enqueue_previews,
+)
 from uvdat.core.models import (
     Basemap,
     Chart,
@@ -153,8 +159,15 @@ class ColormapSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+def _omit_null_field(data: dict, field: str) -> None:
+    if data.get(field) is None:
+        data.pop(field, None)
+
+
 class LayerStyleSerializer(serializers.ModelSerializer):
     is_default = serializers.SerializerMethodField("get_is_default")
+    # Client-computed django-large-image style JSON; write-only (used for previews).
+    raster_style_params = serializers.JSONField(required=False, allow_null=True, write_only=True)
 
     def get_is_default(self, obj):
         if obj.layer.default_style is None:
@@ -170,24 +183,73 @@ class LayerStyleSerializer(serializers.ModelSerializer):
         style_spec = self.initial_data.pop("style_spec", None)
         instance = super().create(validated_data)
         instance.save_style_configs(style_spec)
+        invalidate_and_enqueue_previews(instance)
         return instance
 
     def update(self, instance, validated_data):
         style_spec = self.initial_data.pop("style_spec", None)
         instance.save_style_configs(style_spec)
-        return super().update(instance, validated_data)
+        instance = super().update(instance, validated_data)
+        invalidate_and_enqueue_previews(instance)
+        return instance
 
     class Meta:
         model = LayerStyle
         exclude = ["default_frame", "opacity"]
 
 
+class LayerStyleWithPreviewsSerializer(LayerStyleSerializer):
+    multiframe_previews = serializers.SerializerMethodField()
+    preview_status = serializers.SerializerMethodField()
+
+    def _preview_layer(self, obj):
+        return self.context.get("preview_layer") or obj.layer
+
+    def get_preview_status(self, obj):
+        return get_layer_style_preview_status(obj)
+
+    def get_multiframe_previews(self, obj):
+        if get_layer_style_preview_status(obj) != "ready":
+            return None
+        return obj.multiframe_previews(layer=self._preview_layer(obj))
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        _omit_null_field(data, "multiframe_previews")
+        _omit_null_field(data, "preview_status")
+        return data
+
+
 class LayerSerializer(serializers.ModelSerializer):
     default_style = LayerStyleSerializer()
+    multiframe_previews = serializers.SerializerMethodField()
+    preview_status = serializers.SerializerMethodField()
+
+    def get_preview_status(self, obj):
+        return get_layer_preview_status(obj)
+
+    def get_multiframe_previews(self, obj):
+        if get_layer_preview_status(obj) != "ready":
+            return None
+        return layer_default_multiframe_previews(obj)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        _omit_null_field(data, "multiframe_previews")
+        _omit_null_field(data, "preview_status")
+        return data
 
     class Meta:
         model = Layer
-        fields = ["id", "name", "metadata", "dataset", "default_style"]
+        fields = [
+            "id",
+            "name",
+            "metadata",
+            "dataset",
+            "default_style",
+            "multiframe_previews",
+            "preview_status",
+        ]
 
 
 class VectorDataSerializer(serializers.ModelSerializer):

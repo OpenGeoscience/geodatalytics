@@ -7,16 +7,19 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from uvdat.core.models import Layer, LayerFrame, LayerStyle, Project
+from uvdat.core.rest.querysets import layer_queryset_with_previews
 from uvdat.core.rest.serializers import (
     LayerFrameSerializer,
     LayerSerializer,
-    LayerStyleSerializer,
+    LayerStyleWithPreviewsSerializer,
 )
 
 
 class LayerViewSet(ReadOnlyModelViewSet):
-    queryset = Layer.objects.select_related("dataset").all()
     serializer_class = LayerSerializer
+
+    def get_queryset(self):
+        return layer_queryset_with_previews()
 
     @action(detail=True, methods=["get"])
     def frames(self, request, **kwargs):
@@ -33,7 +36,7 @@ class LayerFrameViewSet(ReadOnlyModelViewSet):
 
 class LayerStyleViewSet(ModelViewSet):
     queryset = LayerStyle.objects.all()
-    serializer_class = LayerStyleSerializer
+    serializer_class = LayerStyleWithPreviewsSerializer
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -43,7 +46,7 @@ class LayerStyleViewSet(ModelViewSet):
         layer_id = int(self.request.query_params.get("layer", -1))
         if layer_id > -1:
             qs = qs.filter(layer=int(layer_id))
-        return qs
+        return layer_queryset_with_previews(qs, for_layer_style=True)
 
     def create(self, request, **kwargs):
         project = Project.objects.get(id=request.data.get("project"))
@@ -53,7 +56,7 @@ class LayerStyleViewSet(ModelViewSet):
                 status=403,
             )
         is_default = request.data.pop("is_default", False)
-        serializer = LayerStyleSerializer(data=request.data)
+        serializer = LayerStyleWithPreviewsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
             try:
@@ -68,7 +71,9 @@ class LayerStyleViewSet(ModelViewSet):
     def partial_update(self, request, **kwargs):
         instance = self.get_object()
         is_default = request.data.pop("is_default", False)
-        serializer = LayerStyleSerializer(instance, data=request.data, partial=True)
+        serializer = LayerStyleWithPreviewsSerializer(
+            instance, data=request.data, partial=True
+        )
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
             try:
