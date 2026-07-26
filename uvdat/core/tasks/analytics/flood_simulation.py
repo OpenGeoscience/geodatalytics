@@ -220,6 +220,12 @@ def flood_simulation(result_id):
                 ],
             }
         )
+        style.raster_style_params = {
+            "min": 0,
+            "max": 2,
+            "palette": ["#002081", "#2AD3FF"],
+        }
+        style.save(update_fields=["raster_style_params"])
 
         result.write_outputs(
             {
