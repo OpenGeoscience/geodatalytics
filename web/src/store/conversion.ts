@@ -1,6 +1,7 @@
 import type { TaskResult } from "@/types";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { useFramePreviewStore } from "./framePreview";
 import { useProjectStore } from "./project";
 
 const url = `${import.meta.env.VITE_API_ROOT}ws/conversion/`;
@@ -15,7 +16,12 @@ export const useConversionStore = defineStore("conversion", () => {
       ws.value = new WebSocket(url);
       ws.value.onmessage = (event: any) => {
         const result = JSON.parse(JSON.parse(event.data)) as TaskResult;
-        const datasetId = result.inputs.dataset_id;
+        // Default frame-preview generation during dataset conversion has no
+        // project, so it arrives on this channel rather than analytics_*.
+        if (result.task_type === "frame_preview" && result.completed) {
+          useFramePreviewStore().onPreviewTaskComplete(result);
+        }
+        const datasetId = result.inputs?.dataset_id;
         if (datasetId !== undefined) {
           datasetConversionTasks.value[datasetId] = result;
           if (result.completed) projectStore.fetchProjectDatasets();
