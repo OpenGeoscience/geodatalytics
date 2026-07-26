@@ -27,12 +27,14 @@ import {
   usePanelStore,
   useLayerStore,
   useAppStore,
+  useFramePreviewStore,
 } from "@/store";
 const styleStore = useStyleStore();
 const projectStore = useProjectStore();
 const panelStore = usePanelStore();
 const layerStore = useLayerStore();
 const appStore = useAppStore();
+const framePreviewStore = useFramePreviewStore();
 
 const emit = defineEmits(["setLayerActive"]);
 const props = defineProps<{
@@ -82,6 +84,40 @@ const currentLayerStyle = computed(() => {
 
 const setCurrentLayerStyle = (style: LayerStyle) => {
   styleStore.selectedLayerStyles[styleKey.value] = style;
+};
+
+// After a style save, the backend invalidates multiframe raster previews and
+// regenerates them asynchronously. Apply the saved style (which the API returns
+// with preview_status "notready" and no previews), drop any stale previews, and
+// remove the on-map preview overlay so tiles are shown until regeneration
+// completes and the WebSocket handler reattaches fresh previews.
+const markStyleSavedAndInvalidatePreviews = (style: LayerStyle) => {
+  const previewStatus =
+    style.preview_status === "ready" && !style.multiframe_previews
+      ? "notready"
+      : (style.preview_status ?? "notready");
+  const invalidatedStyle: LayerStyle = {
+    ...style,
+    preview_status: previewStatus,
+    multiframe_previews: undefined,
+  };
+  setCurrentLayerStyle(invalidatedStyle);
+  if (invalidatedStyle.is_default) {
+    layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
+      if (
+        layer.id !== props.layer.id ||
+        layer.copy_id !== props.layer.copy_id
+      ) {
+        return layer;
+      }
+      return {
+        ...layer,
+        preview_status: invalidatedStyle.preview_status,
+        multiframe_previews: undefined,
+      };
+    });
+  }
+  framePreviewStore.dismissPreviewForLayer(props.layer);
 };
 
 const appliedStyleName = computed(() => {
@@ -181,6 +217,9 @@ function selectStyle(style: LayerStyle) {
   setCurrentLayerStyle(style);
   currentStyleSpec.value = style.style_spec;
   currentGroups.value = { color: undefined, size: undefined };
+  // Remove any preview overlay tied to the previously selected style so the map
+  // only shows previews that belong to the style now in effect.
+  framePreviewStore.dismissPreviewForLayer(props.layer);
 }
 
 function fetchRasterBands() {
@@ -505,9 +544,15 @@ function save() {
     name: newName.value || currentLayerStyle.value.name,
     is_default: currentLayerStyle.value.is_default,
     style_spec: currentStyleSpec.value,
+    raster_style_params: showRasterOptions.value
+      ? styleStore.getRasterTilesQuery(
+          currentStyleSpec.value,
+          styleStore.colormaps,
+        )
+      : null,
   }).then((style) => {
     if (style) {
-      setCurrentLayerStyle(style);
+      markStyleSavedAndInvalidatePreviews(style);
       newName.value = undefined;
       newNameMode.value = undefined;
       // update other styles in case default overriden
@@ -533,9 +578,15 @@ function saveAsNew() {
     layer: props.layer.id,
     project: projectStore.currentProject.id,
     style_spec: currentStyleSpec.value,
+    raster_style_params: showRasterOptions.value
+      ? styleStore.getRasterTilesQuery(
+          currentStyleSpec.value,
+          styleStore.colormaps,
+        )
+      : null,
   }).then((style: LayerStyle) => {
     if (style) {
-      setCurrentLayerStyle(style);
+      markStyleSavedAndInvalidatePreviews(style);
       newName.value = undefined;
       newNameMode.value = undefined;
       // update other styles in case default overriden
@@ -612,6 +663,15 @@ const debouncedStyleSpecUpdated = debounce(() => {
 watch(currentStyleSpec, debouncedStyleSpecUpdated, { deep: true });
 
 watch(() => props.activeLayer, init);
+
+watch(
+  () => props.activeLayer === props.layer,
+  (isEditing) => {
+    styleStore.setLayerStyleEditing(props.layer, isEditing);
+  },
+  { immediate: true },
+);
+
 onMounted(resetCurrentStyle);
 </script>
 

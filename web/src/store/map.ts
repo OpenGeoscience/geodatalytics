@@ -21,7 +21,17 @@ import { Map, Popup } from "maplibre-gl";
 import { getBasemaps } from "@/api/rest";
 import { baseURL } from "@/api/auth";
 import proj4 from "proj4";
-import { useStyleStore, useLayerStore, useAppStore, useProjectStore } from ".";
+import {
+  useStyleStore,
+  useLayerStore,
+  useAppStore,
+  useProjectStore,
+  useFramePreviewStore,
+} from ".";
+import {
+  isPreviewMapLayerId,
+  removeAllPreviewLayersForLayerKey,
+} from "@/utils/framePreviewLayer";
 
 function getLayerIsVisible(layer: MapLibreLayerWithMetadata) {
   // Since visibility must be 'visible' for a feature click to even be registered,
@@ -320,12 +330,21 @@ export const useMapStore = defineStore("map", () => {
 
   function removeLayers(layerIds: string[]) {
     const map = getMap();
+    const framePreviewStore = useFramePreviewStore();
+    const cleanedLayerKeys = new Set<string>();
 
     // Must collect all source Ids so they can be removed after all layers
     // have been removed, since multple layers may use the same source
     const sourceIdsToRemove = new Set<string>();
     const updatedLayerIds: string[] = [];
     layerIds.forEach((id) => {
+      if (isPreviewMapLayerId(id)) {
+        return;
+      }
+      const layerKey = id.split(".").slice(0, 2).join(".");
+      if (layerKey.includes(".")) {
+        cleanedLayerKeys.add(layerKey);
+      }
       // Rasters have implicit bounds layers that also need to be removed
       if (id.includes(".raster.")) {
         updatedLayerIds.push(id.replace(".raster.", ".bounds."));
@@ -343,6 +362,17 @@ export const useMapStore = defineStore("map", () => {
     // Now remove the sources
     sourceIdsToRemove.forEach((id) => {
       map.removeSource(id);
+    });
+
+    cleanedLayerKeys.forEach((layerKey) => {
+      removeAllPreviewLayersForLayerKey(map, layerKey);
+      const [layerId, copyId] = layerKey.split(".").map(Number);
+      const layer = layerStore.selectedLayers.find(
+        (candidate) => candidate.id === layerId && candidate.copy_id === copyId,
+      );
+      if (layer) {
+        framePreviewStore.cleanupLayer(layer);
+      }
     });
   }
 

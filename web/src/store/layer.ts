@@ -22,6 +22,7 @@ import {
   useStyleStore,
   useNetworkStore,
   useProjectStore,
+  useFramePreviewStore,
 } from ".";
 
 interface SourceDBObjects {
@@ -43,6 +44,7 @@ export const useLayerStore = defineStore("layer", () => {
   const networkStore = useNetworkStore();
   const styleStore = useStyleStore();
   const projectStore = useProjectStore();
+  const framePreviewStore = useFramePreviewStore();
 
   /**
    * Return the maplibre layers associated with a Layer DB object
@@ -197,6 +199,10 @@ export const useLayerStore = defineStore("layer", () => {
     }
 
     selectedLayers.value = [newLayer, ...selectedLayers.value];
+    framePreviewStore.prefetchLayerPreviews(
+      newLayer,
+      newLayer.default_style ?? undefined,
+    );
   }
 
   function setLayerVisibility(layers: Layer[], visible = true) {
@@ -227,6 +233,10 @@ export const useLayerStore = defineStore("layer", () => {
           ) {
             styleStore.selectedLayerStyles[styleId] = {
               ...layer.default_style,
+              preview_status: layer.preview_status,
+              ...(layer.preview_status === "ready" && layer.multiframe_previews
+                ? { multiframe_previews: layer.multiframe_previews }
+                : {}),
             };
             if (
               styleStore.selectedLayerStyles[styleId]?.style_spec
@@ -247,6 +257,12 @@ export const useLayerStore = defineStore("layer", () => {
                 firstCurrentRaster,
                 layer.id,
               ),
+              // Dataset conversion can leave ready default-fingerprint previews
+              // with no LayerStyle yet — still attach them for scrubbing.
+              preview_status: layer.preview_status,
+              ...(layer.preview_status === "ready" && layer.multiframe_previews
+                ? { multiframe_previews: layer.multiframe_previews }
+                : {}),
             };
           }
         }

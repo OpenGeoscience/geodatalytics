@@ -3,10 +3,11 @@ import { ref, computed } from "vue";
 import type { Layer } from "@/types";
 import ColormapPreview from "./ColormapPreview.vue";
 
-import { useLayerStore, useStyleStore } from "@/store";
+import { useLayerStore, useStyleStore, useFramePreviewStore } from "@/store";
 import { colormapMarkersSubsample } from "@/store/style";
 const layerStore = useLayerStore();
 const styleStore = useStyleStore();
+const framePreviewStore = useFramePreviewStore();
 
 const searchText = ref<string | undefined>();
 const filteredLegend = computed(() => {
@@ -117,6 +118,16 @@ function getColorPropsCoverage(layer: Layer) {
       <v-list v-if="filteredLegend?.length" density="compact">
         <v-list-item v-for="layer in filteredLegend" :key="layer.id">
           {{ layer.name }}
+          <v-icon
+            v-if="framePreviewStore.isDisplayingPreview(layer)"
+            v-tooltip="
+              'Showing a low-resolution preview while full-resolution tiles load.'
+            "
+            icon="mdi-image-filter-hdr"
+            size="small"
+            color="primary"
+            class="preview-indicator ml-1"
+          />
           <div
             v-for="colormap_preview in getColormapPreviews(layer)"
             :key="colormap_preview.name"
@@ -190,3 +201,19 @@ function getColorPropsCoverage(layer: Layer) {
     </v-card>
   </div>
 </template>
+
+<style scoped>
+.preview-indicator {
+  cursor: help;
+  animation: preview-indicator-pulse 1.4s ease-in-out infinite;
+}
+@keyframes preview-indicator-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+</style>

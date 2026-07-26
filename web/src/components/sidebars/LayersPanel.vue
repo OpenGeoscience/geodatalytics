@@ -8,10 +8,11 @@ import CompareLayerStyle from "./CompareLayerStyle.vue";
 import DetailView from "../DetailView.vue";
 import SliderNumericInput from "../SliderNumericInput.vue";
 
-import { useLayerStore, useMapStore } from "@/store";
+import { useLayerStore, useMapStore, useFramePreviewStore } from "@/store";
 import { useMapCompareStore } from "@/store/compare";
 const layerStore = useLayerStore();
 const mapStore = useMapStore();
+const framePreviewStore = useFramePreviewStore();
 const compareStore = useMapCompareStore();
 const isComparing = computed(() => compareStore.isComparing);
 const orientation = computed(() => compareStore.orientation);
@@ -191,6 +192,21 @@ function setLayerActive(layer: Layer, active: boolean) {
                 </template>
                 {{ element.name }}
                 <template #append>
+                  <v-icon
+                    v-tooltip="
+                      framePreviewStore.isDisplayingPreview(element)
+                        ? 'Showing a low-resolution preview while full-resolution tiles load.'
+                        : undefined
+                    "
+                    icon="mdi-image-filter-hdr"
+                    size="small"
+                    color="primary"
+                    class="preview-indicator mr-1"
+                    :class="{
+                      'preview-indicator--hidden':
+                        !framePreviewStore.isDisplayingPreview(element),
+                    }"
+                  />
                   <span
                     v-if="getLayerMaxFrames(element) > 1"
                     @click="element.hideFrameMenu = !element.hideFrameMenu"
@@ -293,5 +309,23 @@ function setLayerActive(layer: Layer, active: boolean) {
 }
 .v-list-item__prepend > .v-icon {
   opacity: 1;
+}
+.preview-indicator {
+  cursor: help;
+  animation: preview-indicator-pulse 1.4s ease-in-out infinite;
+}
+.preview-indicator--hidden {
+  visibility: hidden;
+  pointer-events: none;
+  animation: none;
+}
+@keyframes preview-indicator-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 </style>
