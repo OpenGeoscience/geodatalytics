@@ -8,6 +8,7 @@ from celery import shared_task
 from django.conf import settings
 from django.core.files import File
 
+from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
 from uvdat.core.models import Chart, Colormap, Dataset, FileItem, LayerStyle, TaskResult
 
 from .analysis_type import AnalysisTask, AnalysisType
@@ -220,6 +221,15 @@ def flood_simulation(result_id):
                 ],
             }
         )
+        style.raster_style_params = {
+            "min": 0,
+            "max": 2,
+            "palette": ["#002081", "#2AD3FF"],
+        }
+        style.save(update_fields=["raster_style_params"])
+        # Conversion queued empty-params previews; regenerate for this style's params
+        # so layer_default_fingerprint / preview_status can become ready.
+        invalidate_and_enqueue_previews(style)
 
         result.write_outputs(
             {
