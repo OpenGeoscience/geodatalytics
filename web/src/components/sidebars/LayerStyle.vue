@@ -543,6 +543,12 @@ function save() {
     name: newName.value || currentLayerStyle.value.name,
     is_default: currentLayerStyle.value.is_default,
     style_spec: currentStyleSpec.value,
+    raster_style_params: showRasterOptions.value
+      ? styleStore.getRasterTilesQuery(
+          currentStyleSpec.value,
+          styleStore.colormaps,
+        )
+      : null,
   }).then((style) => {
     if (style) {
       markStyleSavedAndInvalidatePreviews(style);
@@ -566,6 +572,12 @@ function saveAsNew() {
     layer: props.layer.id,
     project: projectStore.currentProject.id,
     style_spec: currentStyleSpec.value,
+    raster_style_params: showRasterOptions.value
+      ? styleStore.getRasterTilesQuery(
+          currentStyleSpec.value,
+          styleStore.colormaps,
+        )
+      : null,
   }).then((style: LayerStyle) => {
     if (style) {
       markStyleSavedAndInvalidatePreviews(style);

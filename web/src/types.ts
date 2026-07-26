@@ -159,6 +159,8 @@ export interface LayerStyle {
   project?: number;
   is_default: boolean;
   style_spec?: StyleSpec;
+  /** Client-computed django-large-image style JSON, persisted on save for rasters. */
+  raster_style_params?: Record<string, unknown> | null;
   multiframe_previews?: (FramePreview | null)[];
   preview_status?: PreviewStatus;
 }
