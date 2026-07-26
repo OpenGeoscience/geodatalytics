@@ -8,10 +8,15 @@ import s3_file_field.fields
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0023_task_subscribers"),
+        ("core", "0024_taskresult_creator"),
     ]
 
     operations = [
+        migrations.AddField(
+            model_name="layerstyle",
+            name="raster_style_params",
+            field=models.JSONField(blank=True, default=None, null=True),
+        ),
         migrations.CreateModel(
             name="RasterFramePreview",
             fields=[

@@ -32,6 +32,9 @@ class LayerStyle(models.Model):
             MaxValueValidator(1),
         ],
     )
+    # django-large-image ``style`` query JSON for raster tiles/previews.
+    # Provided by the client on style create/update (same object used for tile URLs).
+    raster_style_params = models.JSONField(blank=True, null=True, default=None)
 
     project_filter_path = "layer__dataset__project"
     objects = ProjectQuerySet.as_manager()
