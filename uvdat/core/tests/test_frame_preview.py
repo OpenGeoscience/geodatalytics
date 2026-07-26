@@ -10,7 +10,6 @@ from uvdat.core.frame_previews.preview_regeneration import (
 )
 from uvdat.core.frame_previews.raster_style import (
     apply_source_filters_to_style_query,
-    build_thumbnail_style_query,
     raster_source_filter_kwargs,
 )
 from uvdat.core.models import LayerStyle, RasterFramePreview
@@ -24,14 +23,35 @@ from uvdat.core.tasks.frame_preview import (
 )
 
 
-def test_build_thumbnail_style_query_does_not_embed_frame():
-    style_spec = {
-        "colors": [{"name": "all", "visible": True, "single_color": "#ffffff"}],
-        "filters": [],
-    }
-    query = build_thumbnail_style_query(style_spec, {"frame": 3}, {})
-    assert "frame" not in query
-    assert query == {"palette": "#ffffff"}
+@pytest.mark.django_db
+def test_layer_style_api_stores_client_raster_style_params(
+    authenticated_api_client,
+    layer_style_factory,
+    layer_frame_factory,
+    project,
+    user,
+):
+    layer_style = layer_style_factory()
+    layer_frame_factory(layer=layer_style.layer, index=0)
+    project.set_collaborators([user])
+    project.datasets.set([layer_style.layer.dataset])
+    raster_style_params = {"palette": "#00ff00", "min": 0, "max": 1}
+
+    resp = authenticated_api_client.patch(
+        f"/api/v1/layer-styles/{layer_style.id}/",
+        {
+            "name": layer_style.name,
+            "layer": layer_style.layer_id,
+            "project": layer_style.project_id,
+            "style_spec": DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
+            "raster_style_params": raster_style_params,
+        },
+        format="json",
+    )
+    assert resp.status_code == 200
+    assert "raster_style_params" not in resp.json()
+    layer_style.refresh_from_db()
+    assert layer_style.raster_style_params == raster_style_params
 
 
 def test_raster_source_filter_kwargs_extracts_frame():
@@ -41,8 +61,9 @@ def test_raster_source_filter_kwargs_extracts_frame():
 
 
 def test_apply_source_filters_to_style_query_embeds_band_not_frame():
-    query = apply_source_filters_to_style_query({}, {"frame": 3, "band": 2})
-    assert query == {"band": 2}
+    query = apply_source_filters_to_style_query({"palette": "#fff"}, {"frame": 3, "band": 2})
+    assert query == {"palette": "#fff", "band": 2}
+    assert "frame" not in query
     assert apply_source_filters_to_style_query({}, {"frame": 3, "band": 1}) == {"band": 1}
     assert apply_source_filters_to_style_query({}, {"band": 1}) == {"band": 1}
 
