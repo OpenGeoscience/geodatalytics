@@ -97,37 +97,19 @@ def test_resolve_preview_max_dimension(
 def test_style_fingerprint_matches_db_after_ingest_style_setup(layer_style_factory):
     """Enqueue fingerprint must match what the Celery task reads from the database."""
     style = layer_style_factory()
-    style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+    style.raster_style_params = {"palette": "#00ff00", "min": 0, "max": 1}
+    style.save(update_fields=["raster_style_params"])
 
     assert style_fingerprint(style) == style_fingerprint(LayerStyle.objects.get(pk=style.pk))
 
 
-def test_style_fingerprint_stable_key_order_and_ignores_opacity_default_frame():
-    """Fingerprint uses sorted JSON keys and ignores opacity / default_frame."""
-    base = {
-        "colors": [{"name": "all", "visible": True, "single_color": "#ffffff"}],
-        "filters": [],
-        "sizes": [],
-        "opacity": 1,
-        "default_frame": 0,
-    }
-    reordered = {
-        "default_frame": 0,
-        "sizes": [],
-        "filters": [],
-        "opacity": 1,
-        "colors": [{"single_color": "#ffffff", "visible": True, "name": "all"}],
-    }
-    opacity_and_frame_only = {
-        **base,
-        "opacity": 0.25,
-        "default_frame": 3,
-    }
+def test_style_fingerprint_stable_key_order_and_treats_null_as_empty():
+    """Fingerprint uses sorted JSON keys; null params match empty params."""
+    base = {"palette": "#fff", "min": 0, "max": 1}
+    reordered = {"max": 1, "palette": "#fff", "min": 0}
 
     assert _fingerprint_payload(base) == _fingerprint_payload(reordered)
-    assert _fingerprint_payload(base) == _fingerprint_payload(opacity_and_frame_only)
-    assert "opacity" not in _fingerprint_payload(base)
-    assert "default_frame" not in _fingerprint_payload(base)
+    assert _fingerprint_payload(None) == _fingerprint_payload({})
 
 
 @pytest.mark.django_db
@@ -483,6 +465,8 @@ def test_layer_style_patch_reports_notready_after_preview_invalidation(
     frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
     frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
     layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+    layer_style.raster_style_params = {"palette": "#00ff00", "min": 0, "max": 1}
+    layer_style.save(update_fields=["raster_style_params"])
     fingerprint = style_fingerprint(layer_style)
 
     preview_0 = RasterFramePreview.objects.create(
@@ -508,24 +492,14 @@ def test_layer_style_patch_reports_notready_after_preview_invalidation(
 
     mocker.patch("uvdat.core.tasks.frame_preview.generate_layer_style_previews.delay")
 
-    updated_spec = {
-        **DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
-        "colors": [
-            {
-                "name": "all",
-                "visible": True,
-                "use_feature_props": True,
-                "single_color": "#ff0000",
-            }
-        ],
-    }
     resp = authenticated_api_client.patch(
         f"/api/v1/layer-styles/{layer_style.id}/",
         {
             "name": layer_style.name,
             "layer": layer_style.layer_id,
             "project": layer_style.project_id,
-            "style_spec": updated_spec,
+            "style_spec": DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
+            "raster_style_params": {"palette": "#ff0000", "min": 0, "max": 1},
         },
         format="json",
     )
