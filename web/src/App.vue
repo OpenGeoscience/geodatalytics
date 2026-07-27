@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { watch, onMounted, computed } from "vue";
-import { useTheme } from "vuetify/lib/framework.mjs";
+import { useTheme } from "vuetify";
 
 import ToggleCompareMap from "./components/map/ToggleCompareMap.vue";
 import SideBars from "./components/sidebars/SideBars.vue";

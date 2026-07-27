@@ -8,8 +8,6 @@ import {
 import type { Dataset } from "@/types";
 import { computed, ref, watch } from "vue";
 
-import { VFileUpload, VFileUploadItem } from "vuetify/labs/VFileUpload";
-
 import JsonEditorVue from "json-editor-vue";
 import "vanilla-jsoneditor/themes/jse-theme-dark.css";
 import { Mode } from "vanilla-jsoneditor";

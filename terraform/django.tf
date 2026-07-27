@@ -8,7 +8,7 @@ data "heroku_team" "this" {
 
 module "django" {
   source  = "kitware-resonant/resonant/heroku"
-  version = "3.1.1"
+  version = "3.3.0"
 
   project_slug           = "geodatalytics"
   route53_zone_id        = aws_route53_zone.this.zone_id
