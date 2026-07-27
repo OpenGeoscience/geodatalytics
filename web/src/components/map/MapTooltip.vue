@@ -129,15 +129,24 @@ watch(clickedFeature, () => {
     tooltip.remove();
     return;
   }
-  // Set tooltip position. Give feature clicks priority
-  const centroid = turf.centroid(clickedFeature.value.feature);
-  const center = centroid.geometry.coordinates as [number, number];
-  tooltip.setLngLat(center);
-  // This makes the tooltip visible
-  tooltip.addTo(mapStore.getMap(props.compareMap));
-  // Don't zoom to feature if comparing maps
-  if (!compareStore.isComparing) {
-    zoomToFeature();
+  let center = undefined;
+  if (clickedFeatureSourceType.value === "raster") {
+    center = [clickedFeature.value.pos.lng, clickedFeature.value.pos.lat];
+  } else if (clickedFeatureSourceType.value === "vector") {
+    const centroid = turf.centroid(clickedFeature.value.feature);
+    center = centroid.geometry.coordinates as [number, number];
+  }
+  if (center) {
+    tooltip.setLngLat(center);
+    // This makes the tooltip visible
+    tooltip.addTo(mapStore.getMap(props.compareMap));
+    // Don't zoom to feature if comparing maps
+    if (
+      !compareStore.isComparing &&
+      clickedFeatureSourceType.value === "vector"
+    ) {
+      zoomToFeature();
+    }
   }
 });
 

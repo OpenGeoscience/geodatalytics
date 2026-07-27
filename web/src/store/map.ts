@@ -476,8 +476,9 @@ export const useMapStore = defineStore("map", () => {
       metadata,
     });
 
+    const boundsLayerId = boundsSource.id + ".fill";
     map.addLayer({
-      id: boundsSource.id + ".fill",
+      id: boundsLayerId,
       type: "fill",
       source: boundsSource.id,
       paint: {
@@ -489,7 +490,7 @@ export const useMapStore = defineStore("map", () => {
       metadata: { ...metadata, multiFrame: false },
     });
 
-    map.on("click", boundsSource.id, handleLayerClick);
+    map.on("click", boundsLayerId, handleLayerClick);
   }
 
   async function cacheRasterData(raster: RasterData) {
