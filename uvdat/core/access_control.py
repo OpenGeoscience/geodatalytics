@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from guardian.shortcuts import get_objects_for_user
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import BaseFilterBackend
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 
@@ -50,6 +51,8 @@ class GuardianFilter(BaseFilterBackend):
 
         project_id = request.query_params.get("project")
         if project_id:
+            if not project_id.isdigit():
+                raise ValidationError({"project": "Must be a valid project ID."})
             # Return queryset filtered by objects that are within these projects
             return queryset.filter_by_projects(Project.objects.filter(id=project_id))
 
