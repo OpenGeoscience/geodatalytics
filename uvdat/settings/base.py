@@ -145,12 +145,14 @@ CORS_ALLOWED_ORIGIN_REGEXES: list[str] = env.list(
 _redis_url = env.url("DJANGO_REDIS_URL").geturl()
 CHANNEL_LAYERS: dict[str, dict[str, Any]] = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
         "CONFIG": {
             "hosts": [
                 {
                     "address": _redis_url,
-                    "db": 1,
+                    # No "db" is set: the pub/sub layer only issues PUBLISH/SUBSCRIBE,
+                    # which are global to the Redis server and ignore the selected
+                    # logical database.
                 },
             ]
         },
