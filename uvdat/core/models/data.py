@@ -15,6 +15,8 @@ from .dataset import Dataset
 from .file_item import FileItem
 from .querysets import ProjectQuerySet
 
+MAX_DATA_SIZE = 500
+
 
 class RasterData(models.Model):
     name = models.CharField(max_length=255, default="Raster Data")
@@ -29,17 +31,20 @@ class RasterData(models.Model):
     def __str__(self):
         return f"{self.name} ({self.id})"
 
-    def get_image_data(self, resolution: float = 1.0):
+    def get_image_data(self):
         with tempfile.TemporaryDirectory() as tmp:
             raster_path = Path(tmp, "raster")
             with raster_path.open("wb") as raster_file:
                 raster_file.write(self.cloud_optimized_geotiff.read())
             source = large_image.open(raster_path)
-            data, _data_format = source.getRegion(format="numpy")
-            data = data[:, :, 0]
-            if resolution != 1.0:
-                step = int(1 / resolution)
-                data = data[::step][::step]
+            data, _ = source.getRegion(
+                format="numpy",
+                output={
+                    "maxWidth": MAX_DATA_SIZE,
+                    "maxHeight": MAX_DATA_SIZE,
+                },
+            )
+            data = data[:, :, 0 : source.metadata.get("bandCount", 1)]
             return data.tolist()
 
 

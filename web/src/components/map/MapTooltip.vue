@@ -207,7 +207,7 @@ function toggleNodeHandler() {
     <div v-if="rasterValue === undefined">
       <span>fetching raster data...</span>
     </div>
-    <div v-else class="mr-3">Value: {{ rasterValue }}</div>
+    <div v-else class="mr-3">Band Values: {{ rasterValue }}</div>
   </div>
 </template>
 

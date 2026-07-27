@@ -214,10 +214,7 @@ export async function getVectorSummary(
 export async function getRasterDataValues(
   rasterId: number,
 ): Promise<RasterDataValues> {
-  const resolution = 0.1;
-  const data = (
-    await apiClient.get(`rasters/${rasterId}/raster-data/${resolution}/`)
-  ).data;
+  const data = (await apiClient.get(`rasters/${rasterId}/get-data/`)).data;
   const { bounds } = (await apiClient.get(`rasters/${rasterId}/info/metadata/`))
     .data;
   return {

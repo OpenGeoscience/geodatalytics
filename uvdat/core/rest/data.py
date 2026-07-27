@@ -102,12 +102,12 @@ class RasterDataViewSet(GenericDataViewSet, LargeImageFileDetailMixin):
     @action(
         detail=True,
         methods=["get"],
-        url_path=r"raster-data/(?P<resolution>[\d*\.?\d*]+)",
+        url_path="get-data",
         url_name="raster_data",
     )
-    def get_raster_data(self, request, resolution: str = "1", **kwargs):
+    def get_raster_data(self, request, **kwargs):
         raster_data = self.get_object()
-        data = raster_data.get_image_data(float(resolution))
+        data = raster_data.get_image_data()
         return HttpResponse(json.dumps(data), status=200)
 
 
