@@ -524,9 +524,6 @@ export const useMapStore = defineStore("map", () => {
   ): Source | undefined {
     const map = getMap();
 
-    const queryParams: { projection: string; style?: string } = {
-      projection: "epsg:3857",
-    };
     const { layerId, layerCopyId } = parseSourceString(sourceId);
     const styleSpec =
       styleStore.selectedLayerStyles[`${layerId}.${layerCopyId}`].style_spec;
@@ -540,22 +537,14 @@ export const useMapStore = defineStore("map", () => {
         (f: LayerFrame) => f.index === layer.current_frame_index,
       );
       if (frame?.source_filters) {
-        filters = Object.entries(frame.source_filters).map(([k, v]) => ({
-          filter_by: k,
-          list: [v],
-          include: true,
-          transparency: true,
-          apply: true,
-        }));
+        filters = styleStore.sourceFiltersToStyleFilters(frame.source_filters);
       }
     }
-    if (styleSpec) {
-      const styleParams = styleStore.getRasterTilesQuery(
-        { ...styleSpec, filters },
-        styleStore.colormaps,
-      );
-      if (styleParams) queryParams.style = JSON.stringify(styleParams);
-    }
+    const queryParams = styleStore.buildRasterTileQueryParams(
+      styleSpec ?? styleStore.getDefaultStyleSpec(raster, layerId),
+      filters,
+      styleStore.colormaps,
+    );
     const query = new URLSearchParams(queryParams);
     rasterSourceTileURLs.value[sourceId] =
       `${baseURL}rasters/${raster.id}/tiles/{z}/{x}/{y}.png/?${query}`;

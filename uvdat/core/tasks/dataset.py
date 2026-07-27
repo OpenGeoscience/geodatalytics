@@ -136,7 +136,7 @@ def create_layers_and_frames(dataset, layer_options=None):  # noqa: C901, PLR091
                     index=index,
                     vector=vector,
                     raster=raster,
-                    source_filters=frame_info.get("source_filters", {"band": 1}),
+                    source_filters=frame_info.get("source_filters", {}),
                 )
 
 
