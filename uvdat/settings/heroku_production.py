@@ -21,3 +21,4 @@ ALLAUTH_TRUSTED_PROXY_COUNT = 1
 
 # Heroku Redis uses self-signed certs
 CHANNEL_LAYERS["default"]["CONFIG"]["hosts"][0]["ssl_cert_reqs"] = ssl.CERT_NONE
+CACHES["tiles"]["OPTIONS"]["ssl_cert_reqs"] = ssl.CERT_NONE
