@@ -25,6 +25,8 @@ module "django" {
     DJANGO_SENTRY_DSN              = "https://5302701c88f1fa6ec056e0c269071191@o267860.ingest.us.sentry.io/4510620385804288"
     DJANGO_UVDAT_HF_NAMESPACE      = "Kitware"
     DJANGO_UVDAT_HF_ENDPOINT_NAMES = "qwen=qwen3-5-9b-gguf-ulh,"
+    # large_image takes up too much memory to run more than one process
+    WEB_CONCURRENCY = "1"
   }
   additional_sensitive_django_vars = {
     DJANGO_UVDAT_HF_TOKEN = var.DJANGO_UVDAT_HF_TOKEN
