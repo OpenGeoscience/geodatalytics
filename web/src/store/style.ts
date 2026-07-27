@@ -92,23 +92,10 @@ export function colormapMarkersSubsample(
 // frame/band select which slice to read; they must be flat query params, not in style JSON
 const RASTER_SOURCE_FILTER_KEYS = new Set(["frame", "band"]);
 
-// Ingest defaults missing source_filters to { band: 1 }; that is not a real band selection.
-function isDefaultBandSourceFilter(
-  sourceFilters: Record<string, unknown>,
-): boolean {
-  const keys = Object.keys(sourceFilters);
-  return (
-    keys.length === 1 &&
-    keys[0] === "band" &&
-    (sourceFilters.band === 1 || sourceFilters.band === "1")
-  );
-}
-
 function sourceFiltersToStyleFilters(
   sourceFilters: Record<string, unknown> | undefined,
 ): StyleFilter[] {
   if (!sourceFilters || !Object.keys(sourceFilters).length) return [];
-  if (isDefaultBandSourceFilter(sourceFilters)) return [];
   return Object.entries(sourceFilters).map(([k, v]) => ({
     filter_by: k,
     list: [v],
