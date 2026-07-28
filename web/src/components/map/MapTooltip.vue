@@ -129,7 +129,7 @@ watch(clickedFeature, () => {
     tooltip.remove();
     return;
   }
-  let center = undefined;
+  let center: [number, number] | undefined = undefined;
   if (clickedFeatureSourceType.value === "raster") {
     center = [clickedFeature.value.pos.lng, clickedFeature.value.pos.lat];
   } else if (clickedFeatureSourceType.value === "vector") {
