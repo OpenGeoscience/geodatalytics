@@ -4,7 +4,6 @@ import type {
   ClickedFeatureData,
   Project,
   RasterData,
-  RasterDataValues,
   VectorData,
   LayerFrame,
   MapLibreLayerWithMetadata,
@@ -19,7 +18,7 @@ import type {
   LayerSpecification,
 } from "maplibre-gl";
 import { Map, Popup } from "maplibre-gl";
-import { getBasemaps, getRasterDataValues } from "@/api/rest";
+import { getBasemaps } from "@/api/rest";
 import { baseURL } from "@/api/auth";
 import proj4 from "proj4";
 import { useStyleStore, useLayerStore, useAppStore, useProjectStore } from ".";
@@ -135,9 +134,6 @@ export const useMapStore = defineStore("map", () => {
   const compareTooltipOverlay = ref<Popup>();
   const clickedFeature = ref<ClickedFeatureData>();
   const compareClickedFeature = ref<ClickedFeatureData>();
-  const rasterTooltipDataCache = ref<
-    Record<number, RasterDataValues | undefined>
-  >({});
   const rasterSourceTileURLs = ref<Record<string, string>>({});
 
   const styleStore = useStyleStore();
@@ -493,14 +489,6 @@ export const useMapStore = defineStore("map", () => {
     map.on("click", boundsLayerId, handleLayerClick);
   }
 
-  async function cacheRasterData(raster: RasterData) {
-    if (rasterTooltipDataCache.value[raster.id] !== undefined) {
-      return;
-    }
-    const data = await getRasterDataValues(raster.id);
-    rasterTooltipDataCache.value[raster.id] = data;
-  }
-
   function createVectorTileSource(
     vector: VectorData,
     sourceId: string,
@@ -580,7 +568,6 @@ export const useMapStore = defineStore("map", () => {
 
     if (tileSource && boundsSource) {
       createRasterFeatureMapLayers(tileSource, boundsSource, multiFrame);
-      cacheRasterData(raster);
       return tileSource;
     }
   }
@@ -620,7 +607,6 @@ export const useMapStore = defineStore("map", () => {
     compareTooltipOverlay,
     clickedFeature,
     compareClickedFeature,
-    rasterTooltipDataCache,
     rasterSourceTileURLs,
     // Functions
     getBaseLayerSourceIds,
@@ -644,7 +630,6 @@ export const useMapStore = defineStore("map", () => {
     createVectorTileSource,
     createRasterTileSource,
     addLayerFrameToMap,
-    cacheRasterData,
     sourceIdFromMapLayerId,
     parseSourceString,
     parseLayerString,

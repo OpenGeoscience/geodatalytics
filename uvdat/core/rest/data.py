@@ -99,16 +99,18 @@ class RasterDataViewSet(GenericDataViewSet, LargeImageFileDetailMixin):
     serializer_class = RasterDataSerializer
     FILE_FIELD_NAME = "cloud_optimized_geotiff"
 
-    @action(
-        detail=True,
-        methods=["get"],
-        url_path="get-data",
-        url_name="raster_data",
-    )
-    def get_raster_data(self, request, **kwargs):
-        raster_data = self.get_object()
-        data = raster_data.get_image_data()
-        return HttpResponse(json.dumps(data), status=200)
+    @action(detail=True, methods=["get"])
+    def pixel(self, request, **kwargs):
+        instance = self.get_object()
+        return HttpResponse(
+            json.dumps(
+                instance.get_pixel(
+                    request.query_params.get("lat"),
+                    request.query_params.get("lng"),
+                )
+            ),
+            status=200,
+        )
 
 
 class VectorDataViewSet(GenericDataViewSet):

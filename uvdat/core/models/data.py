@@ -9,13 +9,12 @@ from django.core.files.base import ContentFile
 from django.db import models
 from django.dispatch import receiver
 import large_image
+import numpy as np
 from s3_file_field import S3FileField
 
 from .dataset import Dataset
 from .file_item import FileItem
 from .querysets import ProjectQuerySet
-
-MAX_DATA_SIZE = 500
 
 
 class RasterData(models.Model):
@@ -31,21 +30,20 @@ class RasterData(models.Model):
     def __str__(self):
         return f"{self.name} ({self.id})"
 
-    def get_image_data(self):
+    def get_pixel(self, lat, lng):
         with tempfile.TemporaryDirectory() as tmp:
             raster_path = Path(tmp, "raster")
             with raster_path.open("wb") as raster_file:
                 raster_file.write(self.cloud_optimized_geotiff.read())
             source = large_image.open(raster_path)
-            data, _ = source.getRegion(
-                format="numpy",
-                output={
-                    "maxWidth": MAX_DATA_SIZE,
-                    "maxHeight": MAX_DATA_SIZE,
-                },
+            pixel = source.getPixel(
+                region={
+                    "units": "EPSG:4326",
+                    "right": lng,
+                    "top": lat,
+                }
             )
-            data = data[:, :, 0 : source.metadata.get("bandCount", 1)]
-            return data.tolist()
+            return np.array(pixel.get("value")).astype(source.dtype)[: source.bandCount].tolist()
 
 
 class VectorData(models.Model):
