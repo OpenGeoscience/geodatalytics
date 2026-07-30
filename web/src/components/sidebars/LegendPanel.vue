@@ -116,16 +116,11 @@ function getColorPropsCoverage(layer: Layer) {
     <v-card class="panel-content-inner">
       <v-list v-if="filteredLegend?.length" density="compact">
         <v-list-item v-for="layer in filteredLegend" :key="layer.id">
-          <v-icon
-            :icon="layer.visible ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
-            class=""
-            @click="layerStore.setLayerVisibility([layer], !layer.visible)"
-          />
           {{ layer.name }}
           <div
             v-for="colormap_preview in getColormapPreviews(layer)"
             :key="colormap_preview.name"
-            class="ml-6"
+            class="ml-2"
           >
             <div
               v-if="getColormapPreviews(layer).length > 1"
