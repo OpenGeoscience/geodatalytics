@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-import tempfile
 
 from django.contrib.gis.db import models as geomodels
 from django.core.files.base import ContentFile
 from django.db import models
 from django.dispatch import receiver
-import large_image
-import numpy as np
 from s3_file_field import S3FileField
 
 from .dataset import Dataset
@@ -29,21 +25,6 @@ class RasterData(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.id})"
-
-    def get_pixel(self, lat, lng):
-        with tempfile.TemporaryDirectory() as tmp:
-            raster_path = Path(tmp, "raster")
-            with raster_path.open("wb") as raster_file:
-                raster_file.write(self.cloud_optimized_geotiff.read())
-            source = large_image.open(raster_path)
-            pixel = source.getPixel(
-                region={
-                    "units": "EPSG:4326",
-                    "right": lng,
-                    "top": lat,
-                }
-            )
-            return np.array(pixel.get("value")).astype(source.dtype)[: source.bandCount].tolist()
 
 
 class VectorData(models.Model):

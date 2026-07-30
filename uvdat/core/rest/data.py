@@ -6,6 +6,7 @@ from django.contrib.gis.db.models import Extent
 from django.db import connection
 from django.http import HttpResponse
 from django_large_image.rest import LargeImageFileDetailMixin
+import numpy as np
 from rest_framework import mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -101,14 +102,17 @@ class RasterDataViewSet(GenericDataViewSet, LargeImageFileDetailMixin):
 
     @action(detail=True, methods=["get"])
     def pixel(self, request, **kwargs):
-        instance = self.get_object()
+        source = self.get_tile_source(request)
+        pixel = source.getPixel(
+            region={
+                "units": "EPSG:4326",
+                "right": request.query_params.get("lng"),
+                "top": request.query_params.get("lat"),
+            }
+        )
+        value = np.array(pixel.get("value")).astype(source.dtype)[: source.bandCount].tolist()
         return HttpResponse(
-            json.dumps(
-                instance.get_pixel(
-                    request.query_params.get("lat"),
-                    request.query_params.get("lng"),
-                )
-            ),
+            json.dumps(value),
             status=200,
         )
 
