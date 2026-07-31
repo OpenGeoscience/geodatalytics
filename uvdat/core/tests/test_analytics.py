@@ -15,10 +15,6 @@ from uvdat.core.tasks.analytics import (
 
 @pytest.mark.django_db
 def test_rest_list_analysis_types(user, authenticated_api_client, project):
-    # TODO: remove this when analytics are no longer hidden from non-superusers
-    user.is_superuser = True
-    user.save()
-
     analysis_type_instances = [at() for at in analysis_types if at.is_enabled()]
     resp = authenticated_api_client.get(f"/api/v1/analytics/project/{project.id}/types/")
     data = resp.json()

@@ -25,10 +25,6 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
         url_path=r"project/(?P<project_id>[\d*]+)/types",
     )
     def list_types(self, request, project_id: int, **kwargs):
-        # TODO: remove this when analytics are ready to be shown to all users
-        if not request.user.is_superuser:
-            return Response([], status=200)
-
         serialized = []
         for analysis_type in analysis_types:
             if not analysis_type.is_enabled():
