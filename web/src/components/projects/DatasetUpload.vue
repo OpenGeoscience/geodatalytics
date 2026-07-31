@@ -26,7 +26,7 @@ interface LayerSpec {
 
 const props = defineProps<{
   allDatasets: Dataset[];
-  projectPermission: any;
+  editMode: boolean;
 }>();
 const emit = defineEmits(["addToCurrentProject", "uploaded"]);
 
@@ -79,13 +79,10 @@ const valid = computed(() => {
     })
   );
 });
-const canEditProject = computed(() => {
-  return ["owner", "collaborator"].includes(props.projectPermission);
-});
 
 function init() {
   addLayer();
-  if (canEditProject.value) {
+  if (props.editMode) {
     addToCurrentProject.value = true;
   }
 }
@@ -468,7 +465,7 @@ watch(open, () => {
 
         <div class="d-flex px-3" style="justify-content: right">
           <v-checkbox
-            v-if="canEditProject"
+            v-if="editMode"
             v-model="addToCurrentProject"
             label="Add dataset to current project"
             density="compact"

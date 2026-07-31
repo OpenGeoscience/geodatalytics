@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, computed, ref } from "vue";
 import type { Ref } from "vue";
 import type { Project, ProjectPermissions, User } from "@/types";
 import { getUsers, updateProjectPermissions } from "@/api/rest";
 
+import { useProjectStore } from "@/store";
+const projectStore = useProjectStore();
+
 const props = defineProps<{
   project: Project;
-  permissions: Record<number, string>;
 }>();
 const emit = defineEmits(["updateSelectedProject"]);
 const allUsers: Ref<User[]> = ref([]);
@@ -17,8 +19,12 @@ type PermissionLevel = "follower" | "collaborator";
 const permissionLevels: PermissionLevel[] = ["follower", "collaborator"];
 const selectedPermissionLevel: Ref<PermissionLevel> = ref("follower");
 const userToRemove: Ref<User | undefined> = ref();
+const editMode = computed(
+  () => projectStore.permissions[props.project.id] === "owner",
+);
 
 function savePermissions() {
+  if (!editMode.value) return;
   let owner: number = props.project.owner.id;
   const collaborators = new Set(
     props.project.collaborators.map((u: User) => u.id),
@@ -111,7 +117,7 @@ onMounted(() => {
         </template>
         <template #append>
           <v-icon
-            v-if="permissions[project.id] === 'owner'"
+            v-if="editMode"
             icon="mdi-pencil"
             @click="
               showUserSelectDialog = true;
@@ -156,7 +162,7 @@ onMounted(() => {
         </template>
         <template #append>
           <v-icon
-            v-if="permissions[project.id] === 'owner'"
+            v-if="editMode"
             icon="mdi-trash-can"
             @click="userToRemove = collaborator"
           />
@@ -203,7 +209,7 @@ onMounted(() => {
         </template>
         <template #append>
           <v-icon
-            v-if="permissions[project.id] === 'owner'"
+            v-if="editMode"
             icon="mdi-trash-can"
             @click="userToRemove = follower"
           />
@@ -216,7 +222,7 @@ onMounted(() => {
       />
     </v-list>
     <v-btn
-      v-if="permissions[project.id] === 'owner'"
+      v-if="editMode"
       color="primary"
       @click="
         showUserSelectDialog = true;

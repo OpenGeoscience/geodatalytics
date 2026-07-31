@@ -77,8 +77,15 @@ const selectedInputs = ref<Record<string, any>>({});
 const inputSelectionRules = [(v: any) => (v ? true : "Input required.")];
 const additionalAnimationLayers = ref();
 const inputForm = ref();
+const runAllowed = computed(() => {
+  if (!projectStore.currentProject) return false;
+  return ["owner", "collaborator"].includes(
+    projectStore.permissions[projectStore.currentProject.id],
+  );
+});
 
 function run() {
+  if (!runAllowed.value) return;
   inputForm.value.validate().then(({ valid }: { valid: boolean }) => {
     if (
       valid &&
@@ -309,6 +316,7 @@ watch(
         </v-expansion-panels>
 
         <v-tabs
+          v-if="runAllowed"
           v-model="analysisStore.currentAnalysisTab"
           align-tabs="center"
           fixed-tabs
@@ -318,7 +326,7 @@ watch(
         </v-tabs>
 
         <v-window v-model="analysisStore.currentAnalysisTab">
-          <v-window-item value="new">
+          <v-window-item v-if="runAllowed" value="new">
             <v-form ref="inputForm" class="pa-3" @submit.prevent>
               <v-card-subtitle class="px-1">Select inputs</v-card-subtitle>
               <div

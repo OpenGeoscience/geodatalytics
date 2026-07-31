@@ -67,16 +67,13 @@ const newViewStateValid = computed(() => {
       .includes(newViewStateName.value)
   );
 });
-const userHasEditPermission = computed(() => {
-  const user = appStore.currentUser;
-  const project = projectStore.currentProject;
-  return (
-    user?.is_superuser ||
-    (project &&
-      user &&
-      (project.owner.id === user.id ||
-        project.collaborators.map((u) => u.id).includes(user.id)))
-  );
+const editMode = computed(() => {
+  if (projectStore.currentProject) {
+    return ["owner", "collaborator"].includes(
+      projectStore.permissions[projectStore.currentProject.id],
+    );
+  }
+  return false;
 });
 
 function createBasemapPreviews() {
@@ -427,7 +424,11 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
               While using map comparison mode, saving a new view state is not
               supported.
             </div>
-            <v-btn v-else class="control-menu-row" @click="showViewStateDialog">
+            <v-btn
+              v-else-if="editMode"
+              class="control-menu-row"
+              @click="showViewStateDialog"
+            >
               <div>Save current view state</div>
             </v-btn>
             <v-list
@@ -451,7 +452,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
                 </template>
                 <template #append>
                   <v-btn
-                    v-if="userHasEditPermission"
+                    v-if="editMode"
                     v-tooltip="'Delete this view state'"
                     icon="mdi-delete"
                     flat
@@ -591,7 +592,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog :model-value="showViewStateCreation" width="500">
+    <v-dialog v-if="editMode" :model-value="showViewStateCreation" width="500">
       <v-card>
         <v-card-title class="pa-3">
           New View State
@@ -639,7 +640,11 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog :model-value="viewStateToDelete !== undefined" width="500">
+    <v-dialog
+      v-if="editMode"
+      :model-value="viewStateToDelete !== undefined"
+      width="500"
+    >
       <v-card>
         <v-card-title>
           Delete View State

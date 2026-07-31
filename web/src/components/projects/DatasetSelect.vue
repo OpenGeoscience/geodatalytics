@@ -22,6 +22,7 @@ const props = defineProps<{
   addedIds?: number[] | undefined;
   buttonIcon: string;
   showDelete: boolean;
+  editMode: boolean;
 }>();
 const emit = defineEmits(["buttonClick", "onDelete"]);
 const datasetToDelete = ref<Dataset>();
@@ -95,7 +96,7 @@ function submitDelete() {
                     @click.stop="datasetToDelete = dataset"
                   />
                 </div>
-                <div class="mr-2">
+                <div v-if="editMode" class="mr-2">
                   <div
                     v-if="
                       conversionStore.datasetConversionTasks[dataset.id] &&

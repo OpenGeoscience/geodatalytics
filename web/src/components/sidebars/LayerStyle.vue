@@ -65,17 +65,11 @@ const highlightFilterId = ref<number | undefined>();
 // for correct typing in template, assign to computed variable
 const colormaps = computed(() => styleStore.colormaps);
 
-const projectPermission = computed(() => {
-  if (!projectStore.currentProject || !appStore.currentUser) return "none";
-  const user = appStore.currentUser;
-  const proj = projectStore.currentProject;
-  let perm = "follower";
-  if (proj.owner?.id === user.id || user.is_superuser) {
-    perm = "owner";
-  } else if (proj.collaborators.map((u) => u.id).includes(user.id)) {
-    perm = "collaborator";
-  }
-  return perm;
+const editMode = computed(() => {
+  if (!projectStore.currentProject || !appStore.currentUser) return false;
+  return ["owner", "collaborator"].includes(
+    projectStore.permissions[projectStore.currentProject.id],
+  );
 });
 
 const styleKey = computed(() => {
@@ -343,12 +337,14 @@ function setGroupColormap(groupName: string, colormap: Colormap) {
 }
 
 function openColormapEditor(groupName: string, colormap: Colormap | undefined) {
+  if (!editMode.value) return;
   showColormapEditor.value = true;
   editColormapGroupName.value = groupName;
   editColormap.value = colormap;
 }
 
 function confirmDeleteColormap() {
+  if (!editMode.value) return;
   if (delColormap.value?.id) {
     deleteColormap(delColormap.value.id).then(() => {
       delColormap.value = undefined;
@@ -499,7 +495,12 @@ function cancel() {
 }
 
 function save() {
-  if (!currentLayerStyle.value?.id || !currentStyleSpec.value) return;
+  if (
+    !editMode.value ||
+    !currentLayerStyle.value?.id ||
+    !currentStyleSpec.value
+  )
+    return;
   updateLayerStyle(currentLayerStyle.value.id, {
     name: newName.value || currentLayerStyle.value.name,
     is_default: currentLayerStyle.value.is_default,
@@ -520,7 +521,12 @@ function save() {
 }
 
 function saveAsNew() {
-  if (!projectStore.currentProject || !currentStyleSpec.value) return;
+  if (
+    !editMode.value ||
+    !projectStore.currentProject ||
+    !currentStyleSpec.value
+  )
+    return;
   createLayerStyle({
     ...currentLayerStyle.value,
     name: newName.value,
@@ -543,7 +549,7 @@ function saveAsNew() {
 }
 
 function deleteStyle() {
-  if (!currentLayerStyle.value?.id) return;
+  if (!editMode.value || !currentLayerStyle.value?.id) return;
   deleteLayerStyle(currentLayerStyle.value.id).then(() => {
     getLayerStyles(props.layer.id).then((styles) => {
       availableStyles.value = styles;
@@ -673,6 +679,7 @@ onMounted(resetCurrentStyle);
             @update:model-value="selectStyle"
           ></v-select>
           <v-menu
+            v-if="editMode"
             v-model="showEditOptions"
             open-on-hover
             :close-on-content-click="false"
@@ -704,7 +711,7 @@ onMounted(resetCurrentStyle);
           </v-menu>
         </div>
 
-        <div class="d-flex mx-2">
+        <div v-if="editMode" class="d-flex mx-2">
           <v-checkbox
             v-model="currentLayerStyle.is_default"
             label="Set as default style"
@@ -928,10 +935,9 @@ onMounted(resetCurrentStyle);
                               <template #append>
                                 <v-icon
                                   v-if="
-                                    item.project &&
-                                    ['owner', 'collaborator'].includes(
-                                      projectPermission,
-                                    )
+                                    item.project ==
+                                      projectStore.currentProject?.id &&
+                                    editMode
                                   "
                                   icon="mdi-pencil"
                                   class="ml-2"
@@ -939,10 +945,9 @@ onMounted(resetCurrentStyle);
                                 />
                                 <v-icon
                                   v-if="
-                                    item.project &&
-                                    ['owner', 'collaborator'].includes(
-                                      projectPermission,
-                                    )
+                                    item.project ==
+                                      projectStore.currentProject?.id &&
+                                    editMode
                                   "
                                   icon="mdi-trash-can"
                                   class="ml-2"
@@ -986,11 +991,7 @@ onMounted(resetCurrentStyle);
                           </template>
                           <template #prepend-item>
                             <v-list-item
-                              v-if="
-                                ['owner', 'collaborator'].includes(
-                                  projectPermission,
-                                )
-                              "
+                              v-if="editMode"
                               @click="openColormapEditor(group.name, undefined)"
                             >
                               <div
@@ -1382,10 +1383,9 @@ onMounted(resetCurrentStyle);
                                 <template #append>
                                   <v-icon
                                     v-if="
-                                      item.project &&
-                                      ['owner', 'collaborator'].includes(
-                                        projectPermission,
-                                      )
+                                      item.project ==
+                                        projectStore.currentProject?.id &&
+                                      editMode
                                     "
                                     icon="mdi-pencil"
                                     class="ml-2"
@@ -1395,10 +1395,9 @@ onMounted(resetCurrentStyle);
                                   />
                                   <v-icon
                                     v-if="
-                                      item.project &&
-                                      ['owner', 'collaborator'].includes(
-                                        projectPermission,
-                                      )
+                                      item.project ==
+                                        projectStore.currentProject?.id &&
+                                      editMode
                                     "
                                     icon="mdi-trash-can"
                                     class="ml-2"
@@ -1439,11 +1438,7 @@ onMounted(resetCurrentStyle);
                             </template>
                             <template #prepend-item>
                               <v-list-item
-                                v-if="
-                                  ['owner', 'collaborator'].includes(
-                                    projectPermission,
-                                  )
-                                "
+                                v-if="editMode"
                                 @click="
                                   openColormapEditor(group.name, undefined)
                                 "
@@ -2069,7 +2064,7 @@ onMounted(resetCurrentStyle);
         </v-window>
       </v-card-text>
 
-      <v-card-actions class="my-1" style="float: right">
+      <v-card-actions v-if="editMode" class="my-1" style="float: right">
         <v-btn
           v-tooltip="'Warning: unsaved changes will be discarded'"
           class="secondary-button"
