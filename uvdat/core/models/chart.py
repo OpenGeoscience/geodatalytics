@@ -32,18 +32,20 @@ class Chart(models.Model):
 
         convert_chart_signature = convert_chart.s(self.id, conversion_options)
         if asynchronous:
-            convert_chart_signature.delay()
+            # Prevent circular import
+            from uvdat.core.models.task_result import TaskResult  # noqa: PLC0415
+
+            result = TaskResult.objects.create(
+                name=f"Conversion of Chart {self.name}",
+                task_type="conversion",
+                inputs={
+                    "chart_id": self.id,
+                    "conversion_options": conversion_options,
+                },
+                status="Initializing task...",
+            )
+            convert_chart_signature.delay(result_id=result.id)
+            return result
         else:
             convert_chart_signature.apply()
-
-    def new_line(self):
-        # TODO: new line
-        pass
-
-    def rename_lines(self, new_names):
-        # TODO: rename lines
-        pass
-
-    def clear(self):
-        # TODO: clear
-        pass
+            return None

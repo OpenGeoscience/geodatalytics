@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from django.http import HttpResponse
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from uvdat.core.models import Chart
-from uvdat.core.rest.serializers import ChartSerializer, FileItemSerializer
+from uvdat.core.rest.serializers import ChartSerializer, FileItemSerializer, TaskResultSerializer
 
 
 class ChartViewSet(ModelViewSet):
@@ -29,26 +28,13 @@ class ChartViewSet(ModelViewSet):
             status=200,
         )
 
-    def validate_editable(self, chart, func, *args, **kwargs):
-        if chart.editable:
-            return func(*args, **kwargs)
-        else:
-            return HttpResponse("Not an editable chart.", status=400)
-
     @action(detail=True, methods=["post"])
-    def new_line(self, request, **kwargs):
+    def convert(self, request, **kwargs):
         chart = self.get_object()
-        self.validate_editable(chart, chart.new_line)
-        return HttpResponse(status=200)
+        result = chart.spawn_conversion_task(
+            conversion_options=request.data.get("conversion_options")
+        )
+        result.creator = request.user
+        result.save()
 
-    @action(detail=True, methods=["post"])
-    def rename_lines(self, request, **kwargs):
-        chart = self.get_object()
-        self.validate_editable(chart, chart.rename_lines, new_names=request.data)
-        return HttpResponse(status=200)
-
-    @action(detail=True, methods=["post"])
-    def clear(self, request, **kwargs):
-        chart = self.get_object()
-        self.validate_editable(chart, chart.clear)
-        return HttpResponse(status=200)
+        return Response(TaskResultSerializer(result).data, status=200)
