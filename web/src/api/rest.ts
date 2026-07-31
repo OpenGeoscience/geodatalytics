@@ -211,19 +211,15 @@ export async function getVectorSummary(
   return (await apiClient.get(`vectors/${vectorId}/summary/`)).data;
 }
 
-export async function getRasterDataValues(
+export async function getRasterPixelValue(
   rasterId: number,
+  position: { lat: number; lng: number },
 ): Promise<RasterDataValues> {
-  const resolution = 0.1;
-  const data = (
-    await apiClient.get(`rasters/${rasterId}/raster-data/${resolution}/`)
+  return (
+    await apiClient.get(`rasters/${rasterId}/pixel/`, {
+      params: position,
+    })
   ).data;
-  const { bounds } = (await apiClient.get(`rasters/${rasterId}/info/metadata/`))
-    .data;
-  return {
-    data,
-    sourceBounds: bounds,
-  };
 }
 
 export async function runAnalysis(

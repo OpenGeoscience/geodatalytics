@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import * as turf from "@turf/turf";
-import proj4 from "proj4";
-
 import RecursiveTable from "../RecursiveTable.vue";
 import { useMapStore, useLayerStore, useNetworkStore } from "@/store";
 import { useMapCompareStore } from "@/store/compare";
+import { getRasterPixelValue } from "@/api/rest";
 
 const layerStore = useLayerStore();
 const networkStore = useNetworkStore();
@@ -66,27 +65,7 @@ const clickedFeatureSourceType = computed(() => {
   return undefined;
 });
 
-const rasterValue = computed(() => {
-  if (clickedFeature.value && clickedFeatureSourceType.value === "raster") {
-    const feature = clickedFeature.value.feature;
-    const { raster } = layerStore.getDBObjectsForSourceID(feature.source);
-    if (raster?.id) {
-      const data = mapStore.rasterTooltipDataCache[raster.id]?.data;
-      if (data) {
-        const { lng, lat } = clickedFeature.value.pos;
-        const { srs } = raster.metadata.bounds;
-        let { xmin, xmax, ymin, ymax } = raster.metadata.bounds;
-        [xmin, ymin] = proj4(srs, "EPSG:4326", [xmin, ymin]);
-        [xmax, ymax] = proj4(srs, "EPSG:4326", [xmax, ymax]);
-        // Convert lat/lng to array indices
-        const x = Math.floor(((lng - xmin) / (xmax - xmin)) * data[0].length);
-        const y = Math.floor((1 - (lat - ymin) / (ymax - ymin)) * data.length);
-        return data[y][x];
-      }
-    }
-  }
-  return undefined;
-});
+const rasterPixel = ref();
 
 function zoomToFeature() {
   if (clickedFeature.value === undefined) {
@@ -129,15 +108,33 @@ watch(clickedFeature, () => {
     tooltip.remove();
     return;
   }
-  // Set tooltip position. Give feature clicks priority
-  const centroid = turf.centroid(clickedFeature.value.feature);
-  const center = centroid.geometry.coordinates as [number, number];
-  tooltip.setLngLat(center);
-  // This makes the tooltip visible
-  tooltip.addTo(mapStore.getMap(props.compareMap));
-  // Don't zoom to feature if comparing maps
-  if (!compareStore.isComparing) {
-    zoomToFeature();
+  let center: [number, number] | undefined = undefined;
+  if (clickedFeatureSourceType.value === "raster") {
+    center = [clickedFeature.value.pos.lng, clickedFeature.value.pos.lat];
+    const { raster } = layerStore.getDBObjectsForSourceID(
+      clickedFeature.value.feature.source,
+    );
+    if (raster) {
+      rasterPixel.value = undefined;
+      getRasterPixelValue(raster.id, clickedFeature.value.pos).then(
+        (v) => (rasterPixel.value = v),
+      );
+    }
+  } else if (clickedFeatureSourceType.value === "vector") {
+    const centroid = turf.centroid(clickedFeature.value.feature);
+    center = centroid.geometry.coordinates as [number, number];
+  }
+  if (center) {
+    tooltip.setLngLat(center);
+    // This makes the tooltip visible
+    tooltip.addTo(mapStore.getMap(props.compareMap));
+    // Don't zoom to feature if comparing maps
+    if (
+      !compareStore.isComparing &&
+      clickedFeatureSourceType.value === "vector"
+    ) {
+      zoomToFeature();
+    }
   }
 });
 
@@ -195,10 +192,10 @@ function toggleNodeHandler() {
 
   <!-- Check for raster tooltip data after, to give clicked features priority -->
   <div v-else-if="clickedFeatureSourceType === 'raster'">
-    <div v-if="rasterValue === undefined">
-      <span>fetching raster data...</span>
+    <div v-if="rasterPixel === undefined">
+      <span>Fetching raster pixel...</span>
     </div>
-    <div v-else class="mr-3">Value: {{ rasterValue }}</div>
+    <div v-else class="mr-3">Pixel Value: {{ rasterPixel }}</div>
   </div>
 </template>
 

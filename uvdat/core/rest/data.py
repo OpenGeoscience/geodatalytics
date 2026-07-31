@@ -6,6 +6,7 @@ from django.contrib.gis.db.models import Extent
 from django.db import connection
 from django.http import HttpResponse
 from django_large_image.rest import LargeImageFileDetailMixin
+import numpy as np
 from rest_framework import mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -99,16 +100,21 @@ class RasterDataViewSet(GenericDataViewSet, LargeImageFileDetailMixin):
     serializer_class = RasterDataSerializer
     FILE_FIELD_NAME = "cloud_optimized_geotiff"
 
-    @action(
-        detail=True,
-        methods=["get"],
-        url_path=r"raster-data/(?P<resolution>[\d*\.?\d*]+)",
-        url_name="raster_data",
-    )
-    def get_raster_data(self, request, resolution: str = "1", **kwargs):
-        raster_data = self.get_object()
-        data = raster_data.get_image_data(float(resolution))
-        return HttpResponse(json.dumps(data), status=200)
+    @action(detail=True, methods=["get"])
+    def pixel(self, request, **kwargs):
+        source = self.get_tile_source(request)
+        pixel = source.getPixel(
+            region={
+                "units": "EPSG:4326",
+                "right": request.query_params.get("lng"),
+                "top": request.query_params.get("lat"),
+            }
+        )
+        value = np.array(pixel.get("value")).astype(source.dtype)[: source.bandCount].tolist()
+        return HttpResponse(
+            json.dumps(value),
+            status=200,
+        )
 
 
 class VectorDataViewSet(GenericDataViewSet):
