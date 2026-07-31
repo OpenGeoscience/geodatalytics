@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.utils import timezone
+from django.db import transaction
 
 from uvdat.core.frame_previews.fingerprint import params_fingerprint, style_fingerprint
 from uvdat.core.frame_previews.lookup import (
@@ -23,72 +23,18 @@ def style_needs_previews(layer_style: LayerStyle) -> bool:
     return layer_needs_previews(layer_style.layer)
 
 
-def _pending_preview_tasks_to_supersede(
-    *,
-    layer_id: int,
-    fingerprint: str,
-    layer_style_id: int | None = None,
-) -> list[TaskResult]:
-    """Select in-flight preview tasks that a newer enqueue should replace.
-
-    Style-scoped enqueues supersede that style's pending tasks and any
-    layer-default (no ``layer_style_id``) tasks for the same layer, so conversion
-    and style regeneration cannot race on the same frames. Layer-default enqueues
-    supersede other layer-default tasks with the same fingerprint.
-    """
-    candidates = TaskResult.objects.filter(
-        task_type="frame_preview",
-        completed__isnull=True,
-        inputs__layer_id=layer_id,
+def pending_preview_task(*, layer_id: int, fingerprint: str) -> TaskResult | None:
+    """Return an in-flight preview task for this layer fingerprint, if any."""
+    return (
+        TaskResult.objects.filter(
+            task_type="frame_preview",
+            completed__isnull=True,
+            inputs__layer_id=layer_id,
+            inputs__fingerprint=fingerprint,
+        )
+        .order_by("id")
+        .first()
     )
-    to_supersede: list[TaskResult] = []
-    for task in candidates:
-        inputs = task.inputs or {}
-        task_style_id = inputs.get("layer_style_id")
-        if layer_style_id is not None:
-            if task_style_id == layer_style_id or task_style_id is None:
-                to_supersede.append(task)
-        elif task_style_id is None and inputs.get("fingerprint") == fingerprint:
-            to_supersede.append(task)
-    return to_supersede
-
-
-def supersede_pending_preview_tasks(
-    *,
-    layer_id: int,
-    fingerprint: str,
-    layer_style_id: int | None = None,
-) -> None:
-    """Close in-flight preview tasks superseded by a newer enqueue and revoke Celery."""
-    pending = _pending_preview_tasks_to_supersede(
-        layer_id=layer_id,
-        fingerprint=fingerprint,
-        layer_style_id=layer_style_id,
-    )
-    if not pending:
-        return
-
-    celery_task_ids = [
-        celery_id
-        for task in pending
-        if isinstance((celery_id := (task.inputs or {}).get("celery_task_id")), str)
-    ]
-    TaskResult.objects.filter(
-        id__in=[task.id for task in pending],
-        completed__isnull=True,
-    ).update(
-        completed=timezone.now(),
-        status="Superseded by newer preview request.",
-    )
-
-    if not celery_task_ids:
-        return
-
-    # Lazy import: avoid tasks <-> preview_regeneration cycle at module load.
-    from uvdat.core.tasks.frame_preview import generate_frame_previews  # noqa: PLC0415
-
-    for celery_task_id in celery_task_ids:
-        generate_frame_previews.AsyncResult(celery_task_id).revoke(terminate=False)
 
 
 def previews_current_for_fingerprint(layer: Layer, fingerprint: str) -> bool:
@@ -158,6 +104,61 @@ def mark_previews_regenerating(
     return frame_ids
 
 
+def _resolve_preview_task_project(
+    layer: Layer,
+    project,
+    layer_style: LayerStyle | None,
+):
+    if project is not None:
+        return project
+    if layer_style is not None:
+        return layer_style.project
+    # Prefer a project that already includes this dataset so the analytics
+    # WebSocket (project-scoped) receives completion. Conversion-time tasks
+    # before a project link still fall back to the conversion channel.
+    return Project.objects.filter(datasets=layer.dataset_id).first()
+
+
+def _dispatch_frame_preview_task(
+    result: TaskResult,
+    *,
+    fingerprint: str,
+    params: dict[str, Any],
+    task_kwargs: dict[str, Any],
+    asynchronous: bool,
+) -> None:
+    # Lazy: preview_regeneration <- tasks.frame_preview <- tasks.__init__ <- tasks.dataset
+    # <- preview_regeneration when dataset imports this module at top level.
+    from uvdat.core.tasks.frame_preview import generate_frame_previews  # noqa: PLC0415
+
+    layer_id = result.inputs["layer_id"]
+    result_id = result.id
+
+    if asynchronous:
+        # Defer until after the surrounding transaction commits so a worker
+        # cannot start before preview rows / TaskResult / style params exist.
+        enqueue_params = dict(params)
+        enqueue_kwargs = dict(task_kwargs)
+
+        def _enqueue_preview_task() -> None:
+            generate_frame_previews.delay(
+                layer_id,
+                fingerprint,
+                enqueue_params,
+                result_id,
+                **enqueue_kwargs,
+            )
+
+        transaction.on_commit(_enqueue_preview_task)
+        return
+
+    with suppress_task_notifications():
+        generate_frame_previews.apply(
+            args=(layer_id, fingerprint, params, result_id),
+            kwargs=task_kwargs,
+        )
+
+
 def invalidate_and_enqueue_layer_previews(
     layer: Layer,
     raster_style_params: dict[str, Any] | None = None,
@@ -166,7 +167,11 @@ def invalidate_and_enqueue_layer_previews(
     project=None,
     layer_style: LayerStyle | None = None,
 ) -> TaskResult | None:
-    """Invalidate/create preview rows for a params fingerprint and enqueue generation."""
+    """Invalidate/create preview rows for a params fingerprint and enqueue generation.
+
+    If previews are already complete, or a job for this fingerprint is already
+    in flight, do not start another Celery task.
+    """
     if not layer_needs_previews(layer):
         return None
 
@@ -175,66 +180,40 @@ def invalidate_and_enqueue_layer_previews(
     if previews_current_for_fingerprint(layer, fingerprint):
         return None
 
+    existing = pending_preview_task(layer_id=layer.id, fingerprint=fingerprint)
+    if existing is not None:
+        return existing
+
     mark_previews_regenerating(layer, fingerprint, params)
     clear_layer_preview_instance_cache(layer)
     if layer_style is not None:
         clear_style_preview_instance_cache(layer_style)
 
     style_name = layer_style.name if layer_style is not None else "default"
-    supersede_pending_preview_tasks(
-        layer_id=layer.id,
-        fingerprint=fingerprint,
-        layer_style_id=layer_style.id if layer_style is not None else None,
-    )
-
-    task_project = project
-    if task_project is None and layer_style is not None:
-        task_project = layer_style.project
-    if task_project is None:
-        # Prefer a project that already includes this dataset so the analytics
-        # WebSocket (project-scoped) receives completion. Conversion-time tasks
-        # before a project link still fall back to the conversion channel.
-        task_project = Project.objects.filter(datasets=layer.dataset_id).first()
-
     inputs: dict[str, Any] = {
         "layer_id": layer.id,
         "layer_name": layer.name,
         "dataset_id": layer.dataset_id,
         "fingerprint": fingerprint,
     }
+    task_kwargs: dict[str, Any] = {}
     if layer_style is not None:
         inputs["layer_style_id"] = layer_style.id
+        task_kwargs["layer_style_id"] = layer_style.id
 
     result = TaskResult.objects.create(
         name=f"Frame previews: {layer.name} - {style_name}",
         task_type="frame_preview",
-        project=task_project,
+        project=_resolve_preview_task_project(layer, project, layer_style),
         inputs=inputs,
     )
-
-    task_kwargs: dict[str, Any] = {}
-    if layer_style is not None:
-        task_kwargs["layer_style_id"] = layer_style.id
-
-    # Lazy: preview_regeneration <- tasks.frame_preview <- tasks.__init__ <- tasks.dataset
-    # <- preview_regeneration when dataset imports this module at top level.
-    from uvdat.core.tasks.frame_preview import generate_frame_previews  # noqa: PLC0415
-
-    if asynchronous:
-        async_result = generate_frame_previews.delay(
-            layer.id, fingerprint, params, result.id, **task_kwargs
-        )
-        celery_task_id = getattr(async_result, "id", None)
-        if isinstance(celery_task_id, str):
-            inputs["celery_task_id"] = celery_task_id
-            result.inputs = inputs
-            result.save(update_fields=["inputs"])
-    else:
-        with suppress_task_notifications():
-            generate_frame_previews.apply(
-                args=(layer.id, fingerprint, params, result.id),
-                kwargs=task_kwargs,
-            )
+    _dispatch_frame_preview_task(
+        result,
+        fingerprint=fingerprint,
+        params=params,
+        task_kwargs=task_kwargs,
+        asynchronous=asynchronous,
+    )
     return result
 
 

@@ -14,7 +14,6 @@ from uvdat.core.frame_previews.preview_regeneration import (
     get_layer_style_preview_status,
     invalidate_and_enqueue_layer_previews,
     invalidate_and_enqueue_previews,
-    supersede_pending_preview_tasks,
 )
 from uvdat.core.frame_previews.raster_style import (
     apply_source_filters_to_style_query,
@@ -28,18 +27,19 @@ from uvdat.core.tasks.frame_preview import (
     FRAME_PREVIEW_DEFAULT_RESOLUTION_FRACTION,
     FRAME_PREVIEW_MAX_PX,
     FRAME_PREVIEW_MIN_PX,
-    _complete_preview_task,
-    _PreviewGenerationContext,
-    _PreviewGenerationStats,
     generate_frame_previews,
     resolve_preview_max_dimension,
 )
 
 
-def _patch_preview_delay(mocker, celery_task_id: str = "celery-task-id"):
-    delay = mocker.patch("uvdat.core.tasks.frame_preview.generate_frame_previews.delay")
-    delay.return_value = mocker.Mock(id=celery_task_id)
-    return delay
+def _patch_preview_delay(mocker):
+    return mocker.patch("uvdat.core.tasks.frame_preview.generate_frame_previews.delay")
+
+
+def _run_async_enqueue(django_capture_on_commit_callbacks, fn, *args, **kwargs):
+    """Execute ``transaction.on_commit`` callbacks registered by async enqueue."""
+    with django_capture_on_commit_callbacks(execute=True):
+        return fn(*args, **kwargs)
 
 
 def _make_preview(
@@ -156,6 +156,7 @@ def test_invalidate_and_enqueue_previews_uses_db_fingerprint(
     layer_style_factory,
     layer_frame_factory,
     mocker,
+    django_capture_on_commit_callbacks,
 ):
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
@@ -164,7 +165,11 @@ def test_invalidate_and_enqueue_previews_uses_db_fingerprint(
 
     delay = _patch_preview_delay(mocker)
 
-    invalidate_and_enqueue_previews(layer_style)
+    _run_async_enqueue(
+        django_capture_on_commit_callbacks,
+        invalidate_and_enqueue_previews,
+        layer_style,
+    )
 
     delay.assert_called_once()
     layer_id, fingerprint, params = delay.call_args.args[:3]
@@ -172,8 +177,7 @@ def test_invalidate_and_enqueue_previews_uses_db_fingerprint(
     assert fingerprint == style_fingerprint(LayerStyle.objects.get(pk=layer_style.pk))
     assert params == dict(layer_style.raster_style_params or {})
     assert delay.call_args.kwargs.get("layer_style_id") == layer_style.id
-    task_result = TaskResult.objects.get(task_type="frame_preview")
-    assert task_result.inputs["celery_task_id"] == "celery-task-id"
+    assert TaskResult.objects.filter(task_type="frame_preview").count() == 1
 
 
 @pytest.mark.django_db
@@ -228,6 +232,7 @@ def test_invalidate_and_enqueue_previews_runs_when_fingerprint_changed(
     layer_style_factory,
     layer_frame_factory,
     mocker,
+    django_capture_on_commit_callbacks,
 ):
     layer_style = layer_style_factory()
     frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
@@ -253,7 +258,11 @@ def test_invalidate_and_enqueue_previews_runs_when_fingerprint_changed(
 
     delay = _patch_preview_delay(mocker)
 
-    result = invalidate_and_enqueue_previews(layer_style)
+    result = _run_async_enqueue(
+        django_capture_on_commit_callbacks,
+        invalidate_and_enqueue_previews,
+        layer_style,
+    )
 
     delay.assert_called_once()
     assert result is not None
@@ -699,50 +708,18 @@ def test_styles_with_identical_params_share_preview_rows(
 
 
 @pytest.mark.django_db
-def test_complete_preview_task_skips_when_already_superseded(
+def test_generate_frame_previews_continues_when_style_deleted(
     layer_style_factory,
     layer_frame_factory,
+    mocker,
 ):
+    """Deleted styles still finish from the enqueued params snapshot."""
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
     layer_frame_factory(layer=layer_style.layer, index=1)
-    fingerprint = style_fingerprint(layer_style)
-    result = TaskResult.objects.create(
-        name="Frame previews",
-        task_type="frame_preview",
-        project=layer_style.project,
-        inputs={
-            "layer_id": layer_style.layer_id,
-            "fingerprint": fingerprint,
-            "layer_style_id": layer_style.id,
-        },
-    )
-    result.completed = result.created
-    result.status = "Superseded by newer preview request."
-    result.save(update_fields=["completed", "status"])
-
-    ctx = _PreviewGenerationContext(
-        layer=layer_style.layer,
-        fingerprint=fingerprint,
-        base_style_query={},
-        layer_style=layer_style,
-        task_result=result,
-    )
-    _complete_preview_task(result, ctx, _PreviewGenerationStats(ready_count=2, failed_count=0))
-
-    result.refresh_from_db()
-    assert result.status == "Superseded by newer preview request."
-    assert result.outputs is None
-
-
-@pytest.mark.django_db
-def test_generate_frame_previews_abandons_task_when_style_deleted(
-    layer_style_factory,
-    layer_frame_factory,
-):
-    layer_style = layer_style_factory()
-    layer_frame_factory(layer=layer_style.layer, index=0)
-    layer_frame_factory(layer=layer_style.layer, index=1)
+    params = {"palette": "#00ff00", "min": 0, "max": 1}
+    layer_style.raster_style_params = params
+    layer_style.save(update_fields=["raster_style_params"])
     fingerprint = style_fingerprint(layer_style)
     result = TaskResult.objects.create(
         name="Frame previews",
@@ -756,129 +733,99 @@ def test_generate_frame_previews_abandons_task_when_style_deleted(
     )
     style_id = layer_style.id
     layer_id = layer_style.layer_id
-    layer_style.delete()
-
-    generate_frame_previews(layer_id, fingerprint, {}, result.id, layer_style_id=style_id)
-
-    result.refresh_from_db()
-    assert result.completed is not None
-    assert "Style deleted" in result.status
-
-
-@pytest.mark.django_db
-def test_generate_frame_previews_aborts_when_task_superseded_mid_loop(
-    layer_style_factory,
-    layer_frame_factory,
-    mocker,
-):
-    layer_style = layer_style_factory()
-    layer_frame_factory(layer=layer_style.layer, index=0)
-    layer_frame_factory(layer=layer_style.layer, index=1)
-    fingerprint = style_fingerprint(layer_style)
-    result = TaskResult.objects.create(
-        name="Frame previews",
-        task_type="frame_preview",
-        project=layer_style.project,
-        inputs={
-            "layer_id": layer_style.layer_id,
-            "fingerprint": fingerprint,
-            "layer_style_id": layer_style.id,
-        },
-    )
-
-    def _close_task_while_rendering(*_args, **_kwargs):
-        TaskResult.objects.filter(id=result.id).update(
-            completed=result.created,
-            status="Superseded by newer preview request.",
+    for frame in layer_style.layer.raster_frames():
+        _make_preview(
+            frame,
+            fingerprint=fingerprint,
+            params=params,
+            status=PreviewStatus.CREATING,
         )
-        return b"png", 10, 10, None
+    layer_style.delete()
 
     mocker.patch(
         "uvdat.core.tasks.frame_preview.generate_frame_preview_png",
-        side_effect=_close_task_while_rendering,
-    )
-    mocker.patch(
-        "uvdat.core.tasks.frame_preview.RasterFramePreview.objects.get",
-        return_value=mocker.Mock(
-            style_fingerprint=fingerprint,
-            image=None,
-        ),
+        return_value=(b"png", 10, 10, None),
     )
 
-    generate_frame_previews(
-        layer_style.layer_id,
-        fingerprint,
-        {},
-        result.id,
-        layer_style_id=layer_style.id,
-    )
+    generate_frame_previews(layer_id, fingerprint, params, result.id, layer_style_id=style_id)
 
     result.refresh_from_db()
-    assert result.status == "Superseded by newer preview request."
-    assert result.outputs is None
+    assert result.completed is not None
+    assert result.outputs["ready_count"] == 2
+    assert (
+        RasterFramePreview.objects.filter(
+            layer_frame__layer_id=layer_id,
+            style_fingerprint=fingerprint,
+            status=PreviewStatus.COMPLETE,
+        ).count()
+        == 2
+    )
 
 
 @pytest.mark.django_db
-def test_supersede_pending_preview_tasks_revokes_celery_and_closes_layer_default(
+def test_invalidate_and_enqueue_skips_when_fingerprint_job_in_flight(
     layer_style_factory,
     layer_frame_factory,
     mocker,
+    django_capture_on_commit_callbacks,
 ):
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
     layer_frame_factory(layer=layer_style.layer, index=1)
-    fingerprint = style_fingerprint(layer_style)
+    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+    delay = _patch_preview_delay(mocker)
 
-    style_task = TaskResult.objects.create(
-        name="style previews",
-        task_type="frame_preview",
-        project=layer_style.project,
-        inputs={
-            "layer_id": layer_style.layer_id,
-            "fingerprint": fingerprint,
-            "layer_style_id": layer_style.id,
-            "celery_task_id": "style-celery-id",
-        },
+    first = _run_async_enqueue(
+        django_capture_on_commit_callbacks,
+        invalidate_and_enqueue_previews,
+        layer_style,
     )
-    conversion_task = TaskResult.objects.create(
-        name="conversion previews",
-        task_type="frame_preview",
-        project=layer_style.project,
-        inputs={
-            "layer_id": layer_style.layer_id,
-            "fingerprint": params_fingerprint({}),
-            "celery_task_id": "conversion-celery-id",
-        },
-    )
-    other_style_task = TaskResult.objects.create(
-        name="other style",
-        task_type="frame_preview",
-        project=layer_style.project,
-        inputs={
-            "layer_id": layer_style.layer_id,
-            "fingerprint": "other",
-            "layer_style_id": layer_style.id + 999,
-            "celery_task_id": "other-celery-id",
-        },
+    second = _run_async_enqueue(
+        django_capture_on_commit_callbacks,
+        invalidate_and_enqueue_previews,
+        layer_style,
     )
 
-    revoke = mocker.patch("uvdat.core.tasks.frame_preview.generate_frame_previews.AsyncResult")
+    delay.assert_called_once()
+    assert first is not None
+    assert second is not None
+    assert first.id == second.id
+    assert TaskResult.objects.filter(task_type="frame_preview").count() == 1
 
-    supersede_pending_preview_tasks(
-        layer_id=layer_style.layer_id,
-        fingerprint=fingerprint,
-        layer_style_id=layer_style.id,
+
+@pytest.mark.django_db
+def test_invalidate_and_enqueue_starts_job_for_different_fingerprint(
+    layer_style_factory,
+    layer_frame_factory,
+    mocker,
+    django_capture_on_commit_callbacks,
+):
+    layer_style = layer_style_factory()
+    layer_frame_factory(layer=layer_style.layer, index=0)
+    layer_frame_factory(layer=layer_style.layer, index=1)
+    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
+    delay = _patch_preview_delay(mocker)
+
+    first = _run_async_enqueue(
+        django_capture_on_commit_callbacks,
+        invalidate_and_enqueue_layer_previews,
+        layer_style.layer,
+        {},
+    )
+    layer_style.raster_style_params = {"palette": "#00ff00", "min": 0, "max": 1}
+    layer_style.save(update_fields=["raster_style_params"])
+    second = _run_async_enqueue(
+        django_capture_on_commit_callbacks,
+        invalidate_and_enqueue_previews,
+        layer_style,
     )
 
-    style_task.refresh_from_db()
-    conversion_task.refresh_from_db()
-    other_style_task.refresh_from_db()
-    assert style_task.completed is not None
-    assert conversion_task.completed is not None
-    assert other_style_task.completed is None
-    revoked_ids = {call.args[0] for call in revoke.call_args_list}
-    assert revoked_ids == {"style-celery-id", "conversion-celery-id"}
-    assert all(call.return_value.revoke.called for call in revoke.call_args_list)
+    assert delay.call_count == 2
+    assert first is not None
+    assert second is not None
+    assert first.id != second.id
+    assert first.completed is None
+    assert second.completed is None
 
 
 def test_flood_simulation_enqueues_style_previews_after_params():
@@ -886,22 +833,3 @@ def test_flood_simulation_enqueues_style_previews_after_params():
     source = inspect.getsource(flood_mod.flood_simulation)
     assert "invalidate_and_enqueue_previews(style)" in source
     assert "raster_style_params" in source
-
-
-@pytest.mark.django_db
-def test_invalidate_and_enqueue_layer_previews_stores_celery_task_id(
-    layer_factory,
-    layer_frame_factory,
-    mocker,
-):
-    layer = layer_factory()
-    layer_frame_factory(layer=layer, index=0)
-    layer_frame_factory(layer=layer, index=1)
-    delay = _patch_preview_delay(mocker, celery_task_id="layer-celery-id")
-
-    result = invalidate_and_enqueue_layer_previews(layer, {})
-
-    delay.assert_called_once()
-    assert result is not None
-    result.refresh_from_db()
-    assert result.inputs["celery_task_id"] == "layer-celery-id"

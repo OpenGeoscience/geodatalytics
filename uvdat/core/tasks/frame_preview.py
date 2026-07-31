@@ -9,12 +9,11 @@ from typing import TYPE_CHECKING, Any
 
 from celery import shared_task
 from django.core.files.base import ContentFile
-from django.db import transaction
 from django.utils import timezone
 from django_large_image import tilesource, utilities
 from PIL import Image
 
-from uvdat.core.frame_previews.fingerprint import params_fingerprint, style_fingerprint
+from uvdat.core.frame_previews.fingerprint import params_fingerprint
 from uvdat.core.frame_previews.raster_style import (
     apply_source_filters_to_style_query,
     raster_source_filter_kwargs,
@@ -35,8 +34,8 @@ if TYPE_CHECKING:
 """Celery tasks and helpers for multiframe raster frame preview images.
 
 Previews are styled PNG thumbnails stored on ``RasterFramePreview`` rows, keyed
-by ``(layer_frame, style_fingerprint)``. Generation aborts when a newer enqueue
-supersedes the task fingerprint (style save) or the TaskResult is closed.
+by ``(layer_frame, style_fingerprint)``. Enqueue skips starting a second job
+when one is already in flight for the same fingerprint.
 """
 
 logger = logging.getLogger(__name__)
@@ -200,26 +199,6 @@ def ensure_default_layer_style(layer: Layer, project: Project) -> LayerStyle:
     return style
 
 
-def _fingerprint_still_valid(ctx: _PreviewGenerationContext) -> bool:
-    """Abort style-scoped runs when the live style params no longer match."""
-    if ctx.layer_style is None:
-        return True
-    return style_fingerprint(ctx.layer_style) == ctx.fingerprint
-
-
-def _task_result_still_open(result: TaskResult | None) -> bool:
-    """Return whether ``result`` is still the active run (not superseded/closed)."""
-    if result is None:
-        return True
-    result.refresh_from_db(fields=["completed"])
-    return result.completed is None
-
-
-def _generation_still_current(ctx: _PreviewGenerationContext) -> bool:
-    """Abort when the style changed or a newer enqueue closed this TaskResult."""
-    return _fingerprint_still_valid(ctx) and _task_result_still_open(ctx.task_result)
-
-
 def _abandon_task_result(result_id: int | None, status: str) -> None:
     """Close an open TaskResult without marking it successfully completed."""
     if result_id is None:
@@ -231,7 +210,7 @@ def _abandon_task_result(result_id: int | None, status: str) -> None:
 
 
 def _open_task_result(result_id: int | None, layer_id: int) -> TaskResult | None:
-    """Load the TaskResult for this run, or None if it was already superseded."""
+    """Load the TaskResult for this run, or None if it is missing/already closed."""
     if result_id is None:
         return None
 
@@ -266,12 +245,8 @@ def _save_frame_preview(
     preview.save()
 
 
-def _mark_frame_preview_failed(
-    preview: RasterFramePreview,
-    ctx: _PreviewGenerationContext,
-) -> None:
-    """Mark a row failed only when both the row and context still match this task."""
-    if preview.style_fingerprint == ctx.fingerprint and _generation_still_current(ctx):
+def _mark_frame_preview_failed(preview: RasterFramePreview, fingerprint: str) -> None:
+    if preview.style_fingerprint == fingerprint:
         preview.status = PreviewStatus.FAILED
         preview.save(update_fields=["status"])
 
@@ -279,11 +254,8 @@ def _mark_frame_preview_failed(
 def _process_frame_preview(ctx: _PreviewGenerationContext, frame) -> str:
     """Generate one frame preview.
 
-    Returns ``ready``, ``failed``, ``skipped``, or ``superseded``.
+    Returns ``ready``, ``failed``, or ``skipped``.
     """
-    if not _generation_still_current(ctx):
-        return "superseded"
-
     try:
         preview = RasterFramePreview.objects.get(
             layer_frame=frame,
@@ -311,13 +283,8 @@ def _process_frame_preview(ctx: _PreviewGenerationContext, frame) -> str:
             ctx.layer_id,
             frame.id,
         )
-        _mark_frame_preview_failed(preview, ctx)
+        _mark_frame_preview_failed(preview, ctx.fingerprint)
         return "failed"
-
-    # Re-check after the expensive render so a superseding enqueue cannot be
-    # overwritten by this worker writing stale PNGs into regenerating rows.
-    if not _generation_still_current(ctx):
-        return "superseded"
 
     _save_frame_preview(
         preview,
@@ -337,81 +304,46 @@ def _complete_preview_task(
     """Finalize the TaskResult, which triggers a WebSocket notification."""
     if result is None:
         return
-    if not _generation_still_current(ctx):
-        logger.info(
-            "Skipping task completion for layer=%s; preview run superseded",
-            ctx.layer_id,
-        )
+
+    result.refresh_from_db(fields=["completed"])
+    if result.completed is not None:
         return
 
-    outputs: dict[str, Any] = {
+    result.outputs = {
         "layer_id": ctx.layer_id,
         "fingerprint": ctx.fingerprint,
         "ready_count": stats.ready_count,
         "failed_count": stats.failed_count,
+        **({"layer_style_id": ctx.layer_style.id} if ctx.layer_style is not None else {}),
     }
-    if ctx.layer_style is not None:
-        outputs["layer_style_id"] = ctx.layer_style.id
-
-    # Lock so a concurrent supersede cannot be overwritten with "Completed".
-    with transaction.atomic():
-        locked = (
-            TaskResult.objects.select_for_update()
-            .filter(id=result.id, completed__isnull=True)
-            .first()
-        )
-        if locked is None:
-            logger.info(
-                "Skipping task completion for layer=%s; task result %s already closed",
-                ctx.layer_id,
-                result.id,
-            )
-            return
-        locked.outputs = outputs
-        locked.save(update_fields=["outputs"])
-        locked.complete()
+    result.save(update_fields=["outputs"])
+    result.complete()
 
 
 def _resolve_preview_style_inputs(
     layer_id: int,
     fingerprint: str,
     base_style_query: dict[str, Any] | None,
-    result_id: int | None,
     layer_style_id: int | None,
-) -> tuple[LayerStyle | None, dict[str, Any]] | None:
-    """Resolve style params for a preview run, or abandon and return ``None``."""
+) -> tuple[LayerStyle | None, dict[str, Any]]:
+    """Resolve render params from the enqueue snapshot; optionally attach a style."""
+    query = dict(base_style_query or {})
+    if params_fingerprint(query) != fingerprint:
+        logger.warning(
+            "base_style_query fingerprint mismatch for layer=%s; using provided query",
+            layer_id,
+        )
+
+    layer_style = None
     if layer_style_id is not None:
         layer_style = LayerStyle.objects.filter(id=layer_style_id).first()
         if layer_style is None:
             logger.info(
-                "Skipping preview generation for layer=%s; style %s missing",
+                "Style %s missing for layer=%s; generating from enqueued params",
+                layer_style_id,
                 layer_id,
-                layer_style_id,
             )
-            _abandon_task_result(
-                result_id,
-                "Style deleted; preview generation aborted.",
-            )
-            return None
-        if style_fingerprint(layer_style) != fingerprint:
-            logger.info(
-                "Skipping superseded preview generation for style=%s",
-                layer_style_id,
-            )
-            _abandon_task_result(
-                result_id,
-                "Superseded by newer preview request.",
-            )
-            return None
-        return layer_style, dict(layer_style.raster_style_params or {})
-
-    query = dict(base_style_query or {})
-    if params_fingerprint(query) != fingerprint:
-        logger.warning(
-            "base_style_query fingerprint mismatch for layer=%s; using provided fingerprint",
-            layer_id,
-        )
-    return None, query
+    return layer_style, query
 
 
 @shared_task
@@ -426,8 +358,8 @@ def generate_frame_previews(  # noqa: PLR0913
     """Generate styled PNG previews for every frame of a multiframe raster layer.
 
     Rows are keyed by ``(layer_frame, fingerprint)`` and created upstream with
-    ``creating``/``regenerating`` status. When ``layer_style_id`` is set, the task
-    aborts if that style's live params no longer match ``fingerprint``.
+    ``creating``/``regenerating`` status. Rendering uses the snapshotted
+    ``base_style_query`` from enqueue time.
     """
     started = time.perf_counter()
     layer = Layer.objects.get(id=layer_id)
@@ -436,16 +368,12 @@ def generate_frame_previews(  # noqa: PLR0913
         _abandon_task_result(result_id, "Layer is not multiframe; nothing to preview.")
         return
 
-    resolved = _resolve_preview_style_inputs(
+    layer_style, query = _resolve_preview_style_inputs(
         layer_id,
         fingerprint,
         base_style_query,
-        result_id,
         layer_style_id,
     )
-    if resolved is None:
-        return
-    layer_style, query = resolved
 
     result = _open_task_result(result_id, layer_id)
     if result_id is not None and result is None:
@@ -471,12 +399,6 @@ def generate_frame_previews(  # noqa: PLR0913
     failed_count = 0
     for frame in frames:
         outcome = _process_frame_preview(ctx, frame)
-        if outcome == "superseded":
-            logger.info(
-                "Aborting preview generation for layer=%s; preview run superseded",
-                layer_id,
-            )
-            return
         if outcome == "ready":
             ready_count += 1
         elif outcome == "failed":
