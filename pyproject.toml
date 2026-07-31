@@ -191,7 +191,7 @@ ignore = [
   "S", # flake8-bandit
   "SLF001", # private-member-access
 ]
-"{jupyter,sample_data}/**" = [
+"{sample_data}/**" = [
   "T201", # print
 ]
 
