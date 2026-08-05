@@ -229,7 +229,6 @@ const downloadReady = computed(() => {
               icon="mdi-information-outline"
               size="small"
             ></v-icon>
-            <v-icon icon="mdi-poll" size="small" class="ml-2"></v-icon>
             <DetailView :details="{ ...chart, type: 'chart' }" />
           </template>
         </v-list-item>
