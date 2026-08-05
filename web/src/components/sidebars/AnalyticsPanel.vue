@@ -563,7 +563,6 @@ watch(
               icon="mdi-information-outline"
               size="small"
             ></v-icon>
-            <v-icon icon="mdi-earth" size="small" class="ml-2"></v-icon>
           </template>
         </v-list-item>
       </v-list>

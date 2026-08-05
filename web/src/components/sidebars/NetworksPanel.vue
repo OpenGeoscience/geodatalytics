@@ -287,11 +287,6 @@ watch(
           >
             {{ network.name }}
             <template #append>
-              <v-icon
-                icon="mdi-transit-connection-variant"
-                size="small"
-                class="ml-2"
-              ></v-icon>
               <DetailView :details="{ ...network, type: 'network' }" />
             </template>
           </v-list-item>
