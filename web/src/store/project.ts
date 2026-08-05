@@ -49,7 +49,7 @@ export const useProjectStore = defineStore("project", () => {
   const permissions = computed(() => {
     const ret = Object.fromEntries(
       availableProjects.value.map((p) => {
-        let perm = "follower";
+        let perm = "";
         if (
           p.owner?.id === appStore.currentUser?.id ||
           appStore.currentUser?.is_superuser
@@ -60,6 +60,11 @@ export const useProjectStore = defineStore("project", () => {
           p.collaborators.map((u) => u.id).includes(appStore.currentUser.id)
         ) {
           perm = "collaborator";
+        } else if (
+          appStore.currentUser &&
+          p.followers.map((u) => u.id).includes(appStore.currentUser.id)
+        ) {
+          perm = "follower";
         }
         return [p.id, perm];
       }),

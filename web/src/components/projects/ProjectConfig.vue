@@ -403,7 +403,13 @@ watch(
                 <span v-else>{{ title }}</span>
               </template>
               <template #append>
-                <div v-if="editMode">
+                <div
+                  v-if="
+                    ['owner', 'collaborator'].includes(
+                      projectStore.permissions[project.id],
+                    )
+                  "
+                >
                   <v-icon
                     v-if="!projectToEdit && !projectToDelete"
                     icon="mdi-pencil"
@@ -420,7 +426,11 @@ watch(
                     <v-icon icon="mdi-content-save" />
                   </v-btn>
                 </div>
-                <div v-if="deleteAllowed">
+                <div
+                  v-if="
+                    ['owner'].includes(projectStore.permissions[project.id])
+                  "
+                >
                   <v-icon
                     v-if="!projectToEdit && !projectToDelete"
                     icon="mdi-trash-can"
