@@ -23,6 +23,11 @@ import {
 import { prefetchFramePreviewUrls } from "@/utils/framePreviewCache";
 import { useLayerStore, useMapStore, useStyleStore } from ".";
 
+
+const layerStore = useLayerStore();
+const mapStore = useMapStore();
+const styleStore = useStyleStore();
+
 function layerKey(layer: Layer) {
   return `${layer.id}.${layer.copy_id}`;
 }
@@ -276,9 +281,6 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   }
 
   async function showPreviewThenTiles(layer: Layer) {
-    const layerStore = useLayerStore();
-    const mapStore = useMapStore();
-    const styleStore = useStyleStore();
     if (styleStore.isLayerStyleEditing(layer)) {
       return;
     }
