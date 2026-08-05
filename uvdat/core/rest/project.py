@@ -35,7 +35,9 @@ class ProjectViewSet(ModelViewSet):
         # Only the owner can modify project permissions
         project: Project = self.get_object()
         if not user.has_perm("owner", project):
-            return Response(status=403)
+            return Response(
+                "You do not have permission to modify access control on this project.", status=403
+            )
 
         serializer = ProjectPermissionsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

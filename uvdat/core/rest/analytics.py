@@ -92,14 +92,10 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
     )
     def run(self, request, project_id: int, task_type: str, **kwargs):
         project = Project.objects.get(id=project_id)
-        if (
-            not request.user.is_superuser
-            and project.owner() != request.user
-            and request.user not in project.collaborators()
-        ):
+        if not project.user_can_edit(request.user):
             return Response(
                 "You do not have permission to run analytics tasks in this project.",
-                status=400,
+                status=403,
             )
         analysis_type_class = next(
             iter(at for at in analysis_types if at().db_value == task_type), None

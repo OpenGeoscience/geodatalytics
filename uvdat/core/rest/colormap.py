@@ -15,14 +15,10 @@ class ColormapViewSet(ModelViewSet):
 
     def create(self, request, **kwargs):
         project = Project.objects.get(id=request.data.get("project"))
-        if not (
-            request.user.is_superuser
-            or project.owner == request.user
-            or request.user in project.collaborators()
-        ):
+        if not project.user_can_edit(request.user):
             return Response(
                 "You do not have permission to create colormaps in this project.",
-                status=400,
+                status=403,
             )
         serializer = ColormapSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

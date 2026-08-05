@@ -52,6 +52,9 @@ class Project(models.Model):
             "list[User]", list(get_users_with_perms(self, only_with_perms_in=["follower"]))
         )
 
+    def user_can_edit(self, user):
+        return user.is_superuser or self.owner() == user or user in self.collaborators()
+
     @transaction.atomic()
     def delete_users_perms(self, users: list[User]):
         """Delete all permissions a user may have on this project."""
