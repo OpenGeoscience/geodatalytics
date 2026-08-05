@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from uvdat.core.models import Layer, LayerFrame, LayerStyle
+from uvdat.core.models import Layer, LayerFrame, LayerStyle, Project
 from uvdat.core.rest.serializers import (
     LayerFrameSerializer,
     LayerSerializer,
@@ -46,6 +46,12 @@ class LayerStyleViewSet(ModelViewSet):
         return qs
 
     def create(self, request, **kwargs):
+        project = Project.objects.get(id=request.data.get("project"))
+        if not project.user_can_edit(request.user):
+            return Response(
+                "You do not have permission to create styles in this project.",
+                status=403,
+            )
         is_default = request.data.pop("is_default", False)
         serializer = LayerStyleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

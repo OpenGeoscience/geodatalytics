@@ -15,10 +15,6 @@ from uvdat.core.tasks.analytics import (
 
 @pytest.mark.django_db
 def test_rest_list_analysis_types(user, authenticated_api_client, project):
-    # TODO: remove this when analytics are no longer hidden from non-superusers
-    user.is_superuser = True
-    user.save()
-
     analysis_type_instances = [at() for at in analysis_types if at.is_enabled()]
     resp = authenticated_api_client.get(f"/api/v1/analytics/project/{project.id}/types/")
     data = resp.json()
@@ -49,7 +45,7 @@ def test_rest_list_analysis_types(user, authenticated_api_client, project):
 )
 @pytest.mark.django_db
 def test_rest_run_analysis_task_no_inputs(authenticated_api_client, user, project, task):
-    project.set_followers([user])
+    project.set_collaborators([user])
     resp = authenticated_api_client.post(
         f"/api/v1/analytics/project/{project.id}/types/{task}/run/"
     )
@@ -59,7 +55,7 @@ def test_rest_run_analysis_task_no_inputs(authenticated_api_client, user, projec
 
 @pytest.mark.django_db
 def test_rest_run_analysis_task_creator(authenticated_api_client, user, project):
-    project.set_followers([user])
+    project.set_collaborators([user])
     resp = authenticated_api_client.post(
         f"/api/v1/analytics/project/{project.id}/types/create_road_network/run/",
         # Smallest town in America, only 7 nodes

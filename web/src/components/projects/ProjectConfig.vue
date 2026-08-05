@@ -12,9 +12,8 @@ import {
 } from "@/api/rest";
 import type { Project, Dataset } from "@/types";
 
-import { useMapStore, useAppStore, useProjectStore } from "@/store";
+import { useMapStore, useProjectStore } from "@/store";
 const projectStore = useProjectStore();
-const appStore = useAppStore();
 const mapStore = useMapStore();
 
 const currentTab = ref();
@@ -30,34 +29,25 @@ const filteredProjects = computed(() => {
 const selectedProject: Ref<Project | undefined> = ref();
 const projDatasets: Ref<Dataset[] | undefined> = ref();
 
-const permissions = computed(() => {
-  const ret = Object.fromEntries(
-    projectStore.availableProjects.map((p) => {
-      let perm = "follower";
-      if (p.id === selectedProject.value?.id) {
-        p = selectedProject.value;
-      }
-      if (
-        p.owner?.id === appStore.currentUser?.id ||
-        appStore.currentUser?.is_superuser
-      ) {
-        perm = "owner";
-      } else if (
-        appStore.currentUser &&
-        p.collaborators.map((u) => u.id).includes(appStore.currentUser.id)
-      ) {
-        perm = "collaborator";
-      }
-      return [p.id, perm];
-    }),
-  );
-  return ret;
-});
 const saving = ref<"waiting" | "done">();
 const savingId = ref<number | undefined>();
 const newProjectName = ref();
 const projectToEdit: Ref<Project | undefined> = ref();
 const projectToDelete: Ref<Project | undefined> = ref();
+const editMode = computed(() => {
+  if (selectedProject.value) {
+    return ["owner", "collaborator"].includes(
+      projectStore.permissions[selectedProject.value.id],
+    );
+  }
+  return false;
+});
+const deleteAllowed = computed(() => {
+  if (selectedProject.value) {
+    return projectStore.permissions[selectedProject.value.id] === "owner";
+  }
+  return false;
+});
 
 function openProjectConfig(create = false) {
   projectStore.projectConfigMode = create ? "new" : "existing";
@@ -74,7 +64,7 @@ function create() {
 }
 
 function del() {
-  if (projectToDelete.value) {
+  if (projectToDelete.value && deleteAllowed.value) {
     deleteProject(projectToDelete.value.id).then(() => {
       projectStore.loadProjects();
       if (selectedProject.value?.id === projectToDelete.value?.id) {
@@ -86,6 +76,7 @@ function del() {
 }
 
 function saveProjectName() {
+  if (!editMode.value) return;
   if (!newProjectName.value) {
     projectToEdit.value = undefined;
     return;
@@ -107,6 +98,7 @@ function saveProjectName() {
 }
 
 function saveProjectMapLocation(project: Project | undefined) {
+  if (!editMode.value) return;
   if (project) {
     saving.value = "waiting";
     const { center, zoom } = mapStore.getCurrentMapPosition();
@@ -173,6 +165,7 @@ function removeDatasetFromProject(dataset: Dataset) {
 }
 
 function saveDatasetsToProject(ids: number[]) {
+  if (!editMode.value) return;
   if (selectedProject.value) {
     patchProject(selectedProject.value.id, {
       datasets: ids,
@@ -330,6 +323,7 @@ watch(
               Go to project default map position
             </v-list-item>
             <v-list-item
+              v-if="editMode"
               @click="() => saveProjectMapLocation(projectStore.currentProject)"
             >
               Set current map position as project default
@@ -411,7 +405,9 @@ watch(
               <template #append>
                 <div
                   v-if="
-                    ['owner', 'collaborator'].includes(permissions[project.id])
+                    ['owner', 'collaborator'].includes(
+                      projectStore.permissions[project.id],
+                    )
                   "
                 >
                   <v-icon
@@ -430,7 +426,11 @@ watch(
                     <v-icon icon="mdi-content-save" />
                   </v-btn>
                 </div>
-                <div v-if="['owner'].includes(permissions[project.id])">
+                <div
+                  v-if="
+                    ['owner'].includes(projectStore.permissions[project.id])
+                  "
+                >
                   <v-icon
                     v-if="!projectToEdit && !projectToDelete"
                     icon="mdi-trash-can"
@@ -501,18 +501,19 @@ watch(
                     :saving-id="savingId"
                     :show-delete="false"
                     button-icon="mdi-close"
+                    :edit-mode="editMode"
                     @button-click="removeDatasetFromProject"
                     @on-delete="refreshProjectDatasets"
                   />
                 </div>
               </div>
               <v-divider class="mx-5" vertical></v-divider>
-              <div style="width: 45%">
+              <div v-if="editMode" style="width: 45%">
                 <div class="d-flex">
                   <v-card-text>All Datasets</v-card-text>
                   <DatasetUpload
                     :all-datasets="projectStore.allDatasets"
-                    :project-permission="permissions[selectedProject.id]"
+                    :edit-mode="editMode"
                     @add-to-current-project="addDatasetToProject"
                     @uploaded="datasetUploaded"
                   />
@@ -524,6 +525,7 @@ watch(
                     :added-ids="projDatasets?.map((d) => d.id)"
                     :show-delete="true"
                     button-icon="mdi-plus"
+                    :edit-mode="editMode"
                     @button-click="addDatasetToProject"
                     @on-delete="refreshProjectDatasets"
                   />
@@ -534,7 +536,6 @@ watch(
           <div v-if="currentTab === 'users'" class="py-3 px-6">
             <AccessControl
               :project="selectedProject"
-              :permissions="permissions"
               @update-selected-project="updateSelectedProject"
             />
           </div>
@@ -557,7 +558,9 @@ watch(
             Are you sure you want to delete "{{ projectToDelete.name }}"?
           </v-card-text>
           <v-card-actions class="d-flex" style="justify-content: space-evenly">
-            <v-btn color="red" @click="del">Delete</v-btn>
+            <v-btn color="red" :disabled="!deleteAllowed" @click="del"
+              >Delete</v-btn
+            >
             <v-btn
               color="primary"
               variant="tonal"

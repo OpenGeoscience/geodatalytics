@@ -9,7 +9,7 @@ import {
 } from "@/api/rest";
 import type { Dataset, Project, ViewState } from "@/types";
 import { defineStore } from "pinia";
-import { ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -45,6 +45,32 @@ export const useProjectStore = defineStore("project", () => {
   const availableViewStates = ref<ViewState[]>([]);
   const currentViewState = ref<ViewState>();
   const currentViewStateLoaded = ref<boolean>(false);
+
+  const permissions = computed(() => {
+    const ret = Object.fromEntries(
+      availableProjects.value.map((p) => {
+        let perm = "";
+        if (
+          p.owner?.id === appStore.currentUser?.id ||
+          appStore.currentUser?.is_superuser
+        ) {
+          perm = "owner";
+        } else if (
+          appStore.currentUser &&
+          p.collaborators.map((u) => u.id).includes(appStore.currentUser.id)
+        ) {
+          perm = "collaborator";
+        } else if (
+          appStore.currentUser &&
+          p.followers.map((u) => u.id).includes(appStore.currentUser.id)
+        ) {
+          perm = "follower";
+        }
+        return [p.id, perm];
+      }),
+    );
+    return ret;
+  });
 
   async function fetchProjectDatasets() {
     if (!currentProject.value) {
@@ -314,6 +340,7 @@ export const useProjectStore = defineStore("project", () => {
     availableViewStates,
     currentViewState,
     currentViewStateLoaded,
+    permissions,
     fetchProjectDatasets,
     fetchAvailableDatasetTags,
     fetchProjectViewStates,
