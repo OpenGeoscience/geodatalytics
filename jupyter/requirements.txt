@@ -1,3 +1,0 @@
-ipyleaflet
-ipywidgets
-ipytree

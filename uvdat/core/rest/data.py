@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from uvdat.core.models import RasterData, VectorData, VectorFeature
-from uvdat.core.rest.explorer import IPyLeafletTokenAuth
 from uvdat.core.rest.serializers import RasterDataSerializer, VectorDataSerializer
 
 VECTOR_TILE_SQL = """
@@ -83,19 +82,7 @@ def get_filter_string(filters: dict | None = None):
     return return_str
 
 
-class GenericDataViewSet(GenericViewSet, mixins.RetrieveModelMixin):
-    @property
-    def authentication_classes(self):
-        auth_classes = [IPyLeafletTokenAuth]
-
-        existing_auth_classes = super().authentication_classes
-        if existing_auth_classes is not None:
-            auth_classes = existing_auth_classes + auth_classes
-
-        return auth_classes
-
-
-class RasterDataViewSet(GenericDataViewSet, LargeImageFileDetailMixin):
+class RasterDataViewSet(GenericViewSet, mixins.RetrieveModelMixin, LargeImageFileDetailMixin):
     queryset = RasterData.objects.select_related("dataset").all()
     serializer_class = RasterDataSerializer
     FILE_FIELD_NAME = "cloud_optimized_geotiff"
@@ -117,7 +104,7 @@ class RasterDataViewSet(GenericDataViewSet, LargeImageFileDetailMixin):
         )
 
 
-class VectorDataViewSet(GenericDataViewSet):
+class VectorDataViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = VectorData.objects.select_related("dataset").all()
     serializer_class = VectorDataSerializer
 
