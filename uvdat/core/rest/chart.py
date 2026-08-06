@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -32,7 +34,7 @@ class ChartViewSet(ModelViewSet):
     def convert(self, request, **kwargs):
         chart = self.get_object()
         result = chart.spawn_conversion_task(
-            conversion_options=request.data.get("conversion_options")
+            conversion_options=json.loads(request.data.get("conversion_options"))
         )
         result.creator = request.user
         result.save()
