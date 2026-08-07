@@ -24,7 +24,7 @@ const editMode = computed(
 );
 
 function savePermissions() {
-  if (!editMode.value) return;
+  if (!editMode.value || props.project.owner.id === undefined) return;
   let owner: number = props.project.owner.id;
   const collaborators = new Set(
     props.project.collaborators.map((u: User) => u.id),
@@ -39,10 +39,12 @@ function savePermissions() {
   ) {
     // Transfer ownership to new owner, demoting current owner to collaborator
     const newOwner = selectedUsers.value[0].id;
-    followers.delete(newOwner);
-    collaborators.delete(newOwner);
-    collaborators.add(owner);
-    owner = newOwner;
+    if (newOwner) {
+      followers.delete(newOwner);
+      collaborators.delete(newOwner);
+      collaborators.add(owner);
+      owner = newOwner;
+    }
   } else if (selectedPermissionLevel.value == "collaborator") {
     selectedUsers.value.forEach((u: User) => collaborators.add(u.id));
     selectedUsers.value.forEach((u: User) => followers.delete(u.id));
@@ -52,8 +54,10 @@ function savePermissions() {
   }
   const newPermissions: ProjectPermissions = {
     owner_id: owner,
-    collaborator_ids: Array.from(collaborators),
-    follower_ids: Array.from(followers),
+    collaborator_ids: Array.from(collaborators).filter(
+      (id) => id !== undefined,
+    ),
+    follower_ids: Array.from(followers).filter((id) => id !== undefined),
   };
   updateProjectPermissions(props.project.id, newPermissions).then((project) => {
     if (project) {
@@ -104,7 +108,7 @@ onMounted(() => {
             class="mx-3 user-circle"
             :ripple="false"
           >
-            <span v-if="project.owner.first_name || project.owner.last_name">
+            <span v-if="project.owner.first_name && project.owner.last_name">
               {{ project.owner.first_name[0] }}
               {{ project.owner.last_name[0] }}
               <v-tooltip activator="parent" location="end">
@@ -145,6 +149,7 @@ onMounted(() => {
       >
         <template #prepend>
           <v-btn
+            v-if="collaborator.first_name && collaborator.last_name"
             flat
             icon
             color="primary"
@@ -192,6 +197,7 @@ onMounted(() => {
       >
         <template #prepend>
           <v-btn
+            v-if="follower.first_name && follower.last_name"
             flat
             icon
             color="primary"
