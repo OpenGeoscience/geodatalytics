@@ -151,7 +151,11 @@ function togglePanelVisibility(id: string) {
               <v-icon v-bind="props" icon="mdi-cog" class="px-3"></v-icon>
             </template>
             <v-list>
-              <v-list-item density="compact" @click="logout">
+              <v-list-item
+                v-if="appStore.authenticated"
+                density="compact"
+                @click="logout"
+              >
                 Logout
                 <template #append>
                   <v-icon icon="mdi-logout"></v-icon>

@@ -175,7 +175,7 @@ async function createNewBasemapPreview() {
 }
 
 function submitBasemapCreate() {
-  if (newBasemapValid.value) {
+  if (newBasemapValid.value && appStore.authenticated) {
     createBasemap({
       name: newBasemapName.value,
       style: newBasemapStyleJSON.value,
@@ -261,6 +261,7 @@ function cancelCreateViewState() {
 }
 
 function submitNewViewState() {
+  if (!appStore.authenticated) return;
   if (newViewStateValid.value && newViewStateThumbnail.value) {
     const thumbnailFile = new File(
       [newViewStateThumbnail.value],
@@ -325,6 +326,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
           >
             <v-list-subheader>Base Map Options</v-list-subheader>
             <v-list-item
+              v-if="appStore.authenticated"
               key="new"
               title="Create Custom Basemap"
               class="px-2"

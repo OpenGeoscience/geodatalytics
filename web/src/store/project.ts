@@ -62,7 +62,8 @@ export const useProjectStore = defineStore("project", () => {
           perm = "collaborator";
         } else if (
           appStore.currentUser &&
-          p.followers.map((u) => u.id).includes(appStore.currentUser.id)
+          (p.followers.map((u) => u.id).includes(appStore.currentUser.id) ||
+            p.allow_unauthenticated)
         ) {
           perm = "follower";
         }

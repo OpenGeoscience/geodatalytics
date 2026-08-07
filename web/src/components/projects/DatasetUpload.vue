@@ -130,6 +130,7 @@ function isVectorFile(file: File) {
 }
 
 function submit() {
+  if (!appStore.authenticated) return;
   submitting.value = true;
   createDataset({
     name: name.value,
@@ -185,7 +186,7 @@ watch(open, () => {
 </script>
 
 <template>
-  <v-btn color="primary" @click="open = true">
+  <v-btn v-if="appStore.authenticated" color="primary" @click="open = true">
     <v-icon icon="mdi-upload" class="mr-2" />
     Upload New Dataset
 
