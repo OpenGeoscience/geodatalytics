@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import faker
 import pytest
+from pytest_lazy_fixtures import lf
 
 if TYPE_CHECKING:
     from uvdat.core.models.project import Project
@@ -40,10 +41,29 @@ def test_project_set_followers_collaborators(project, user_factory):
     assert sorted(project.followers(), key=sort_func) == users
 
 
+@pytest.mark.parametrize(
+    "client",
+    [lf("api_client"), lf("authenticated_api_client")],
+)
 @pytest.mark.django_db
-def test_rest_project_create_no_datasets(authenticated_api_client):
+def test_rest_list_projects(client, user, project_factory):
+    project = project_factory(allow_unauthenticated=True)
+    project.set_owner(user)
+    resp = client.get("/api/v1/projects/")
+    assert resp.status_code == 200
+    results = resp.json().get("results")
+    assert len(results) == 1
+    assert results[0].get("name") == project.name
+
+
+@pytest.mark.parametrize(
+    ("client", "expected_status"),
+    [(lf("api_client"), 401), (lf("authenticated_api_client"), 201)],
+)
+@pytest.mark.django_db
+def test_rest_project_create_no_datasets(client, expected_status):
     fake = faker.Faker()
-    resp = authenticated_api_client.post(
+    resp = client.post(
         "/api/v1/projects/",
         data={
             "name": fake.name(),
@@ -52,15 +72,19 @@ def test_rest_project_create_no_datasets(authenticated_api_client):
         },
     )
 
-    assert resp.status_code == 201
+    assert resp.status_code == expected_status
 
 
+@pytest.mark.parametrize(
+    ("client", "expected_status"),
+    [(lf("api_client"), 401), (lf("authenticated_api_client"), 201)],
+)
 @pytest.mark.django_db
-def test_rest_project_create_with_datasets(authenticated_api_client, dataset_factory):
+def test_rest_project_create_with_datasets(client, expected_status, dataset_factory):
     fake = faker.Faker()
 
     datasets = [dataset_factory().id for _ in range(3)]
-    resp = authenticated_api_client.post(
+    resp = client.post(
         "/api/v1/projects/",
         data={
             "name": fake.name(),
@@ -70,7 +94,7 @@ def test_rest_project_create_with_datasets(authenticated_api_client, dataset_fac
         },
     )
 
-    assert resp.status_code == 201
+    assert resp.status_code == expected_status
 
 
 @pytest.mark.django_db
