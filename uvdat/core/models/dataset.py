@@ -11,6 +11,8 @@ from .querysets import ProjectQuerySet
 if typing.TYPE_CHECKING:
     from django.contrib.auth.models import User
 
+    from uvdat.core.tasks.run_mode import TaskRunMode
+
 
 class DatasetTag(models.Model):
     tag = models.CharField(max_length=255, unique=True)
@@ -82,7 +84,7 @@ class Dataset(models.Model):
         layer_options=None,
         network_options=None,
         region_options=None,
-        asynchronous=True,
+        run_mode: TaskRunMode | str = "async",
     ):
         # Prevent circular import
         from uvdat.core.models.task_result import (  # noqa: PLC0415
@@ -90,15 +92,19 @@ class Dataset(models.Model):
             suppress_task_notifications,
         )
         from uvdat.core.tasks.dataset import convert_dataset  # noqa: PLC0415
+        from uvdat.core.tasks.run_mode import TaskRunMode  # noqa: PLC0415
+
+        run_mode = TaskRunMode(run_mode)
 
         convert_dataset_signature = convert_dataset.s(
             dataset_id=self.id,
             layer_options=layer_options,
             network_options=network_options,
             region_options=region_options,
+            run_mode=run_mode,
         )
 
-        if asynchronous:
+        if run_mode is TaskRunMode.ASYNC:
             result = TaskResult.objects.create(
                 name=f"Conversion of Dataset {self.name}",
                 task_type="conversion",
@@ -113,7 +119,7 @@ class Dataset(models.Model):
             )
             convert_dataset_signature.delay(result_id=result.id)
             return result
-        else:
-            with suppress_task_notifications():
-                convert_dataset_signature.apply()
-            return None
+
+        with suppress_task_notifications():
+            convert_dataset_signature.apply()
+        return None

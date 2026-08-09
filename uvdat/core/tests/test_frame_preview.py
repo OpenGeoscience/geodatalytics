@@ -30,6 +30,7 @@ from uvdat.core.tasks.frame_preview import (
     generate_frame_previews,
     resolve_preview_max_dimension,
 )
+from uvdat.core.tasks.run_mode import TaskRunMode
 
 
 def _patch_preview_delay(mocker):
@@ -299,7 +300,7 @@ def test_invalidate_and_enqueue_previews_runs_synchronously(
     delay = _patch_preview_delay(mocker)
     apply = mocker.patch("uvdat.core.tasks.frame_preview.generate_frame_previews.apply")
 
-    invalidate_and_enqueue_previews(layer_style, asynchronous=False)
+    invalidate_and_enqueue_previews(layer_style, run_mode=TaskRunMode.SYNC)
 
     apply.assert_called_once()
     delay.assert_not_called()
@@ -831,5 +832,5 @@ def test_invalidate_and_enqueue_starts_job_for_different_fingerprint(
 def test_flood_simulation_enqueues_style_previews_after_params():
     """Regression: flood default style params must trigger preview generation."""
     source = inspect.getsource(flood_mod.flood_simulation)
-    assert "invalidate_and_enqueue_previews(style)" in source
+    assert "invalidate_and_enqueue_previews(style, run_mode=TaskRunMode.SYNC)" in source
     assert "raster_style_params" in source

@@ -10,6 +10,7 @@ from django.core.files import File
 
 from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
 from uvdat.core.models import Chart, Colormap, Dataset, FileItem, LayerStyle, TaskResult
+from uvdat.core.tasks.run_mode import TaskRunMode
 
 from .analysis_type import AnalysisTask, AnalysisType
 
@@ -177,7 +178,7 @@ def flood_simulation(result_id):
             ],
             network_options=None,
             region_options=None,
-            asynchronous=False,
+            run_mode=TaskRunMode.SYNC,
         )
 
         # Create a default style for new layer
@@ -227,9 +228,10 @@ def flood_simulation(result_id):
             "palette": ["#002081", "#2AD3FF"],
         }
         style.save(update_fields=["raster_style_params"])
-        # Conversion queued empty-params previews; regenerate for this style's params
-        # so layer_default_fingerprint / preview_status can become ready.
-        invalidate_and_enqueue_previews(style)
+        # Conversion generated empty-params previews inline (sync); regenerate for
+        # this style's params so layer_default_fingerprint / preview_status are
+        # ready before this flood TaskResult completes.
+        invalidate_and_enqueue_previews(style, run_mode=TaskRunMode.SYNC)
 
         result.write_outputs(
             {

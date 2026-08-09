@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.db import transaction
 
@@ -13,6 +13,16 @@ from uvdat.core.frame_previews.lookup import (
 from uvdat.core.models import Layer, LayerStyle, Project, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
 from uvdat.core.models.task_result import suppress_task_notifications
+
+if TYPE_CHECKING:
+    from uvdat.core.tasks.run_mode import TaskRunMode
+
+
+def _coerce_run_mode(run_mode: TaskRunMode | str) -> TaskRunMode:
+    # Lazy: this module is imported by tasks.dataset during package init.
+    from uvdat.core.tasks.run_mode import TaskRunMode as _TaskRunMode  # noqa: PLC0415
+
+    return _TaskRunMode(run_mode)
 
 
 def layer_needs_previews(layer: Layer) -> bool:
@@ -125,16 +135,39 @@ def _dispatch_frame_preview_task(
     fingerprint: str,
     params: dict[str, Any],
     task_kwargs: dict[str, Any],
-    asynchronous: bool,
+    run_mode: TaskRunMode | str,
 ) -> None:
     # Lazy: preview_regeneration <- tasks.frame_preview <- tasks.__init__ <- tasks.dataset
     # <- preview_regeneration when dataset imports this module at top level.
     from uvdat.core.tasks.frame_preview import generate_frame_previews  # noqa: PLC0415
 
+    run_mode = _coerce_run_mode(run_mode)
     layer_id = result.inputs["layer_id"]
     result_id = result.id
 
-    if asynchronous:
+    if run_mode == "async":
+        # Defer until after the surrounding transaction commits so a worker
+        # cannot start before preview rows / TaskResult / style params exist.
+        enqueue_params = dict(params)
+        enqueue_kwargs = dict(task_kwargs)
+
+        def _enqueue_preview_task() -> None:
+            generate_frame_previews.delay(
+                layer_id,
+                fingerprint,
+                enqueue_params,
+                result_id,
+                **enqueue_kwargs,
+            )
+
+        transaction.on_commit(_enqueue_preview_task)
+        return
+
+    with suppress_task_notifications():
+        generate_frame_previews.apply(
+            args=(layer_id, fingerprint, params, result_id),
+            kwargs=task_kwargs,
+        )
         # Defer until after the surrounding transaction commits so a worker
         # cannot start before preview rows / TaskResult / style params exist.
         enqueue_params = dict(params)
@@ -163,7 +196,7 @@ def invalidate_and_enqueue_layer_previews(
     layer: Layer,
     raster_style_params: dict[str, Any] | None = None,
     *,
-    asynchronous: bool = True,
+    run_mode: TaskRunMode | str = "async",
     project=None,
     layer_style: LayerStyle | None = None,
 ) -> TaskResult | None:
@@ -175,6 +208,7 @@ def invalidate_and_enqueue_layer_previews(
     if not layer_needs_previews(layer):
         return None
 
+    run_mode = _coerce_run_mode(run_mode)
     params = dict(raster_style_params or {})
     fingerprint = params_fingerprint(params)
     if previews_current_for_fingerprint(layer, fingerprint):
@@ -212,7 +246,7 @@ def invalidate_and_enqueue_layer_previews(
         fingerprint=fingerprint,
         params=params,
         task_kwargs=task_kwargs,
-        asynchronous=asynchronous,
+        run_mode=run_mode,
     )
     return result
 
@@ -220,7 +254,7 @@ def invalidate_and_enqueue_layer_previews(
 def invalidate_and_enqueue_previews(
     layer_style: LayerStyle,
     *,
-    asynchronous: bool = True,
+    run_mode: TaskRunMode | str = "async",
 ) -> TaskResult | None:
     """Invalidate previews for a style's current ``raster_style_params`` and enqueue."""
     if not style_needs_previews(layer_style):
@@ -230,7 +264,7 @@ def invalidate_and_enqueue_previews(
     return invalidate_and_enqueue_layer_previews(
         layer_style.layer,
         layer_style.raster_style_params,
-        asynchronous=asynchronous,
+        run_mode=run_mode,
         project=layer_style.project,
         layer_style=layer_style,
     )

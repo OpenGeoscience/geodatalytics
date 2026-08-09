@@ -6,6 +6,7 @@ import pandas as pd
 import requests
 
 from uvdat.core.models import NetworkNode, VectorData, VectorFeature
+from uvdat.core.tasks.run_mode import TaskRunMode
 
 LINE_COLORS = {
     "RED": "#D31414",
@@ -30,7 +31,7 @@ def convert_dataset(dataset, options):
         layer_options=options.get("layers"),
         network_options=options.get("network_options"),
         region_options=options.get("region_options"),
-        asynchronous=False,
+        run_mode=TaskRunMode.SYNC,
     )
 
     # Post-processing

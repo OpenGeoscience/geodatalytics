@@ -16,6 +16,7 @@ from uvdat.core.models import (
     TaskResult,
     VectorData,
 )
+from uvdat.core.tasks.run_mode import TaskRunMode
 
 from .conversion import convert_file_item
 from .data import create_vector_features
@@ -23,7 +24,13 @@ from .networks import create_network
 from .regions import create_source_regions
 
 
-def create_layers_and_frames(dataset, layer_options=None, task_result=None):  # noqa: C901, PLR0912, PLR0915
+def create_layers_and_frames(  # noqa: C901, PLR0912, PLR0915
+    dataset,
+    layer_options=None,
+    task_result=None,
+    *,
+    run_mode: TaskRunMode = TaskRunMode.ASYNC,
+):
     Layer.objects.filter(dataset=dataset).delete()
     LayerFrame.objects.filter(layer__dataset=dataset).delete()
     vectors = VectorData.objects.filter(dataset=dataset)
@@ -143,21 +150,27 @@ def create_layers_and_frames(dataset, layer_options=None, task_result=None):  # 
                 )
 
     # Default empty-params previews (no Project/LayerStyle required).
+    # Match the surrounding conversion mode: sync ingest must generate
+    # previews inline (no Celery worker required).
     for layer in Layer.objects.filter(dataset=dataset):
         if layer.is_multiframe_raster():
             if task_result is not None:
                 task_result.write_status(f"Generating frame previews for layer {layer.name}...")
-            invalidate_and_enqueue_layer_previews(layer, {}, asynchronous=True)
+            invalidate_and_enqueue_layer_previews(layer, {}, run_mode=run_mode)
 
 
 @shared_task
-def convert_dataset(
+def convert_dataset(  # noqa: PLR0913
     dataset_id,
     layer_options=None,
     network_options=None,
     region_options=None,
     result_id=None,
+    *,
+    run_mode: TaskRunMode | str = TaskRunMode.ASYNC,
 ):
+    # Celery JSON may deserialize StrEnum kwargs as plain strings.
+    run_mode = TaskRunMode(run_mode)
     dataset = Dataset.objects.get(id=dataset_id)
     dataset.processing = True
     dataset.save()
@@ -189,7 +202,12 @@ def convert_dataset(
 
         vector_data.get_summary()
 
-    create_layers_and_frames(dataset, layer_options, task_result=result)
+    create_layers_and_frames(
+        dataset,
+        layer_options,
+        task_result=result,
+        run_mode=run_mode,
+    )
 
     dataset.processing = False
     dataset.save()

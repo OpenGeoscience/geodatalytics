@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from uvdat.core.tasks.dataset import create_layers_and_frames
+from uvdat.core.tasks.run_mode import TaskRunMode
 
 from .export_networks import perform_export
 from .import_networks import perform_import
@@ -22,17 +23,17 @@ def convert_dataset(dataset, options):
             perform_export()
         else:
             perform_import(dataset, downloads_folder=DOWNLOADS_FOLDER)
-        create_layers_and_frames(dataset)
+        create_layers_and_frames(dataset, run_mode=TaskRunMode.SYNC)
     elif dataset.name == "National Grid CompanyBoundary":
         create_vector_features(dataset, "CompanyBoundary")
-        create_layers_and_frames(dataset)
+        create_layers_and_frames(dataset, run_mode=TaskRunMode.SYNC)
     elif dataset.name == "National Grid Substations":
         create_vector_features(dataset, "Substations")
-        create_layers_and_frames(dataset)
+        create_layers_and_frames(dataset, run_mode=TaskRunMode.SYNC)
     else:
         dataset.spawn_conversion_task(
             layer_options=options.get("layers"),
             network_options=options.get("network_options"),
             region_options=options.get("region_options"),
-            asynchronous=False,
+            run_mode=TaskRunMode.SYNC,
         )

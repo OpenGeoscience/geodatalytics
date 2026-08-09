@@ -23,7 +23,6 @@ import {
 import { prefetchFramePreviewUrls } from "@/utils/framePreviewCache";
 import { useLayerStore, useMapStore, useStyleStore } from ".";
 
-
 const layerStore = useLayerStore();
 const mapStore = useMapStore();
 const styleStore = useStyleStore();
