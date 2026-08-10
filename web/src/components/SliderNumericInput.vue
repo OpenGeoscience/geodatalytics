@@ -83,7 +83,7 @@ function updateRange(lower: number, upper: number) {
         :max="props.max"
         :step="props.step"
         :precision="precision"
-        :style="{ width: getInputWidth(props.model) }"
+        :style="{ width: getInputWidth(props.max) }"
         variant="outlined"
         control-variant="stacked"
         hide-details
@@ -111,7 +111,7 @@ function updateRange(lower: number, upper: number) {
         :max="props.rangeModel[1]"
         :step="props.step"
         :precision="precision"
-        :style="{ width: getInputWidth(props.rangeModel[0]) }"
+        :style="{ width: getInputWidth(props.max) }"
         variant="outlined"
         control-variant="stacked"
         hide-details
@@ -130,7 +130,7 @@ function updateRange(lower: number, upper: number) {
         :max="props.max"
         :step="props.step"
         :precision="precision"
-        :style="{ width: getInputWidth(props.rangeModel[1]) }"
+        :style="{ width: getInputWidth(props.max) }"
         variant="outlined"
         control-variant="stacked"
         hide-details
