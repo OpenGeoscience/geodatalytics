@@ -54,7 +54,7 @@ class DatasetGuardianPermission(GuardianPermission):
         if request.user.is_anonymous:
             return (
                 request.method == "GET"
-                and obj.project_set.filter(allow_unauthenticated=True).count()
+                and obj.project_set.filter(allow_unauthenticated=True).exists()
             )
 
         # Prohibit delete and patch requests unless user is owner
