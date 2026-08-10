@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from django.core import signing
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from uvdat.core.models import Dataset, FileItem, RasterData, VectorData
+from uvdat.core.models import FileItem, RasterData, VectorData
 from uvdat.core.rest.serializers import (
     FileItemSerializer,
     RasterDataSerializer,
@@ -25,30 +26,14 @@ class FileItemViewSet(ModelViewSet):
 
         return qs.filter(project=int(project_id))
 
-    def create(self, request, *args, **kwargs):
-        file_key = request.data.get("file")
+    def perform_create(self, serializer):
+        file_key = self.request.data.get("file")
         try:
             file_key_data = signing.loads(file_key)
             file_key = file_key_data.get("object_key")
-        except (signing.BadSignature, TypeError):
-            return Response({"detail": "Invalid file key"}, status=400)
-
-        dataset_id = request.data.get("dataset")
-        try:
-            dataset = Dataset.objects.get(id=dataset_id)
-        except Dataset.DoesNotExist:
-            return Response({"detail": "Dataset not found"}, status=404)
-
-        file_item = FileItem.objects.create(
-            name=request.data.get("name", "File"),
-            file_type=request.data.get("file_type", "json"),
-            metadata=request.data.get("metadata", {}),
-            index=request.data.get("index", 0),
-            dataset=dataset,
-            file=file_key,
-        )
-        serializer = self.get_serializer(file_item)
-        return Response(serializer.data, status=201)
+        except (signing.BadSignature, TypeError) as e:
+            raise ValidationError("Invalid file key") from e
+        serializer.save(file=file_key)
 
     @action(detail=True, methods=["get"])
     def data(self, request, **kwargs):

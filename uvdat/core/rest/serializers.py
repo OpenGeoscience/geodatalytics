@@ -135,6 +135,10 @@ class FileItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = FileItem
         fields = "__all__"
+        extra_kwargs = {
+            "dataset": {"allow_null": True, "required": False},
+            "chart": {"allow_null": True, "required": False},
+        }
 
 
 class ChartSerializer(serializers.ModelSerializer):

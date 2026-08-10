@@ -15,6 +15,7 @@ import type { ChartOptions } from "@/types";
 import DetailView from "../DetailView.vue";
 
 import { useAnalysisStore } from "@/store";
+import SliderNumericInput from "../SliderNumericInput.vue";
 const analysisStore = useAnalysisStore();
 
 ChartJS.register(
@@ -196,24 +197,17 @@ const downloadReady = computed(() => {
         <Line :data="data" :options="options" />
         <div v-if="showXRange" class="pt-3">
           Current X Axis Slice (From {{ maxX }} values)
-          <div style="display: flex">
-            <v-text-field
-              v-model.number="currentXRange"
-              type="number"
-              label="Number of values"
-              density="compact"
-              :max="maxX"
-              min="0"
-            />
-            <v-text-field
-              v-model.number="currentXStart"
-              type="number"
-              label="Starting from"
-              density="compact"
-              :max="maxX"
-              min="0"
-            />
-          </div>
+          <SliderNumericInput
+            :range-model="[currentXStart, currentXStart + currentXRange]"
+            :min="0"
+            :max="maxX"
+            @update="
+              (v: [number, number]) => {
+                currentXStart = v[0];
+                currentXRange = v[1] - v[0];
+              }
+            "
+          />
         </div>
       </div>
       <v-list v-else-if="filteredCharts?.length" density="compact">
