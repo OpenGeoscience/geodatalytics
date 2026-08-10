@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.contrib.gis.serializers import geojson
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from uvdat.core.models import (
     Basemap,
@@ -92,6 +93,12 @@ class ProjectSerializer(serializers.ModelSerializer):
         if isinstance(center, list):
             data["default_map_center"] = Point(center[0], center[1])
         return data
+
+    def validate_allow_unauthenticated(self, value):
+        request = self.context.get("request")
+        if value and not request.user.is_superuser:
+            raise ValidationError("Only superusers can allow unauthenticated access to a project.")
+        return value
 
     class Meta:
         model = Project

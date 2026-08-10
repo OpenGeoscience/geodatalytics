@@ -201,3 +201,21 @@ def test_rest_project_delete(authenticated_api_client, user, project: Project):
     project.set_owner(user)
     resp = authenticated_api_client.delete(f"/api/v1/projects/{project.id}/")
     assert resp.status_code == 204
+
+
+@pytest.mark.parametrize("superuser", [True, False])
+@pytest.mark.django_db
+def test_rest_update_allow_unauthenticated(authenticated_api_client, user, superuser, project):
+    if superuser:
+        user.is_superuser = True
+        user.save()
+    else:
+        project.set_owner(user)
+
+    resp = authenticated_api_client.patch(
+        f"/api/v1/projects/{project.id}/",
+        {"allow_unauthenticated": True},
+    )
+    assert resp.status_code == (200 if superuser else 400)
+    project.refresh_from_db()
+    assert project.allow_unauthenticated == superuser
