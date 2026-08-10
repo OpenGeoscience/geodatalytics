@@ -5,6 +5,7 @@ import type { Project, ProjectPermissions, User } from "@/types";
 import { getUsers, updateProjectPermissions } from "@/api/rest";
 
 import { useProjectStore } from "@/store";
+import UserProfile from "./UserProfile.vue";
 const projectStore = useProjectStore();
 
 const props = defineProps<{
@@ -90,35 +91,7 @@ onMounted(() => {
           icon="mdi-information-outline"
         />
       </v-list-subheader>
-      <v-list-item
-        v-if="project.owner"
-        :title="
-          project.owner.first_name && project.owner.last_name
-            ? project.owner.first_name + ' ' + project.owner.last_name
-            : project.owner.username
-        "
-        :subtitle="project.owner.email"
-      >
-        <template #prepend>
-          <v-btn
-            flat
-            icon
-            color="primary"
-            size="small"
-            class="mx-3 user-circle"
-            :ripple="false"
-          >
-            <span v-if="project.owner.first_name && project.owner.last_name">
-              {{ project.owner.first_name[0] }}
-              {{ project.owner.last_name[0] }}
-              <v-tooltip activator="parent" location="end">
-                {{ project.owner.first_name }}
-                {{ project.owner.last_name }}
-              </v-tooltip>
-            </span>
-            <v-icon v-else icon="mdi-account"></v-icon>
-          </v-btn>
-        </template>
+      <user-profile :user="project.owner">
         <template #append>
           <v-icon
             v-if="editMode"
@@ -129,7 +102,7 @@ onMounted(() => {
             "
           />
         </template>
-      </v-list-item>
+      </user-profile>
       <v-list-subheader>
         Collaborators
         <v-icon
@@ -137,34 +110,11 @@ onMounted(() => {
           icon="mdi-information-outline"
         />
       </v-list-subheader>
-      <v-list-item
+      <user-profile
         v-for="collaborator in project.collaborators"
         :key="collaborator.id"
-        :title="
-          collaborator.first_name && collaborator.last_name
-            ? collaborator.first_name + ' ' + collaborator.last_name
-            : collaborator.username
-        "
-        :subtitle="collaborator.email"
+        :user="collaborator"
       >
-        <template #prepend>
-          <v-btn
-            v-if="collaborator.first_name && collaborator.last_name"
-            flat
-            icon
-            color="primary"
-            size="small"
-            class="mx-3 user-circle"
-            :ripple="false"
-          >
-            {{ collaborator.first_name[0] }}
-            {{ collaborator.last_name[0] }}
-            <v-tooltip activator="parent" location="end">
-              {{ collaborator.first_name }}
-              {{ collaborator.last_name }}
-            </v-tooltip>
-          </v-btn>
-        </template>
         <template #append>
           <v-icon
             v-if="editMode"
@@ -172,7 +122,7 @@ onMounted(() => {
             @click="userToRemove = collaborator"
           />
         </template>
-      </v-list-item>
+      </user-profile>
       <v-list-item
         v-if="!project.collaborators.length"
         subtitle="No collaborators"
@@ -185,34 +135,11 @@ onMounted(() => {
           icon="mdi-information-outline"
         />
       </v-list-subheader>
-      <v-list-item
+      <user-profile
         v-for="follower in project.followers"
         :key="follower.id"
-        :title="
-          follower.first_name && follower.last_name
-            ? follower.first_name + ' ' + follower.last_name
-            : follower.username
-        "
-        :subtitle="follower.email"
+        :user="follower"
       >
-        <template #prepend>
-          <v-btn
-            v-if="follower.first_name && follower.last_name"
-            flat
-            icon
-            color="primary"
-            size="small"
-            class="mx-3 user-circle"
-            :ripple="false"
-          >
-            {{ follower.first_name[0] }}
-            {{ follower.last_name[0] }}
-            <v-tooltip activator="parent" location="end">
-              {{ follower.first_name }}
-              {{ follower.last_name }}
-            </v-tooltip>
-          </v-btn>
-        </template>
         <template #append>
           <v-icon
             v-if="editMode"
@@ -220,7 +147,7 @@ onMounted(() => {
             @click="userToRemove = follower"
           />
         </template>
-      </v-list-item>
+      </user-profile>
       <v-list-item
         v-if="!project.followers.length"
         subtitle="No followers"
