@@ -33,9 +33,10 @@ class ChartViewSet(ModelViewSet):
     @action(detail=True, methods=["post"])
     def convert(self, request, **kwargs):
         chart = self.get_object()
-        result = chart.spawn_conversion_task(
-            conversion_options=json.loads(request.data.get("conversion_options"))
-        )
+        conversion_options = request.data.get("conversion_options")
+        if conversion_options is None:
+            return Response("Missing required conversion_options.", status=400)
+        result = chart.spawn_conversion_task(conversion_options=json.loads(conversion_options))
         result.creator = request.user
         result.save()
 
