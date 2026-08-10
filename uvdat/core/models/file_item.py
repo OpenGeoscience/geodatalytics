@@ -25,6 +25,17 @@ class FileItem(TimeStampedModel):
     project_filter_path = "dataset__project"
     objects = ProjectQuerySet.as_manager()
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(dataset__isnull=False, chart__isnull=True)
+                    | models.Q(dataset__isnull=True, chart__isnull=False)
+                ),
+                name="dataset_or_chart_constraint",
+            )
+        ]
+
     def __str__(self):
         return f"{self.name} ({self.id})"
 

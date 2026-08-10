@@ -37,9 +37,9 @@ function blur() {
   if (activeElement) activeElement.blur();
 }
 
-function getInputWidth() {
+function getInputWidth(value: number) {
   let width = 50;
-  width += props.max.toString().length * 8;
+  width += value.toString().length * 8;
   width += precision.value * 8;
   return width + "px";
 }
@@ -83,7 +83,7 @@ function updateRange(lower: number, upper: number) {
         :max="props.max"
         :step="props.step"
         :precision="precision"
-        :style="{ width: getInputWidth() }"
+        :style="{ width: getInputWidth(props.max) }"
         variant="outlined"
         control-variant="stacked"
         hide-details
@@ -111,7 +111,7 @@ function updateRange(lower: number, upper: number) {
         :max="props.rangeModel[1]"
         :step="props.step"
         :precision="precision"
-        :style="{ width: getInputWidth() }"
+        :style="{ width: getInputWidth(props.max) }"
         variant="outlined"
         control-variant="stacked"
         hide-details
@@ -130,7 +130,7 @@ function updateRange(lower: number, upper: number) {
         :max="props.max"
         :step="props.step"
         :precision="precision"
-        :style="{ width: getInputWidth() }"
+        :style="{ width: getInputWidth(props.max) }"
         variant="outlined"
         control-variant="stacked"
         hide-details
