@@ -198,7 +198,6 @@ onMounted(() => {
                 ? 'Users to add'
                 : 'New project owner'
             "
-            item-title="username"
             return-object
             :multiple="userSelectDialogMode === 'add'"
             :clearable="userSelectDialogMode === 'add'"
@@ -247,8 +246,8 @@ onMounted(() => {
           </v-btn>
         </v-card-title>
         <v-card-text v-if="userToRemove">
-          Are you sure you want to remove {{ userToRemove.username }} from this
-          project?
+          Are you sure you want to remove {{ userToRemove.first_name }}
+          {{ userToRemove.last_name }} from this project?
         </v-card-text>
         <v-card-actions class="d-flex" style="justify-content: space-evenly">
           <v-btn color="red" @click="savePermissions">Delete</v-btn>
