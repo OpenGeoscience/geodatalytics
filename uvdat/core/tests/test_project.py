@@ -42,18 +42,24 @@ def test_project_set_followers_collaborators(project, user_factory):
 
 
 @pytest.mark.parametrize(
-    "client",
-    [lf("api_client"), lf("authenticated_api_client")],
+    ("client", "anon"),
+    [(lf("api_client"), True), (lf("authenticated_api_client"), False)],
 )
 @pytest.mark.django_db
-def test_rest_list_projects(client, user, project_factory):
-    project = project_factory(allow_unauthenticated=True)
+def test_rest_list_projects(client, anon, user, user_factory, project_factory):
+    project = project_factory()
     project.set_owner(user)
+    demo = project_factory(allow_unauthenticated=True)
+    demo.set_owner(user_factory())  # set owner to a different user
     resp = client.get("/api/v1/projects/")
     assert resp.status_code == 200
     results = resp.json().get("results")
-    assert len(results) == 1
-    assert results[0].get("name") == project.name
+    if anon:
+        assert len(results) == 1
+        assert results[0].get("name") == demo.name
+    else:
+        assert len(results) == 2
+        assert {result.get("name") for result in results} == {project.name, demo.name}
 
 
 @pytest.mark.parametrize(

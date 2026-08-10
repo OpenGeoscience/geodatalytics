@@ -86,7 +86,7 @@ class GuardianFilter(BaseFilterBackend):
                 user=request.user,
                 perms=["follower", "collaborator", "owner"],
                 any_perm=True,
-            )
+            ) | permitted_projects.filter(allow_unauthenticated=True)
 
         # Return queryset filtered by objects that are within these projects
         return queryset.filter_by_projects(permitted_projects)
