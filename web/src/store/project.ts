@@ -20,6 +20,7 @@ import {
   usePanelStore,
   useAppStore,
   useStyleStore,
+  useTutorialStore,
 } from ".";
 
 export const useProjectStore = defineStore("project", () => {
@@ -30,6 +31,7 @@ export const useProjectStore = defineStore("project", () => {
   const panelStore = usePanelStore();
   const appStore = useAppStore();
   const styleStore = useStyleStore();
+  const tutorialStore = useTutorialStore();
 
   const route = useRoute();
   const router = useRouter();
@@ -153,6 +155,13 @@ export const useProjectStore = defineStore("project", () => {
 
   watch(() => route?.fullPath, loadViewStateFromURL);
   async function loadViewStateFromURL() {
+    if (
+      tutorialStore.showWelcomeMessage ||
+      tutorialStore.showTutorialStep > 1
+    ) {
+      // Don't load view state until after exiting tutorial
+      return;
+    }
     if (!route.path.includes("/view/")) {
       currentViewState.value = undefined;
       return;
