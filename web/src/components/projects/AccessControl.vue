@@ -212,14 +212,7 @@ onMounted(() => {
             "
           >
             <template #item="{ props: itemProps, item }">
-              <v-list-item
-                v-bind="itemProps"
-                :title="
-                  item.first_name && item.last_name
-                    ? item.first_name + ' ' + item.last_name
-                    : item.username
-                "
-              ></v-list-item>
+              <user-profile v-bind="itemProps" :user="item" />
             </template>
           </v-combobox>
           <v-select
