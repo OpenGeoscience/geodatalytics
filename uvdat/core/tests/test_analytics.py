@@ -15,14 +15,24 @@ from uvdat.core.tasks.analytics import (
 
 
 @pytest.mark.parametrize(
-    "client",
-    [lf("api_client"), lf("authenticated_api_client")],
+    ("client", "anon"),
+    [(lf("api_client"), True), (lf("authenticated_api_client"), False)],
 )
 @pytest.mark.django_db
-def test_rest_list_analysis_types(user, client, project):
+def test_rest_list_analysis_types(client, anon, project):
     analysis_type_instances = [at() for at in analysis_types if at.is_enabled()]
     resp = client.get(f"/api/v1/analytics/project/{project.id}/types/")
     data = resp.json()
+
+    if anon:
+        assert not len(data)
+        # Unauthenticated users can only see a task type if a run exists on an allowed project
+        project.allow_unauthenticated = True
+        project.save()
+        analysis_type_instances = analysis_type_instances[:1]
+        TaskResult.objects.create(project=project, task_type=analysis_type_instances[0].db_value)
+        resp = client.get(f"/api/v1/analytics/project/{project.id}/types/")
+        data = resp.json()
 
     assert len(data) == len(analysis_type_instances)
     assert {type_info.get("name") for type_info in data} == {
