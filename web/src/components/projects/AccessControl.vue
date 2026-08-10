@@ -190,7 +190,7 @@ onMounted(() => {
           class="pa-3"
         />
         <v-card-text>
-          <v-select
+          <v-combobox
             v-model="selectedUsers"
             :items="allUsers"
             :label="
@@ -219,10 +219,9 @@ onMounted(() => {
                     ? item.first_name + ' ' + item.last_name
                     : item.username
                 "
-                :subtitle="item.email"
               ></v-list-item>
             </template>
-          </v-select>
+          </v-combobox>
           <v-select
             v-if="userSelectDialogMode === 'add'"
             v-model="selectedPermissionLevel"

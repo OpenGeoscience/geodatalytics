@@ -3,7 +3,6 @@ import type { MapGeoJSONFeature, StyleSpecification } from "maplibre-gl";
 export interface User {
   id: number | undefined; // undefined id is unauthenticated
   username?: string;
-  email?: string;
   first_name?: string;
   last_name?: string;
   is_superuser?: boolean;
