@@ -156,8 +156,8 @@ export const useProjectStore = defineStore("project", () => {
   watch(() => route?.fullPath, loadViewStateFromURL);
   async function loadViewStateFromURL() {
     if (
-      tutorialStore.showWelcomeMessage ||
-      tutorialStore.showTutorialStep > 1
+      !appStore.authenticated &&
+      (tutorialStore.showWelcomeMessage || tutorialStore.showTutorialStep > 1)
     ) {
       // Don't load view state until after exiting tutorial
       return;
