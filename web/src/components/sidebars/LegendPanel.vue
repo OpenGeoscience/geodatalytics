@@ -121,7 +121,7 @@ function getColorPropsCoverage(layer: Layer) {
           <v-icon
             v-if="framePreviewStore.isDisplayingPreview(layer)"
             v-tooltip="
-              'Showing a low-resolution preview while full-resolution tiles load.'
+              'Showing a low-resolution preview while default resolution tiles load.'
             "
             icon="mdi-image-filter-hdr"
             size="small"

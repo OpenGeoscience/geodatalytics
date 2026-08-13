@@ -195,7 +195,7 @@ function setLayerActive(layer: Layer, active: boolean) {
                   <v-icon
                     v-tooltip="
                       framePreviewStore.isDisplayingPreview(element)
-                        ? 'Showing a low-resolution preview while full-resolution tiles load.'
+                        ? 'Showing a low-resolution preview while default resolution tiles load.'
                         : undefined
                     "
                     icon="mdi-image-filter-hdr"
