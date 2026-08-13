@@ -21,11 +21,9 @@ import {
   waitForRasterSourceLoaded,
 } from "@/utils/framePreviewLayer";
 import { prefetchFramePreviewUrls } from "@/utils/framePreviewCache";
-import { useLayerStore, useMapStore, useStyleStore } from ".";
-
-const layerStore = useLayerStore();
-const mapStore = useMapStore();
-const styleStore = useStyleStore();
+import { useLayerStore } from "./layer";
+import { useMapStore } from "./map";
+import { useStyleStore } from "./style";
 
 function layerKey(layer: Layer) {
   return `${layer.id}.${layer.copy_id}`;
@@ -122,6 +120,10 @@ function adjacentRasterFrames(
 }
 
 export const useFramePreviewStore = defineStore("framePreview", () => {
+  const layerStore = useLayerStore();
+  const mapStore = useMapStore();
+  const styleStore = useStyleStore();
+
   const activePreviewByLayerKey = new Map<string, number>();
   const transitionGenerationByLayerKey = new Map<string, number>();
 
@@ -232,7 +234,6 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     tileLayerId: string,
     tileSourceId: string,
   ) {
-    const mapStore = useMapStore();
     const map = mapStore.getMap();
     const previewMapLayerId = previewLayerId(layerKeyValue, frameIndex);
 
@@ -374,9 +375,6 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   }
 
   function dismissPreviewForLayer(layer: Layer) {
-    const mapStore = useMapStore();
-    const layerStore = useLayerStore();
-    const styleStore = useStyleStore();
     const map = mapStore.getMap();
     const layerKeyValue = layerKey(layer);
 
@@ -402,7 +400,6 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   }
 
   function cleanupLayer(layer: Layer) {
-    const mapStore = useMapStore();
     const layerKeyValue = layerKey(layer);
     transitionGenerationByLayerKey.delete(layerKeyValue);
     activePreviewByLayerKey.delete(layerKeyValue);
@@ -425,9 +422,6 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     if (layerId === undefined) {
       return;
     }
-
-    const layerStore = useLayerStore();
-    const styleStore = useStyleStore();
 
     // Conversion / dataset-default tasks have no layer_style_id; refresh the
     // layer payload which carries the default-fingerprint preview set.
