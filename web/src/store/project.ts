@@ -21,6 +21,7 @@ import {
   useAppStore,
   useStyleStore,
   useFramePreviewStore,
+  useTutorialStore,
 } from ".";
 import { clearFramePreviewCache } from "@/utils/framePreviewCache";
 
@@ -32,6 +33,7 @@ export const useProjectStore = defineStore("project", () => {
   const panelStore = usePanelStore();
   const appStore = useAppStore();
   const styleStore = useStyleStore();
+  const tutorialStore = useTutorialStore();
 
   const route = useRoute();
   const router = useRouter();
@@ -64,7 +66,8 @@ export const useProjectStore = defineStore("project", () => {
           perm = "collaborator";
         } else if (
           appStore.currentUser &&
-          p.followers.map((u) => u.id).includes(appStore.currentUser.id)
+          (p.followers.map((u) => u.id).includes(appStore.currentUser.id) ||
+            p.allow_unauthenticated)
         ) {
           perm = "follower";
         }
@@ -154,6 +157,13 @@ export const useProjectStore = defineStore("project", () => {
 
   watch(() => route?.fullPath, loadViewStateFromURL);
   async function loadViewStateFromURL() {
+    if (
+      !appStore.authenticated &&
+      (tutorialStore.showWelcomeMessage || tutorialStore.showTutorialStep > 1)
+    ) {
+      // Don't load view state until after exiting tutorial
+      return;
+    }
     if (!route.path.includes("/view/")) {
       currentViewState.value = undefined;
       return;

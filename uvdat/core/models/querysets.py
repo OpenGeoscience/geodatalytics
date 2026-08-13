@@ -35,4 +35,4 @@ class ProjectQuerySet(models.QuerySet):
         query = models.Q(**{f"{path}__in": projects})
         if allow_null:
             query |= models.Q(**{f"{path}__isnull": True})
-        return self.filter(query)
+        return self.filter(query).distinct()

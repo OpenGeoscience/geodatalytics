@@ -1,12 +1,10 @@
 import type { MapGeoJSONFeature, StyleSpecification } from "maplibre-gl";
 
 export interface User {
-  id: number;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  is_superuser: boolean;
+  id: number | undefined; // undefined id is unauthenticated
+  first_name?: string;
+  last_name?: string;
+  is_superuser?: boolean;
 }
 
 export interface Basemap {
@@ -273,6 +271,7 @@ export interface Project {
     charts: number;
     analyses: number;
   };
+  allow_unauthenticated: boolean;
 }
 
 export interface ProjectPatch {

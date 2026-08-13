@@ -78,7 +78,7 @@ const inputSelectionRules = [(v: any) => (v ? true : "Input required.")];
 const additionalAnimationLayers = ref();
 const inputForm = ref();
 const runAllowed = computed(() => {
-  if (!projectStore.currentProject) return false;
+  if (!projectStore.currentProject || !appStore.authenticated) return false;
   return ["owner", "collaborator"].includes(
     projectStore.permissions[projectStore.currentProject.id],
   );
@@ -213,7 +213,7 @@ async function fillInputsAndOutputs() {
 }
 
 async function subscribe() {
-  if (analysisStore.currentResult) {
+  if (appStore.authenticated && analysisStore.currentResult) {
     analysisStore.currentResult.subscribers = (
       await subscribeToTaskResult(analysisStore.currentResult.id)
     ).subscribers;
@@ -516,10 +516,13 @@ watch(
                       </tbody>
                     </v-table>
                   </div>
-                  <div v-else style="text-align: center">
+                  <div
+                    v-else-if="appStore.authenticated"
+                    style="text-align: center"
+                  >
                     <div
                       v-if="
-                        appStore.currentUser &&
+                        appStore.currentUser?.id &&
                         analysisStore.currentResult?.subscribers.includes(
                           appStore.currentUser.id,
                         )

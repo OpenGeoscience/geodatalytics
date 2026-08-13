@@ -6,6 +6,7 @@ import ToggleCompareMap from "./components/map/ToggleCompareMap.vue";
 import SideBars from "./components/sidebars/SideBars.vue";
 import ControlsBar from "./components/ControlsBar.vue";
 import SplashPage from "./components/SplashPage.vue";
+import TutorialPopup from "./components/TutorialPopup.vue";
 
 import {
   useAppStore,
@@ -39,8 +40,8 @@ watch(() => appStore.currentUser, onReady);
   <v-app>
     <SplashPage v-if="!appStore.currentUser" />
     <div v-else>
+      <tutorial-popup />
       <v-overlay
-        v-if="appStore.currentUser"
         :model-value="showError"
         absolute
         :opacity="0.8"
@@ -120,5 +121,15 @@ scrollbar changes disables default styling and rounding so corners appear square
 
 .v-input {
   --v-input-control-height: 32px;
+}
+
+.tutorial-message {
+  position: absolute;
+  z-index: 2000;
+  padding: 8px;
+  border-radius: 4px;
+  width: 200px;
+  background-color: rgb(var(--v-theme-on-surface-variant));
+  color: rgb(var(--v-theme-surface-variant));
 }
 </style>

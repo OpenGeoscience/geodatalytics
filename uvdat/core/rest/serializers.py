@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.contrib.gis.serializers import geojson
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from uvdat.core.frame_previews.lookup import layer_default_multiframe_previews
 from uvdat.core.frame_previews.preview_regeneration import (
@@ -36,7 +37,7 @@ from uvdat.core.models import (
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "is_superuser"]
+        fields = ["id", "first_name", "last_name", "is_superuser"]
 
 
 class BasemapSerializer(serializers.ModelSerializer):
@@ -98,6 +99,12 @@ class ProjectSerializer(serializers.ModelSerializer):
         if isinstance(center, list):
             data["default_map_center"] = Point(center[0], center[1])
         return data
+
+    def validate_allow_unauthenticated(self, value):
+        request = self.context.get("request")
+        if value and not request.user.is_superuser:
+            raise PermissionDenied("Only superusers can allow unauthenticated access to a project.")
+        return value
 
     class Meta:
         model = Project

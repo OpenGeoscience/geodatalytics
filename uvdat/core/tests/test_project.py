@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import faker
 import pytest
+from pytest_lazy_fixtures import lf
 
 if TYPE_CHECKING:
     from uvdat.core.models.project import Project
@@ -40,10 +41,35 @@ def test_project_set_followers_collaborators(project, user_factory):
     assert sorted(project.followers(), key=sort_func) == users
 
 
+@pytest.mark.parametrize(
+    ("client", "anon"),
+    [(lf("api_client"), True), (lf("authenticated_api_client"), False)],
+)
 @pytest.mark.django_db
-def test_rest_project_create_no_datasets(authenticated_api_client):
+def test_rest_list_projects(client, anon, user, user_factory, project_factory):
+    project = project_factory()
+    project.set_owner(user)
+    demo = project_factory(allow_unauthenticated=True)
+    demo.set_owner(user_factory())  # set owner to a different user
+    resp = client.get("/api/v1/projects/")
+    assert resp.status_code == 200
+    results = resp.json().get("results")
+    if anon:
+        assert len(results) == 1
+        assert results[0].get("name") == demo.name
+    else:
+        assert len(results) == 2
+        assert {result.get("name") for result in results} == {project.name, demo.name}
+
+
+@pytest.mark.parametrize(
+    ("client", "expected_status"),
+    [(lf("api_client"), 401), (lf("authenticated_api_client"), 201)],
+)
+@pytest.mark.django_db
+def test_rest_project_create_no_datasets(client, expected_status):
     fake = faker.Faker()
-    resp = authenticated_api_client.post(
+    resp = client.post(
         "/api/v1/projects/",
         data={
             "name": fake.name(),
@@ -52,15 +78,19 @@ def test_rest_project_create_no_datasets(authenticated_api_client):
         },
     )
 
-    assert resp.status_code == 201
+    assert resp.status_code == expected_status
 
 
+@pytest.mark.parametrize(
+    ("client", "expected_status"),
+    [(lf("api_client"), 401), (lf("authenticated_api_client"), 201)],
+)
 @pytest.mark.django_db
-def test_rest_project_create_with_datasets(authenticated_api_client, dataset_factory):
+def test_rest_project_create_with_datasets(client, expected_status, dataset_factory):
     fake = faker.Faker()
 
     datasets = [dataset_factory().id for _ in range(3)]
-    resp = authenticated_api_client.post(
+    resp = client.post(
         "/api/v1/projects/",
         data={
             "name": fake.name(),
@@ -70,7 +100,7 @@ def test_rest_project_create_with_datasets(authenticated_api_client, dataset_fac
         },
     )
 
-    assert resp.status_code == 201
+    assert resp.status_code == expected_status
 
 
 @pytest.mark.django_db
@@ -171,3 +201,21 @@ def test_rest_project_delete(authenticated_api_client, user, project: Project):
     project.set_owner(user)
     resp = authenticated_api_client.delete(f"/api/v1/projects/{project.id}/")
     assert resp.status_code == 204
+
+
+@pytest.mark.parametrize("superuser", [True, False])
+@pytest.mark.django_db
+def test_rest_update_allow_unauthenticated(authenticated_api_client, user, superuser, project):
+    if superuser:
+        user.is_superuser = True
+        user.save()
+    else:
+        project.set_owner(user)
+
+    resp = authenticated_api_client.patch(
+        f"/api/v1/projects/{project.id}/",
+        {"allow_unauthenticated": True},
+    )
+    assert resp.status_code == (200 if superuser else 403)
+    project.refresh_from_db()
+    assert project.allow_unauthenticated == superuser

@@ -8,6 +8,7 @@ import { useStyleStore } from "./style";
 import { usePanelStore } from "./panel";
 import { useConversionStore } from "./conversion";
 import { useFramePreviewStore } from "./framePreview";
+import { useTutorialStore } from "./tutorial";
 
 export {
   useAppStore,
@@ -20,4 +21,5 @@ export {
   usePanelStore,
   useConversionStore,
   useFramePreviewStore,
+  useTutorialStore,
 };

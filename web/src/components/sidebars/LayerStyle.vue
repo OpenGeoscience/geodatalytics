@@ -68,7 +68,7 @@ const highlightFilterId = ref<number | undefined>();
 const colormaps = computed(() => styleStore.colormaps);
 
 const editMode = computed(() => {
-  if (!projectStore.currentProject || !appStore.currentUser) return false;
+  if (!projectStore.currentProject || !appStore.authenticated) return false;
   return ["owner", "collaborator"].includes(
     projectStore.permissions[projectStore.currentProject.id],
   );
@@ -567,6 +567,7 @@ function save() {
 
 function saveAsNew() {
   if (
+    !appStore.authenticated ||
     !editMode.value ||
     !projectStore.currentProject ||
     !currentStyleSpec.value

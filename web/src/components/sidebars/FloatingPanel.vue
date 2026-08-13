@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
-import { usePanelStore, useProjectStore } from "@/store";
+import { useAppStore, usePanelStore, useProjectStore } from "@/store";
 import { useMapCompareStore } from "@/store/compare";
+const appStore = useAppStore();
 const panelStore = usePanelStore();
 const projectStore = useProjectStore();
 const compareStore = useMapCompareStore();
@@ -100,7 +101,11 @@ function panelUpdated() {
           }}</v-card-text>
           <div class="mr-3">
             <v-icon
-              v-if="panel.id === 'datasets' && projectStore.currentProject"
+              v-if="
+                panel.id === 'datasets' &&
+                projectStore.currentProject &&
+                appStore.authenticated
+              "
               v-tooltip="'Add Dataset'"
               icon="mdi-plus"
               color="primary"

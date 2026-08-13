@@ -37,7 +37,7 @@ class BasemapAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ["id", "name"]
+    list_display = ["id", "name", "allow_unauthenticated"]
 
 
 @admin.register(Dataset)

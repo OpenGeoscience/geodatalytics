@@ -3,6 +3,7 @@ from __future__ import annotations
 from django.contrib.auth.models import User
 from django.core.management import call_command
 import pytest
+from pytest_lazy_fixtures import lf
 
 from uvdat.core.models import Chart, Dataset, Network, TaskResult
 from uvdat.core.tasks.analytics import (
@@ -13,11 +14,25 @@ from uvdat.core.tasks.analytics import (
 )
 
 
+@pytest.mark.parametrize(
+    ("client", "anon"),
+    [(lf("api_client"), True), (lf("authenticated_api_client"), False)],
+)
 @pytest.mark.django_db
-def test_rest_list_analysis_types(user, authenticated_api_client, project):
+def test_rest_list_analysis_types(client, anon, project):
     analysis_type_instances = [at() for at in analysis_types if at.is_enabled()]
-    resp = authenticated_api_client.get(f"/api/v1/analytics/project/{project.id}/types/")
+    resp = client.get(f"/api/v1/analytics/project/{project.id}/types/")
     data = resp.json()
+
+    if anon:
+        assert not len(data)
+        # Unauthenticated users can only see a task type if a run exists on an allowed project
+        project.allow_unauthenticated = True
+        project.save()
+        analysis_type_instances = analysis_type_instances[:1]
+        TaskResult.objects.create(project=project, task_type=analysis_type_instances[0].db_value)
+        resp = client.get(f"/api/v1/analytics/project/{project.id}/types/")
+        data = resp.json()
 
     assert len(data) == len(analysis_type_instances)
     assert {type_info.get("name") for type_info in data} == {
@@ -53,41 +68,55 @@ def test_rest_run_analysis_task_no_inputs(authenticated_api_client, user, projec
     assert "not provided" in resp.json()
 
 
+@pytest.mark.parametrize(
+    ("client", "expected_status"),
+    [(lf("api_client"), 401), (lf("authenticated_api_client"), 200)],
+)
 @pytest.mark.django_db
-def test_rest_run_analysis_task_creator(authenticated_api_client, user, project, mocker):
-    # Eager Celery would otherwise call Overpass via OSMnx; this test only
-    # asserts the API attaches the requesting user as TaskResult.creator.
-    mocker.patch("uvdat.core.tasks.analytics.create_road_network.create_road_network.delay")
+def test_rest_run_analysis_task_creator(client, expected_status, user, project):
     project.set_collaborators([user])
-    resp = authenticated_api_client.post(
+    resp = client.post(
         f"/api/v1/analytics/project/{project.id}/types/create_road_network/run/",
         # Smallest town in America, only 7 nodes
         {"location": "Monowi, Nebraska"},
     )
-    assert resp.status_code == 200
-    assert resp.json()["creator"] == user.id
+    assert resp.status_code == expected_status
+    if expected_status == 200:
+        assert resp.json()["creator"] == user.id
 
 
+@pytest.mark.parametrize(
+    ("client", "expected_status"),
+    [(lf("api_client"), 401), (lf("authenticated_api_client"), 200)],
+)
 @pytest.mark.django_db
-def test_rest_subscribe_to_running_task(authenticated_api_client, user, project, mailoutbox):
+def test_rest_subscribe_to_running_task(client, expected_status, user, project, mailoutbox):
     project.set_followers([user])
     task_result = TaskResult.objects.create(name="Test Task", project=project)
-    resp = authenticated_api_client.post(f"/api/v1/analytics/{task_result.id}/subscribe/")
-    assert resp.status_code == 200
-    task_result.complete()
-    message = next(filter(lambda m: m.subject == "GeoDatalytics Task Completed", mailoutbox), None)
-    assert message is not None
-    assert task_result.name in message.body
+    resp = client.post(f"/api/v1/analytics/{task_result.id}/subscribe/")
+    assert resp.status_code == expected_status
+    if expected_status == 200:
+        task_result.complete()
+        message = next(
+            filter(lambda m: m.subject == "GeoDatalytics Task Completed", mailoutbox), None
+        )
+        assert message is not None
+        assert task_result.name in message.body
 
 
+@pytest.mark.parametrize(
+    ("client", "expected_status"),
+    [(lf("api_client"), 401), (lf("authenticated_api_client"), 410)],
+)
 @pytest.mark.django_db
-def test_rest_subscribe_to_completed_task(authenticated_api_client, user, project):
+def test_rest_subscribe_to_completed_task(client, expected_status, user, project):
     project.set_followers([user])
     task_result = TaskResult.objects.create(name="Test Task", project=project)
     task_result.complete()
-    resp = authenticated_api_client.post(f"/api/v1/analytics/{task_result.id}/subscribe/")
-    assert resp.status_code == 410
-    assert resp.json() == "Task already completed. Subscription not applied."
+    resp = client.post(f"/api/v1/analytics/{task_result.id}/subscribe/")
+    assert resp.status_code == expected_status
+    if expected_status == 410:
+        assert resp.json() == "Task already completed. Subscription not applied."
 
 
 @pytest.mark.slow

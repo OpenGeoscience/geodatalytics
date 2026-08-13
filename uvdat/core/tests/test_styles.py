@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from pytest_lazy_fixtures import lf
 
 from uvdat.core.models import ColorConfig, SizeConfig
 
@@ -135,8 +136,12 @@ def test_style_config_update(layer_style):
     assert layer_style.filter_configs.count() == 0
 
 
+@pytest.mark.parametrize(
+    ("client", "expected_status"),
+    [(lf("api_client"), 401), (lf("authenticated_api_client"), 200)],
+)
 @pytest.mark.django_db
-def test_rest_style_create_and_update(authenticated_api_client, layer, project, user):
+def test_rest_style_create_and_update(client, expected_status, layer, project, user):
     project.set_collaborators([user])
     project.datasets.set([layer.dataset])
 
@@ -148,18 +153,19 @@ def test_rest_style_create_and_update(authenticated_api_client, layer, project, 
 
     # Create style with simple spec
     style["style_spec"] = SIMPLE_SPEC
-    resp = authenticated_api_client.post("/api/v1/layer-styles/", style)
-    assert resp.status_code == 200
-    serialized_result = resp.json()
-    style_id = serialized_result.pop("id")
-    assert serialized_result.pop("is_default") is not None
-    assert serialized_result == style
+    resp = client.post("/api/v1/layer-styles/", style)
+    assert resp.status_code == expected_status
+    if expected_status == 200:
+        serialized_result = resp.json()
+        style_id = serialized_result.pop("id")
+        assert serialized_result.pop("is_default") is not None
+        assert serialized_result == style
 
-    # Update style with complex spec
-    style["style_spec"] = COMPLEX_SPEC
-    resp = authenticated_api_client.patch(f"/api/v1/layer-styles/{style_id}/", style)
-    assert resp.status_code == 200
-    serialized_result = resp.json()
-    assert serialized_result.pop("id") is not None
-    assert serialized_result.pop("is_default") is not None
-    assert serialized_result == style
+        # Update style with complex spec
+        style["style_spec"] = COMPLEX_SPEC
+        resp = client.patch(f"/api/v1/layer-styles/{style_id}/", style)
+        assert resp.status_code == expected_status
+        serialized_result = resp.json()
+        assert serialized_result.pop("id") is not None
+        assert serialized_result.pop("is_default") is not None
+        assert serialized_result == style

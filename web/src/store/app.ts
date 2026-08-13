@@ -1,6 +1,6 @@
 import type { User } from "@/types";
 import { defineStore } from "pinia";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 export const useAppStore = defineStore("app", () => {
   const theme = ref<"dark" | "light">("light");
@@ -8,6 +8,10 @@ export const useAppStore = defineStore("app", () => {
   const currentUser = ref<User>();
   const currentError = ref<string>();
   const themeManager = ref();
+
+  const authenticated = computed(() => {
+    return currentUser.value?.id !== undefined;
+  });
 
   function setDefaultTheme() {
     const darkThemeMatch =
@@ -29,6 +33,7 @@ export const useAppStore = defineStore("app", () => {
     openSidebars,
     currentUser,
     currentError,
+    authenticated,
     setDefaultTheme,
   };
 });

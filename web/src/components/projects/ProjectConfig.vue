@@ -12,9 +12,10 @@ import {
 } from "@/api/rest";
 import type { Project, Dataset } from "@/types";
 
-import { useMapStore, useProjectStore } from "@/store";
+import { useMapStore, useProjectStore, useAppStore } from "@/store";
 const projectStore = useProjectStore();
 const mapStore = useMapStore();
+const appStore = useAppStore();
 
 const currentTab = ref();
 const searchText = ref<string | undefined>();
@@ -50,10 +51,12 @@ const deleteAllowed = computed(() => {
 });
 
 function openProjectConfig(create = false) {
-  projectStore.projectConfigMode = create ? "new" : "existing";
+  if (appStore.authenticated)
+    projectStore.projectConfigMode = create ? "new" : "existing";
 }
 
 function create() {
+  if (!appStore.authenticated) return;
   const { center, zoom } = mapStore.getCurrentMapPosition();
   createProject(newProjectName.value, center, zoom).then((project) => {
     newProjectName.value = undefined;
@@ -98,7 +101,13 @@ function saveProjectName() {
 }
 
 function saveProjectMapLocation(project: Project | undefined) {
-  if (!editMode.value) return;
+  if (
+    !projectStore.currentProject ||
+    !["owner", "collaborator"].includes(
+      projectStore.permissions[projectStore.currentProject.id],
+    )
+  )
+    return;
   if (project) {
     saving.value = "waiting";
     const { center, zoom } = mapStore.getCurrentMapPosition();
@@ -248,6 +257,7 @@ watch(
         return-object
       ></v-select>
       <v-btn
+        v-if="appStore.authenticated"
         color="primary"
         variant="flat"
         style="min-width: 30px; height: 30px"
@@ -260,6 +270,7 @@ watch(
         </v-tooltip>
       </v-btn>
       <v-btn
+        v-if="appStore.authenticated"
         color="secondary"
         variant="flat"
         style="min-width: 30px; height: 30px"
@@ -279,8 +290,11 @@ watch(
       "
       class="tutorial-popup"
     >
-      <v-card-text>
+      <v-card-text v-if="appStore.authenticated">
         To get started, create a project and add datasets to it.
+      </v-card-text>
+      <v-card-text v-else>
+        There are currently no projects that allow unauthenticated access.
       </v-card-text>
     </v-card>
     <div v-if="projectStore.currentProject" class="project-row">
@@ -323,7 +337,11 @@ watch(
               Go to project default map position
             </v-list-item>
             <v-list-item
-              v-if="editMode"
+              v-if="
+                ['owner', 'collaborator'].includes(
+                  projectStore.permissions[projectStore.currentProject?.id],
+                )
+              "
               @click="() => saveProjectMapLocation(projectStore.currentProject)"
             >
               Set current map position as project default
@@ -345,7 +363,7 @@ watch(
       </v-menu>
     </div>
     <v-card
-      v-if="projectStore.projectConfigMode"
+      v-if="appStore.authenticated && projectStore.projectConfigMode"
       flat
       class="config"
       color="background"
@@ -480,6 +498,10 @@ watch(
           </v-btn>
         </div>
         <div v-if="selectedProject" class="tab-content">
+          <v-alert v-if="selectedProject.allow_unauthenticated" class="mr-16">
+            <v-icon icon="mdi-alert-box-outline" color="error"></v-icon>
+            This project allows unauthenticated view access.
+          </v-alert>
           <v-tabs v-model="currentTab" color="primary">
             <v-tab value="datasets">Dataset Selection</v-tab>
             <v-tab value="users">Access Control</v-tab>
