@@ -23,30 +23,16 @@ def previews_by_frame_id(
     frames: list[LayerFrame],
     fingerprint: str,
 ) -> dict[int, RasterFramePreview]:
-    """Map frame id → preview row for the given fingerprint."""
-    result: dict[int, RasterFramePreview] = {}
-    missing_frame_ids: list[int] = []
-
-    for frame in frames:
-        prefetched = getattr(frame, "_prefetched_objects_cache", None)
-        if prefetched is not None and "previews" in prefetched:
-            match = next(
-                (p for p in prefetched["previews"] if p.style_fingerprint == fingerprint),
-                None,
-            )
-            if match is not None:
-                result[frame.id] = match
-            continue
-        missing_frame_ids.append(frame.id)
-
-    if missing_frame_ids:
+    """Return ``{frame_id: RasterFramePreview}`` for ``fingerprint``."""
+    if not frames:
+        return {}
+    return {
+        preview.layer_frame_id: preview
         for preview in RasterFramePreview.objects.filter(
-            layer_frame_id__in=missing_frame_ids,
+            layer_frame_id__in=[frame.id for frame in frames],
             style_fingerprint=fingerprint,
-        ):
-            result[preview.layer_frame_id] = preview
-
-    return result
+        )
+    }
 
 
 def ordered_complete_previews(

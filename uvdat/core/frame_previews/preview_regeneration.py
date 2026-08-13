@@ -273,9 +273,7 @@ def invalidate_and_enqueue_previews(
 def preview_status_for_style(layer_style: LayerStyle) -> str | None:
     if not style_needs_previews(layer_style):
         return None
-    return preview_status_for_fingerprint(
-        layer_style.layer, style_fingerprint(layer_style)
-    )
+    return preview_status_for_fingerprint(layer_style.layer, style_fingerprint(layer_style))
 
 
 def get_layer_style_preview_status(layer_style: LayerStyle) -> str | None:

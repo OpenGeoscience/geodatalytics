@@ -64,4 +64,3 @@ class Chart(models.Model):
     def clear(self):
         # TODO: clear
         pass
-
