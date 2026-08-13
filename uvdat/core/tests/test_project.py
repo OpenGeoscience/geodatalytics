@@ -216,6 +216,6 @@ def test_rest_update_allow_unauthenticated(authenticated_api_client, user, super
         f"/api/v1/projects/{project.id}/",
         {"allow_unauthenticated": True},
     )
-    assert resp.status_code == (200 if superuser else 400)
+    assert resp.status_code == (200 if superuser else 403)
     project.refresh_from_db()
     assert project.allow_unauthenticated == superuser
