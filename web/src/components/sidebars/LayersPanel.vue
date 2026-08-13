@@ -198,7 +198,7 @@ function setLayerActive(layer: Layer, active: boolean) {
                         ? 'Showing a low-resolution preview while default resolution tiles load.'
                         : undefined
                     "
-                    icon="mdi-image-filter-hdr"
+                    icon="mdi-image-size-select-large"
                     size="small"
                     color="primary"
                     class="preview-indicator mr-1"

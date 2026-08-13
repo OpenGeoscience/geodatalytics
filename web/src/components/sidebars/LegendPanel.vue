@@ -123,7 +123,7 @@ function getColorPropsCoverage(layer: Layer) {
             v-tooltip="
               'Showing a low-resolution preview while default resolution tiles load.'
             "
-            icon="mdi-image-filter-hdr"
+            icon="mdi-image-size-select-large"
             size="small"
             color="primary"
             class="preview-indicator ml-1"
