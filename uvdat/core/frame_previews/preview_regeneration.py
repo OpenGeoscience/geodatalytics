@@ -49,10 +49,10 @@ def pending_preview_task(*, layer_id: int, fingerprint: str) -> TaskResult | Non
 
 def previews_current_for_fingerprint(layer: Layer, fingerprint: str) -> bool:
     """Return whether every frame already has a complete preview for this fingerprint."""
-    frames = layer.raster_frames()
-    if len(frames) <= 1:
+    if not layer.is_multiframe_raster():
         return False
 
+    frames = layer.raster_frames()
     by_frame = previews_by_frame_id(frames, fingerprint)
     return all(
         (preview := by_frame.get(frame.id))
@@ -273,8 +273,9 @@ def invalidate_and_enqueue_previews(
 def preview_status_for_style(layer_style: LayerStyle) -> str | None:
     if not style_needs_previews(layer_style):
         return None
-    frames = layer_style.layer.raster_frames()
-    return preview_status_for_fingerprint(frames, style_fingerprint(layer_style))
+    return preview_status_for_fingerprint(
+        layer_style.layer, style_fingerprint(layer_style)
+    )
 
 
 def get_layer_style_preview_status(layer_style: LayerStyle) -> str | None:
@@ -286,8 +287,7 @@ def get_layer_style_preview_status(layer_style: LayerStyle) -> str | None:
 def preview_status_for_layer(layer: Layer) -> str | None:
     if not layer_needs_previews(layer):
         return None
-    frames = layer.raster_frames()
-    return preview_status_for_fingerprint(frames, layer_default_fingerprint(layer))
+    return preview_status_for_fingerprint(layer, layer_default_fingerprint(layer))
 
 
 def get_layer_preview_status(layer: Layer) -> str | None:

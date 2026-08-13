@@ -363,10 +363,10 @@ def generate_frame_previews(  # noqa: PLR0913
     """
     started = time.perf_counter()
     layer = Layer.objects.get(id=layer_id)
-    frames = layer.raster_frames()
-    if len(frames) <= 1:
+    if not layer.is_multiframe_raster():
         _abandon_task_result(result_id, "Layer is not multiframe; nothing to preview.")
         return
+    frames = layer.raster_frames()
 
     layer_style, query = _resolve_preview_style_inputs(
         layer_id,

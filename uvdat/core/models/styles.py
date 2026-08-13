@@ -236,8 +236,7 @@ class LayerStyle(models.Model):
 
     def multiframe_previews(self, layer=None) -> list[FramePreviewData] | None:
         layer = layer or self.layer
-        frames = layer.raster_frames()
-        return ordered_complete_previews(frames, style_fingerprint(self))
+        return ordered_complete_previews(layer, style_fingerprint(self))
 
 
 def get_default_colormap():

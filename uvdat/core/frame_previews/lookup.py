@@ -50,13 +50,14 @@ def previews_by_frame_id(
 
 
 def ordered_complete_previews(
-    frames: list[LayerFrame],
+    layer: Layer,
     fingerprint: str,
 ) -> list[FramePreviewData] | None:
     """Return serialized previews in frame order, or None if any frame is incomplete."""
-    if len(frames) <= 1:
+    if not layer.is_multiframe_raster():
         return None
 
+    frames = layer.raster_frames()
     by_frame = previews_by_frame_id(frames, fingerprint)
     ordered = [by_frame.get(frame.id) for frame in frames]
     if not all(
@@ -68,14 +69,13 @@ def ordered_complete_previews(
 
 
 def preview_status_for_fingerprint(
-    frames: list[LayerFrame],
+    layer: Layer,
     fingerprint: str,
 ) -> str | None:
-    if len(frames) <= 1:
-        return None
-    if not frames:
+    if not layer.is_multiframe_raster():
         return None
 
+    frames = layer.raster_frames()
     by_frame = previews_by_frame_id(frames, fingerprint)
     if all(
         (preview := by_frame.get(frame.id))
@@ -97,6 +97,6 @@ def layer_default_fingerprint(layer: Layer) -> str:
 def layer_default_multiframe_previews(layer: Layer) -> list[FramePreviewData] | None:
     """Previews for the layer default fingerprint (default style params or ``{}``)."""
     return ordered_complete_previews(
-        layer.raster_frames(),
+        layer,
         layer_default_fingerprint(layer),
     )
