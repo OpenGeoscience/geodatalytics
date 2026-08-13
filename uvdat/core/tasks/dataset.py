@@ -156,7 +156,8 @@ def create_layers_and_frames(  # noqa: C901, PLR0912, PLR0915
         if layer.is_multiframe_raster():
             if task_result is not None:
                 task_result.write_status(f"Generating frame previews for layer {layer.name}...")
-            invalidate_and_enqueue_layer_previews(layer, {}, run_mode=run_mode)
+            # All Dataset Preview tasks are run synchronously.
+            invalidate_and_enqueue_layer_previews(layer, {}, run_mode=TaskRunMode.SYNC)
 
 
 @shared_task

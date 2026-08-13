@@ -152,28 +152,6 @@ def _dispatch_frame_preview_task(
             args=(layer_id, fingerprint, params, result_id),
             kwargs=task_kwargs,
         )
-        # Defer until after the surrounding transaction commits so a worker
-        # cannot start before preview rows / TaskResult / style params exist.
-        enqueue_params = dict(params)
-        enqueue_kwargs = dict(task_kwargs)
-
-        def _enqueue_preview_task() -> None:
-            generate_frame_previews.delay(
-                layer_id,
-                fingerprint,
-                enqueue_params,
-                result_id,
-                **enqueue_kwargs,
-            )
-
-        transaction.on_commit(_enqueue_preview_task)
-        return
-
-    with suppress_task_notifications():
-        generate_frame_previews.apply(
-            args=(layer_id, fingerprint, params, result_id),
-            kwargs=task_kwargs,
-        )
 
 
 def invalidate_and_enqueue_layer_previews(
