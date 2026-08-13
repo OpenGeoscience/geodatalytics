@@ -143,10 +143,14 @@ async function updateClickedFeatureIsDeactivatedNode() {
     const feature = clickedFeature.value.feature;
     const sourceId = feature.source;
     const nodeId = clickedFeature.value.feature.properties.node_id;
-    const { dataset } = layerStore.getDBObjectsForSourceID(sourceId);
-    if (dataset) {
-      const active = await networkStore.isNodeActive(nodeId, dataset);
-      clickedFeatureIsDeactivatedNode.value = !active;
+    if (nodeId) {
+      const { dataset } = layerStore.getDBObjectsForSourceID(sourceId);
+      if (dataset) {
+        const active = await networkStore.isNodeActive(nodeId, dataset);
+        clickedFeatureIsDeactivatedNode.value = !active;
+      } else {
+        clickedFeatureIsDeactivatedNode.value = false;
+      }
     } else {
       clickedFeatureIsDeactivatedNode.value = false;
     }
