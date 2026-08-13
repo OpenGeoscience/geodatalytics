@@ -27,9 +27,14 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
     def list_types(self, request, project_id: int, **kwargs):
         serialized = []
         for analysis_type in analysis_types:
-            if not analysis_type.is_enabled():
-                continue
             instance = analysis_type()
+            if not analysis_type.is_enabled() or (
+                request.user.is_anonymous
+                and not TaskResult.objects.filter(
+                    task_type=instance.db_value, project__allow_unauthenticated=True
+                ).exists()
+            ):
+                continue
             filtered_input_options = {}
             for k, v in instance.get_input_options().items():
                 if isinstance(v, QuerySet):

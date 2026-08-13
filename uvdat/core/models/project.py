@@ -19,6 +19,7 @@ class Project(models.Model):
     default_map_center = geo_models.PointField()
     default_map_zoom = models.FloatField(default=10)
     datasets = models.ManyToManyField(Dataset, blank=True)
+    allow_unauthenticated = models.BooleanField(default=False)
 
     project_filter_path = "pk"
     objects = ProjectQuerySet.as_manager()

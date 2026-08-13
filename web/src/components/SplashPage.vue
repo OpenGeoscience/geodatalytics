@@ -2,6 +2,13 @@
 import { oauthClient } from "@/api/auth";
 import KitwareLogo from "@/assets/Kitware.png";
 import SplashBG from "@/assets/splash_bg.png";
+import { useAppStore } from "@/store";
+
+const appStore = useAppStore();
+
+const continueNoLogin = () => {
+  appStore.currentUser = { id: undefined };
+};
 
 const login = () => {
   oauthClient.redirectToLogin();
@@ -64,6 +71,14 @@ const login = () => {
         <v-btn color="primary" prepend-icon="mdi-login" @click="login">
           Log in to GeoDatalytics
         </v-btn>
+      </div>
+      <div class="pt-3">
+        <span
+          class="text-primary"
+          style="cursor: pointer"
+          @click="continueNoLogin"
+          >Continue without logging in</span
+        >
       </div>
     </div>
     <div>

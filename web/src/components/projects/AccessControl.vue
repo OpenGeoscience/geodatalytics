@@ -5,6 +5,7 @@ import type { Project, ProjectPermissions, User } from "@/types";
 import { getUsers, updateProjectPermissions } from "@/api/rest";
 
 import { useProjectStore } from "@/store";
+import UserProfile from "./UserProfile.vue";
 const projectStore = useProjectStore();
 
 const props = defineProps<{
@@ -24,7 +25,7 @@ const editMode = computed(
 );
 
 function savePermissions() {
-  if (!editMode.value) return;
+  if (!editMode.value || props.project.owner.id === undefined) return;
   let owner: number = props.project.owner.id;
   const collaborators = new Set(
     props.project.collaborators.map((u: User) => u.id),
@@ -39,10 +40,12 @@ function savePermissions() {
   ) {
     // Transfer ownership to new owner, demoting current owner to collaborator
     const newOwner = selectedUsers.value[0].id;
-    followers.delete(newOwner);
-    collaborators.delete(newOwner);
-    collaborators.add(owner);
-    owner = newOwner;
+    if (newOwner) {
+      followers.delete(newOwner);
+      collaborators.delete(newOwner);
+      collaborators.add(owner);
+      owner = newOwner;
+    }
   } else if (selectedPermissionLevel.value == "collaborator") {
     selectedUsers.value.forEach((u: User) => collaborators.add(u.id));
     selectedUsers.value.forEach((u: User) => followers.delete(u.id));
@@ -52,8 +55,10 @@ function savePermissions() {
   }
   const newPermissions: ProjectPermissions = {
     owner_id: owner,
-    collaborator_ids: Array.from(collaborators),
-    follower_ids: Array.from(followers),
+    collaborator_ids: Array.from(collaborators).filter(
+      (id) => id !== undefined,
+    ),
+    follower_ids: Array.from(followers).filter((id) => id !== undefined),
   };
   updateProjectPermissions(props.project.id, newPermissions).then((project) => {
     if (project) {
@@ -86,35 +91,7 @@ onMounted(() => {
           icon="mdi-information-outline"
         />
       </v-list-subheader>
-      <v-list-item
-        v-if="project.owner"
-        :title="
-          project.owner.first_name && project.owner.last_name
-            ? project.owner.first_name + ' ' + project.owner.last_name
-            : project.owner.username
-        "
-        :subtitle="project.owner.email"
-      >
-        <template #prepend>
-          <v-btn
-            flat
-            icon
-            color="primary"
-            size="small"
-            class="mx-3 user-circle"
-            :ripple="false"
-          >
-            <span v-if="project.owner.first_name || project.owner.last_name">
-              {{ project.owner.first_name[0] }}
-              {{ project.owner.last_name[0] }}
-              <v-tooltip activator="parent" location="end">
-                {{ project.owner.first_name }}
-                {{ project.owner.last_name }}
-              </v-tooltip>
-            </span>
-            <v-icon v-else icon="mdi-account"></v-icon>
-          </v-btn>
-        </template>
+      <user-profile :user="project.owner">
         <template #append>
           <v-icon
             v-if="editMode"
@@ -125,7 +102,7 @@ onMounted(() => {
             "
           />
         </template>
-      </v-list-item>
+      </user-profile>
       <v-list-subheader>
         Collaborators
         <v-icon
@@ -133,33 +110,11 @@ onMounted(() => {
           icon="mdi-information-outline"
         />
       </v-list-subheader>
-      <v-list-item
+      <user-profile
         v-for="collaborator in project.collaborators"
         :key="collaborator.id"
-        :title="
-          collaborator.first_name && collaborator.last_name
-            ? collaborator.first_name + ' ' + collaborator.last_name
-            : collaborator.username
-        "
-        :subtitle="collaborator.email"
+        :user="collaborator"
       >
-        <template #prepend>
-          <v-btn
-            flat
-            icon
-            color="primary"
-            size="small"
-            class="mx-3 user-circle"
-            :ripple="false"
-          >
-            {{ collaborator.first_name[0] }}
-            {{ collaborator.last_name[0] }}
-            <v-tooltip activator="parent" location="end">
-              {{ collaborator.first_name }}
-              {{ collaborator.last_name }}
-            </v-tooltip>
-          </v-btn>
-        </template>
         <template #append>
           <v-icon
             v-if="editMode"
@@ -167,7 +122,7 @@ onMounted(() => {
             @click="userToRemove = collaborator"
           />
         </template>
-      </v-list-item>
+      </user-profile>
       <v-list-item
         v-if="!project.collaborators.length"
         subtitle="No collaborators"
@@ -180,33 +135,11 @@ onMounted(() => {
           icon="mdi-information-outline"
         />
       </v-list-subheader>
-      <v-list-item
+      <user-profile
         v-for="follower in project.followers"
         :key="follower.id"
-        :title="
-          follower.first_name && follower.last_name
-            ? follower.first_name + ' ' + follower.last_name
-            : follower.username
-        "
-        :subtitle="follower.email"
+        :user="follower"
       >
-        <template #prepend>
-          <v-btn
-            flat
-            icon
-            color="primary"
-            size="small"
-            class="mx-3 user-circle"
-            :ripple="false"
-          >
-            {{ follower.first_name[0] }}
-            {{ follower.last_name[0] }}
-            <v-tooltip activator="parent" location="end">
-              {{ follower.first_name }}
-              {{ follower.last_name }}
-            </v-tooltip>
-          </v-btn>
-        </template>
         <template #append>
           <v-icon
             v-if="editMode"
@@ -214,7 +147,7 @@ onMounted(() => {
             @click="userToRemove = follower"
           />
         </template>
-      </v-list-item>
+      </user-profile>
       <v-list-item
         v-if="!project.followers.length"
         subtitle="No followers"
@@ -257,7 +190,7 @@ onMounted(() => {
           class="pa-3"
         />
         <v-card-text>
-          <v-select
+          <v-combobox
             v-model="selectedUsers"
             :items="allUsers"
             :label="
@@ -265,7 +198,6 @@ onMounted(() => {
                 ? 'Users to add'
                 : 'New project owner'
             "
-            item-title="username"
             return-object
             :multiple="userSelectDialogMode === 'add'"
             :clearable="userSelectDialogMode === 'add'"
@@ -279,17 +211,9 @@ onMounted(() => {
             "
           >
             <template #item="{ props: itemProps, item }">
-              <v-list-item
-                v-bind="itemProps"
-                :title="
-                  item.first_name && item.last_name
-                    ? item.first_name + ' ' + item.last_name
-                    : item.username
-                "
-                :subtitle="item.email"
-              ></v-list-item>
+              <user-profile v-bind="itemProps" :user="item" />
             </template>
-          </v-select>
+          </v-combobox>
           <v-select
             v-if="userSelectDialogMode === 'add'"
             v-model="selectedPermissionLevel"
@@ -322,8 +246,8 @@ onMounted(() => {
           </v-btn>
         </v-card-title>
         <v-card-text v-if="userToRemove">
-          Are you sure you want to remove {{ userToRemove.username }} from this
-          project?
+          Are you sure you want to remove {{ userToRemove.first_name }}
+          {{ userToRemove.last_name }} from this project?
         </v-card-text>
         <v-card-actions class="d-flex" style="justify-content: space-evenly">
           <v-btn color="red" @click="savePermissions">Delete</v-btn>
