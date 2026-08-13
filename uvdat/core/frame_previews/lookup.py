@@ -73,6 +73,11 @@ def preview_status_for_fingerprint(
     return "notready"
 
 
+def previews_current_for_fingerprint(layer: Layer, fingerprint: str) -> bool:
+    """Return whether every frame already has a complete preview for this fingerprint."""
+    return preview_status_for_fingerprint(layer, fingerprint) == "ready"
+
+
 def layer_default_fingerprint(layer: Layer) -> str:
     """Fingerprint for layer-level default previews (default style params, else ``{}``)."""
     if layer.default_style_id is not None:

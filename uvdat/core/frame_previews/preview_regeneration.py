@@ -8,7 +8,7 @@ from uvdat.core.frame_previews.fingerprint import params_fingerprint, style_fing
 from uvdat.core.frame_previews.lookup import (
     layer_default_fingerprint,
     preview_status_for_fingerprint,
-    previews_by_frame_id,
+    previews_current_for_fingerprint,
 )
 from uvdat.core.models import Layer, LayerStyle, Project, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
@@ -44,22 +44,6 @@ def pending_preview_task(*, layer_id: int, fingerprint: str) -> TaskResult | Non
         )
         .order_by("id")
         .first()
-    )
-
-
-def previews_current_for_fingerprint(layer: Layer, fingerprint: str) -> bool:
-    """Return whether every frame already has a complete preview for this fingerprint."""
-    if not layer.is_multiframe_raster():
-        return False
-
-    frames = layer.raster_frames()
-    by_frame = previews_by_frame_id(frames, fingerprint)
-    return all(
-        (preview := by_frame.get(frame.id))
-        and preview.status == PreviewStatus.COMPLETE
-        and preview.image
-        and preview.style_fingerprint == fingerprint
-        for frame in frames
     )
 
 
