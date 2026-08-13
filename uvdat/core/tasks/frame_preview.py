@@ -21,7 +21,6 @@ from uvdat.core.frame_previews.raster_style import (
 from uvdat.core.models import (
     Layer,
     LayerStyle,
-    Project,
     RasterData,
     RasterFramePreview,
     TaskResult,
@@ -179,24 +178,6 @@ def generate_frame_preview_png(
     png_bytes = _thumbnail_png_bytes(thumb_data)
     image = Image.open(io.BytesIO(png_bytes))
     return png_bytes, image.width, image.height, _preview_bounds(source)
-
-
-def ensure_default_layer_style(layer: Layer, project: Project) -> LayerStyle:
-    """Return the project's Default style for a layer, creating it if needed.
-
-    Prefer ``invalidate_and_enqueue_layer_previews`` for dataset-time defaults;
-    this helper remains for callers that still want a project Default style.
-    """
-    style = LayerStyle.objects.filter(layer=layer, project=project, name="Default").first()
-    if style is None:
-        style = LayerStyle.objects.create(name="Default", layer=layer, project=project)
-        style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
-        style.raster_style_params = {}
-        style.save(update_fields=["raster_style_params"])
-    if layer.default_style_id is None:
-        layer.default_style = style
-        layer.save(update_fields=["default_style"])
-    return style
 
 
 def _abandon_task_result(result_id: int | None, status: str) -> None:
