@@ -52,15 +52,3 @@ class Chart(models.Model):
             with suppress_task_notifications():
                 convert_chart_signature.apply()
             return None
-
-    def new_line(self):
-        # TODO: new line
-        pass
-
-    def rename_lines(self, new_names):
-        # TODO: rename lines
-        pass
-
-    def clear(self):
-        # TODO: clear
-        pass
