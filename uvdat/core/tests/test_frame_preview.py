@@ -37,12 +37,6 @@ def _patch_preview_delay(mocker):
     return mocker.patch("uvdat.core.tasks.frame_preview.generate_frame_previews.delay")
 
 
-def _run_async_enqueue(django_capture_on_commit_callbacks, fn, *args, **kwargs):
-    """Execute ``transaction.on_commit`` callbacks registered by async enqueue."""
-    with django_capture_on_commit_callbacks(execute=True):
-        return fn(*args, **kwargs)
-
-
 def _make_preview(
     layer_frame,
     *,
@@ -157,7 +151,6 @@ def test_invalidate_and_enqueue_previews_uses_db_fingerprint(
     layer_style_factory,
     layer_frame_factory,
     mocker,
-    django_capture_on_commit_callbacks,
 ):
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
@@ -166,11 +159,7 @@ def test_invalidate_and_enqueue_previews_uses_db_fingerprint(
 
     delay = _patch_preview_delay(mocker)
 
-    _run_async_enqueue(
-        django_capture_on_commit_callbacks,
-        invalidate_and_enqueue_previews,
-        layer_style,
-    )
+    invalidate_and_enqueue_previews(layer_style)
 
     delay.assert_called_once()
     layer_id, fingerprint, params = delay.call_args.args[:3]
@@ -233,7 +222,6 @@ def test_invalidate_and_enqueue_previews_runs_when_fingerprint_changed(
     layer_style_factory,
     layer_frame_factory,
     mocker,
-    django_capture_on_commit_callbacks,
 ):
     layer_style = layer_style_factory()
     frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
@@ -259,11 +247,7 @@ def test_invalidate_and_enqueue_previews_runs_when_fingerprint_changed(
 
     delay = _patch_preview_delay(mocker)
 
-    result = _run_async_enqueue(
-        django_capture_on_commit_callbacks,
-        invalidate_and_enqueue_previews,
-        layer_style,
-    )
+    result = invalidate_and_enqueue_previews(layer_style)
 
     delay.assert_called_once()
     assert result is not None
@@ -768,7 +752,6 @@ def test_invalidate_and_enqueue_skips_when_fingerprint_job_in_flight(
     layer_style_factory,
     layer_frame_factory,
     mocker,
-    django_capture_on_commit_callbacks,
 ):
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
@@ -776,16 +759,8 @@ def test_invalidate_and_enqueue_skips_when_fingerprint_job_in_flight(
     layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
     delay = _patch_preview_delay(mocker)
 
-    first = _run_async_enqueue(
-        django_capture_on_commit_callbacks,
-        invalidate_and_enqueue_previews,
-        layer_style,
-    )
-    second = _run_async_enqueue(
-        django_capture_on_commit_callbacks,
-        invalidate_and_enqueue_previews,
-        layer_style,
-    )
+    first = invalidate_and_enqueue_previews(layer_style)
+    second = invalidate_and_enqueue_previews(layer_style)
 
     delay.assert_called_once()
     assert first is not None
@@ -799,7 +774,6 @@ def test_invalidate_and_enqueue_starts_job_for_different_fingerprint(
     layer_style_factory,
     layer_frame_factory,
     mocker,
-    django_capture_on_commit_callbacks,
 ):
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
@@ -807,19 +781,10 @@ def test_invalidate_and_enqueue_starts_job_for_different_fingerprint(
     layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
     delay = _patch_preview_delay(mocker)
 
-    first = _run_async_enqueue(
-        django_capture_on_commit_callbacks,
-        invalidate_and_enqueue_layer_previews,
-        layer_style.layer,
-        {},
-    )
+    first = invalidate_and_enqueue_layer_previews(layer_style.layer, {})
     layer_style.raster_style_params = {"palette": "#00ff00", "min": 0, "max": 1}
     layer_style.save(update_fields=["raster_style_params"])
-    second = _run_async_enqueue(
-        django_capture_on_commit_callbacks,
-        invalidate_and_enqueue_previews,
-        layer_style,
-    )
+    second = invalidate_and_enqueue_previews(layer_style)
 
     assert delay.call_count == 2
     assert first is not None

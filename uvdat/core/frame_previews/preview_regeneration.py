@@ -125,26 +125,16 @@ def _dispatch_frame_preview_task(
     # <- preview_regeneration when dataset imports this module at top level.
     from uvdat.core.tasks.frame_preview import generate_frame_previews  # noqa: PLC0415
 
-    run_mode = _coerce_run_mode(run_mode)
     layer_id = result.inputs["layer_id"]
     result_id = result.id
-
-    if run_mode == "async":
-        # Defer until after the surrounding transaction commits so a worker
-        # cannot start before preview rows / TaskResult / style params exist.
-        enqueue_params = dict(params)
-        enqueue_kwargs = dict(task_kwargs)
-
-        def _enqueue_preview_task() -> None:
-            generate_frame_previews.delay(
-                layer_id,
-                fingerprint,
-                enqueue_params,
-                result_id,
-                **enqueue_kwargs,
-            )
-
-        transaction.on_commit(_enqueue_preview_task)
+    if _coerce_run_mode(run_mode) == "async":
+        generate_frame_previews.delay(
+            layer_id,
+            fingerprint,
+            params,
+            result_id,
+            **task_kwargs,
+        )
         return
 
     with suppress_task_notifications():
@@ -180,11 +170,6 @@ def invalidate_and_enqueue_layer_previews(
     if existing is not None:
         return existing
 
-    mark_previews_regenerating(layer, fingerprint, params)
-    clear_layer_preview_instance_cache(layer)
-    if layer_style is not None:
-        clear_style_preview_instance_cache(layer_style)
-
     style_name = layer_style.name if layer_style is not None else "default"
     inputs: dict[str, Any] = {
         "layer_id": layer.id,
@@ -197,12 +182,19 @@ def invalidate_and_enqueue_layer_previews(
         inputs["layer_style_id"] = layer_style.id
         task_kwargs["layer_style_id"] = layer_style.id
 
-    result = TaskResult.objects.create(
-        name=f"Frame previews: {layer.name} - {style_name}",
-        task_type="frame_preview",
-        project=_resolve_preview_task_project(layer, project, layer_style),
-        inputs=inputs,
-    )
+    with transaction.atomic():
+        mark_previews_regenerating(layer, fingerprint, params)
+        clear_layer_preview_instance_cache(layer)
+        if layer_style is not None:
+            clear_style_preview_instance_cache(layer_style)
+
+        result = TaskResult.objects.create(
+            name=f"Frame previews: {layer.name} - {style_name}",
+            task_type="frame_preview",
+            project=_resolve_preview_task_project(layer, project, layer_style),
+            inputs=inputs,
+        )
+
     _dispatch_frame_preview_task(
         result,
         fingerprint=fingerprint,

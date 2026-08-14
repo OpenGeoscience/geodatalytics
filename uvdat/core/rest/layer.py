@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from uvdat.core.frame_previews.preview_regeneration import invalidate_and_enqueue_previews
 from uvdat.core.models import Layer, LayerFrame, LayerStyle, Project
 from uvdat.core.rest.querysets import layer_queryset_with_previews
 from uvdat.core.rest.serializers import (
@@ -66,6 +67,8 @@ class LayerStyleViewSet(ModelViewSet):
             if is_default and instance.layer.default_style != instance:
                 instance.layer.default_style = instance
                 instance.layer.save()
+        # Enqueue after commit so a worker cannot start before style rows exist.
+        invalidate_and_enqueue_previews(instance)
         return Response(serializer.data, status=200)
 
     def partial_update(self, request, **kwargs):
@@ -81,6 +84,7 @@ class LayerStyleViewSet(ModelViewSet):
             if is_default and instance.layer.default_style != instance:
                 instance.layer.default_style = instance
                 instance.layer.save()
+        invalidate_and_enqueue_previews(instance)
         return Response(serializer.data, status=200)
 
     def destroy(self, request, *args, **kwargs):

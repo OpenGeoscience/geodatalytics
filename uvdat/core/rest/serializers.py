@@ -10,7 +10,6 @@ from uvdat.core.frame_previews.lookup import layer_default_multiframe_previews
 from uvdat.core.frame_previews.preview_regeneration import (
     get_layer_preview_status,
     get_layer_style_preview_status,
-    invalidate_and_enqueue_previews,
 )
 from uvdat.core.models import (
     Basemap,
@@ -190,15 +189,12 @@ class LayerStyleSerializer(serializers.ModelSerializer):
         style_spec = self.initial_data.pop("style_spec", None)
         instance = super().create(validated_data)
         instance.save_style_configs(style_spec)
-        invalidate_and_enqueue_previews(instance)
         return instance
 
     def update(self, instance, validated_data):
         style_spec = self.initial_data.pop("style_spec", None)
         instance.save_style_configs(style_spec)
-        instance = super().update(instance, validated_data)
-        invalidate_and_enqueue_previews(instance)
-        return instance
+        return super().update(instance, validated_data)
 
     class Meta:
         model = LayerStyle
