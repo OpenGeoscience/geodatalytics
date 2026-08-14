@@ -11,6 +11,7 @@ import {
   useLayerStore,
   useMapStore,
 } from "@/store";
+import { layerStyleKey } from "@/store/style";
 import { cloneDeep } from "lodash";
 import { useMapCompareStore } from "@/store/compare";
 const styleStore = useStyleStore();
@@ -31,9 +32,7 @@ const currentStyleSpecs = ref<{
   B: StyleSpec | undefined;
 }>({ A: undefined, B: undefined });
 
-const styleKey = computed(() => {
-  return `${props.layer.id}.${props.layer.copy_id}`;
-});
+const styleKey = computed(() => layerStyleKey(props.layer));
 
 const currentLayerStyles = computed(() => {
   let A = compareStore.compareLayerStyles.A[styleKey.value];

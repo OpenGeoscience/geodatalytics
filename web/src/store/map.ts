@@ -28,6 +28,7 @@ import {
   useProjectStore,
   useFramePreviewStore,
 } from ".";
+import { layerStyleKey } from "./style";
 import {
   isPreviewMapLayerId,
   removeAllPreviewLayersForLayerKey,
@@ -59,17 +60,13 @@ function sourceIdFromMapLayerId(mapLayerId: string) {
   return mapLayerId.split(".").slice(0, -1).join(".");
 }
 
-function uniqueLayerIdFromLayer(layer: Layer) {
-  return `${layer.id}.${layer.copy_id}`;
-}
-
 /**
  * Note: Rasters also have an extra `bounds` source, which allows for
  * interaction with the raster layer. This is not considered in this
  * function, as it's rarely accessed directly.
  */
 function sourceIdFromLayerFrame(layer: Layer, frame: LayerFrame) {
-  const parts: (number | string)[] = [uniqueLayerIdFromLayer(layer), frame.id];
+  const parts: (number | string)[] = [layerStyleKey(layer), frame.id];
 
   if (frame.vector) {
     parts.push("vector");
@@ -664,7 +661,6 @@ export const useMapStore = defineStore("map", () => {
     parseSourceString,
     parseLayerString,
     sourceIdFromLayerFrame,
-    uniqueLayerIdFromLayer,
     getLatestLayerInstance,
     getUserMapLayers,
     setupVectorLayerClickHandlers,

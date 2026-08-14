@@ -29,6 +29,7 @@ import {
   useAppStore,
   useFramePreviewStore,
 } from "@/store";
+import { layerStyleKey } from "@/store/style";
 const styleStore = useStyleStore();
 const projectStore = useProjectStore();
 const panelStore = usePanelStore();
@@ -74,9 +75,7 @@ const editMode = computed(() => {
   );
 });
 
-const styleKey = computed(() => {
-  return `${props.layer.id}.${props.layer.copy_id}`;
-});
+const styleKey = computed(() => layerStyleKey(props.layer));
 
 const currentLayerStyle = computed(() => {
   return styleStore.selectedLayerStyles[styleKey.value];
@@ -392,13 +391,13 @@ function confirmDeleteColormap() {
       );
       // update other styles in case colormap changed to default
       layerStore.selectedLayers.forEach((layer) => {
-        const layerStyleKey = `${layer.id}.${layer.copy_id}`;
+        const key = layerStyleKey(layer);
         getLayerStyles(layer.id).then((styles) => {
           const updated = styles.find(
-            (s) => s.id === styleStore.selectedLayerStyles[layerStyleKey].id,
+            (s) => s.id === styleStore.selectedLayerStyles[key].id,
           );
           if (updated) {
-            styleStore.selectedLayerStyles[layerStyleKey] = updated;
+            styleStore.selectedLayerStyles[key] = updated;
             if (layer.id === props.layer.id) {
               availableStyles.value = styles;
               currentStyleSpec.value = updated.style_spec;

@@ -347,6 +347,10 @@ function getVectorSizePaintProperty(
   } else return baseSize;
 }
 
+export function layerStyleKey(layer: Layer) {
+  return `${layer.id}.${layer.copy_id}`;
+}
+
 function getVectorVisibilityPaintProperty(
   styleSpec: StyleSpec,
   groupName: string,
@@ -407,10 +411,6 @@ export const useStyleStore = defineStore("style", () => {
   const layerStore = useLayerStore();
   const networkStore = useNetworkStore();
   const framePreviewStore = useFramePreviewStore();
-
-  function layerStyleKey(layer: Layer) {
-    return `${layer.id}.${layer.copy_id}`;
-  }
 
   function isLayerStyleEditing(layer: Layer) {
     return editingStyleLayerKeys.value.has(layerStyleKey(layer));
@@ -491,7 +491,7 @@ export const useStyleStore = defineStore("style", () => {
             "visibility",
             layer.visible ? "visible" : "none",
           );
-          const styleKey = `${layer.id}.${layer.copy_id}`;
+          const styleKey = layerStyleKey(layer);
           const currentStyleSpec: StyleSpec | undefined =
             selectedLayerStyles.value[styleKey].style_spec;
           if (currentStyleSpec) {
@@ -697,6 +697,7 @@ export const useStyleStore = defineStore("style", () => {
     buildRasterTileQueryParams,
     sourceFiltersToStyleFilters,
     colormapMarkersSubsample,
+    layerStyleKey,
     getDefaultColor,
     getDefaultStyleSpec,
     getVectorColorPaintProperty,

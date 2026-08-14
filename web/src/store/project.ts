@@ -23,6 +23,7 @@ import {
   useFramePreviewStore,
   useTutorialStore,
 } from ".";
+import { layerStyleKey } from "./style";
 import { clearFramePreviewCache } from "@/utils/framePreviewCache";
 
 export const useProjectStore = defineStore("project", () => {
@@ -121,7 +122,7 @@ export const useProjectStore = defineStore("project", () => {
     );
     const styleKeysToCurrentFrames = Object.fromEntries(
       includeLayers.map((layer) => [
-        mapStore.uniqueLayerIdFromLayer(layer),
+        layerStyleKey(layer),
         layer.current_frame_index,
       ]),
     );
@@ -251,8 +252,8 @@ export const useProjectStore = defineStore("project", () => {
       // Ensure correct layer order
       layerStore.selectedLayers = layerStore.selectedLayers.sort(
         (layer1, layer2) => {
-          const key1 = mapStore.uniqueLayerIdFromLayer(layer1);
-          const key2 = mapStore.uniqueLayerIdFromLayer(layer2);
+          const key1 = layerStyleKey(layer1);
+          const key2 = layerStyleKey(layer2);
           return (
             viewState.selected_layer_order.indexOf(key1) -
             viewState.selected_layer_order.indexOf(key2)
@@ -261,7 +262,7 @@ export const useProjectStore = defineStore("project", () => {
       );
       // Ensure correct current frames
       layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
-        const styleKey = mapStore.uniqueLayerIdFromLayer(layer);
+        const styleKey = layerStyleKey(layer);
         if (viewState.selected_layer_current_frames[styleKey]) {
           layer.current_frame_index =
             viewState.selected_layer_current_frames[styleKey];
