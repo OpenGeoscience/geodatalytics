@@ -94,15 +94,14 @@ class Dataset(models.Model):
         from uvdat.core.tasks.dataset import convert_dataset  # noqa: PLC0415
         from uvdat.core.tasks.run_mode import TaskRunMode  # noqa: PLC0415
 
-        run_mode = TaskRunMode(run_mode)
-
         convert_dataset_signature = convert_dataset.s(
             dataset_id=self.id,
             layer_options=layer_options,
             network_options=network_options,
             region_options=region_options,
-            run_mode=run_mode,
         )
+
+        run_mode = TaskRunMode(run_mode)
 
         if run_mode is TaskRunMode.ASYNC:
             result = TaskResult.objects.create(

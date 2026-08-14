@@ -23,13 +23,13 @@ def convert_dataset(dataset, options):
             perform_export()
         else:
             perform_import(dataset, downloads_folder=DOWNLOADS_FOLDER)
-        create_layers_and_frames(dataset, run_mode=TaskRunMode.SYNC)
+        create_layers_and_frames(dataset)
     elif dataset.name == "National Grid CompanyBoundary":
         create_vector_features(dataset, "CompanyBoundary")
-        create_layers_and_frames(dataset, run_mode=TaskRunMode.SYNC)
+        create_layers_and_frames(dataset)
     elif dataset.name == "National Grid Substations":
         create_vector_features(dataset, "Substations")
-        create_layers_and_frames(dataset, run_mode=TaskRunMode.SYNC)
+        create_layers_and_frames(dataset)
     else:
         dataset.spawn_conversion_task(
             layer_options=options.get("layers"),

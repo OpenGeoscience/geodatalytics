@@ -28,8 +28,6 @@ def create_layers_and_frames(  # noqa: C901, PLR0912, PLR0915
     dataset,
     layer_options=None,
     task_result=None,
-    *,
-    run_mode: TaskRunMode = TaskRunMode.ASYNC,
 ):
     Layer.objects.filter(dataset=dataset).delete()
     LayerFrame.objects.filter(layer__dataset=dataset).delete()
@@ -150,8 +148,6 @@ def create_layers_and_frames(  # noqa: C901, PLR0912, PLR0915
                 )
 
     # Default empty-params previews (no Project/LayerStyle required).
-    # Match the surrounding conversion mode: sync ingest must generate
-    # previews inline (no Celery worker required).
     for layer in Layer.objects.filter(dataset=dataset):
         if layer.is_multiframe_raster():
             if task_result is not None:
@@ -161,17 +157,13 @@ def create_layers_and_frames(  # noqa: C901, PLR0912, PLR0915
 
 
 @shared_task
-def convert_dataset(  # noqa: PLR0913
+def convert_dataset(
     dataset_id,
     layer_options=None,
     network_options=None,
     region_options=None,
     result_id=None,
-    *,
-    run_mode: TaskRunMode | str = TaskRunMode.ASYNC,
 ):
-    # Celery JSON may deserialize StrEnum kwargs as plain strings.
-    run_mode = TaskRunMode(run_mode)
     dataset = Dataset.objects.get(id=dataset_id)
     dataset.processing = True
     dataset.save()
@@ -207,7 +199,6 @@ def convert_dataset(  # noqa: PLR0913
         dataset,
         layer_options,
         task_result=result,
-        run_mode=run_mode,
     )
 
     dataset.processing = False
