@@ -23,7 +23,6 @@ from uvdat.core.models import LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
 from uvdat.core.tasks.analytics import flood_simulation as flood_mod
 from uvdat.core.tasks.frame_preview import (
-    DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
     FRAME_PREVIEW_DEFAULT_RESOLUTION_FRACTION,
     FRAME_PREVIEW_MAX_PX,
     FRAME_PREVIEW_MIN_PX,
@@ -31,6 +30,15 @@ from uvdat.core.tasks.frame_preview import (
     resolve_preview_max_dimension,
 )
 from uvdat.core.tasks.run_mode import TaskRunMode
+
+# LayerStyle PATCH still requires vector style_spec (colors/sizes); unused for fingerprints.
+_VECTOR_STYLE_SPEC = {
+    "default_frame": 0,
+    "opacity": 1,
+    "colors": [{"name": "all", "visible": True, "use_feature_props": True}],
+    "sizes": [{"name": "all", "zoom_scaling": True, "single_size": 5}],
+    "filters": [],
+}
 
 
 def _patch_preview_delay(mocker):
@@ -76,7 +84,7 @@ def test_layer_style_api_stores_client_raster_style_params(
             "name": layer_style.name,
             "layer": layer_style.layer_id,
             "project": layer_style.project_id,
-            "style_spec": DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
+            "style_spec": _VECTOR_STYLE_SPEC,
             "raster_style_params": raster_style_params,
         },
         format="json",
@@ -155,7 +163,6 @@ def test_invalidate_and_enqueue_previews_uses_db_fingerprint(
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
     layer_frame_factory(layer=layer_style.layer, index=1)
-    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
 
     delay = _patch_preview_delay(mocker)
 
@@ -179,7 +186,6 @@ def test_invalidate_and_enqueue_previews_skips_when_previews_current(
     layer_style = layer_style_factory()
     frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
     frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
-    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
     fingerprint = style_fingerprint(layer_style)
 
     preview_0 = _make_preview(
@@ -226,7 +232,6 @@ def test_invalidate_and_enqueue_previews_runs_when_fingerprint_changed(
     layer_style = layer_style_factory()
     frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
     frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
-    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
 
     preview_0 = _make_preview(
         frame_0,
@@ -279,7 +284,6 @@ def test_invalidate_and_enqueue_previews_runs_synchronously(
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
     layer_frame_factory(layer=layer_style.layer, index=1)
-    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
 
     delay = _patch_preview_delay(mocker)
     apply = mocker.patch("uvdat.core.tasks.frame_preview.generate_frame_previews.apply")
@@ -500,7 +504,6 @@ def test_layer_style_patch_reports_notready_after_preview_invalidation(
     project.datasets.set([layer_style.layer.dataset])
     frame_0 = layer_frame_factory(layer=layer_style.layer, index=0)
     frame_1 = layer_frame_factory(layer=layer_style.layer, index=1)
-    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
     layer_style.raster_style_params = {"palette": "#00ff00", "min": 0, "max": 1}
     layer_style.save(update_fields=["raster_style_params"])
     fingerprint = style_fingerprint(layer_style)
@@ -532,7 +535,7 @@ def test_layer_style_patch_reports_notready_after_preview_invalidation(
             "name": layer_style.name,
             "layer": layer_style.layer_id,
             "project": layer_style.project_id,
-            "style_spec": DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC,
+            "style_spec": _VECTOR_STYLE_SPEC,
             "raster_style_params": {"palette": "#ff0000", "min": 0, "max": 1},
         },
         format="json",
@@ -756,7 +759,6 @@ def test_invalidate_and_enqueue_skips_when_fingerprint_job_in_flight(
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
     layer_frame_factory(layer=layer_style.layer, index=1)
-    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
     delay = _patch_preview_delay(mocker)
 
     first = invalidate_and_enqueue_previews(layer_style)
@@ -778,7 +780,6 @@ def test_invalidate_and_enqueue_starts_job_for_different_fingerprint(
     layer_style = layer_style_factory()
     layer_frame_factory(layer=layer_style.layer, index=0)
     layer_frame_factory(layer=layer_style.layer, index=1)
-    layer_style.save_style_configs(DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC)
     delay = _patch_preview_delay(mocker)
 
     first = invalidate_and_enqueue_layer_previews(layer_style.layer, {})

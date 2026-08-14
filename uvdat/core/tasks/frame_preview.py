@@ -45,15 +45,6 @@ FRAME_PREVIEW_MAX_PX = 4096
 FRAME_PREVIEW_MIN_PX = 1024
 FRAME_PREVIEW_DEFAULT_RESOLUTION_FRACTION = 1 / 8
 
-# Applied when ingest/API still creates a Default LayerStyle for vector config.
-DEFAULT_MULTIFRAME_RASTER_STYLE_SPEC = {
-    "default_frame": 0,
-    "opacity": 1,
-    "colors": [{"name": "all", "visible": True, "use_feature_props": True}],
-    "sizes": [{"name": "all", "zoom_scaling": True, "single_size": 5}],
-    "filters": [],
-}
-
 
 @dataclass(frozen=True)
 class _PreviewGenerationContext:
