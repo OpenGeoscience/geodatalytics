@@ -25,14 +25,6 @@ def _coerce_run_mode(run_mode: TaskRunMode | str) -> TaskRunMode:
     return _TaskRunMode(run_mode)
 
 
-def layer_needs_previews(layer: Layer) -> bool:
-    return layer.is_multiframe_raster()
-
-
-def style_needs_previews(layer_style: LayerStyle) -> bool:
-    return layer_needs_previews(layer_style.layer)
-
-
 def pending_preview_task(*, layer_id: int, fingerprint: str) -> TaskResult | None:
     """Return an in-flight preview task for this layer fingerprint, if any."""
     return (
@@ -157,7 +149,7 @@ def invalidate_and_enqueue_layer_previews(
     If previews are already complete, or a job for this fingerprint is already
     in flight, do not start another Celery task.
     """
-    if not layer_needs_previews(layer):
+    if not layer.is_multiframe_raster():
         return None
 
     run_mode = _coerce_run_mode(run_mode)
@@ -211,7 +203,7 @@ def invalidate_and_enqueue_previews(
     run_mode: TaskRunMode | str = "async",
 ) -> TaskResult | None:
     """Invalidate previews for a style's current ``raster_style_params`` and enqueue."""
-    if not style_needs_previews(layer_style):
+    if not layer_style.layer.is_multiframe_raster():
         return None
 
     layer_style.refresh_from_db()
@@ -225,7 +217,7 @@ def invalidate_and_enqueue_previews(
 
 
 def preview_status_for_style(layer_style: LayerStyle) -> str | None:
-    if not style_needs_previews(layer_style):
+    if not layer_style.layer.is_multiframe_raster():
         return None
     return preview_status_for_fingerprint(layer_style.layer, style_fingerprint(layer_style))
 
@@ -237,7 +229,7 @@ def get_layer_style_preview_status(layer_style: LayerStyle) -> str | None:
 
 
 def preview_status_for_layer(layer: Layer) -> str | None:
-    if not layer_needs_previews(layer):
+    if not layer.is_multiframe_raster():
         return None
     return preview_status_for_fingerprint(layer, layer_default_fingerprint(layer))
 
