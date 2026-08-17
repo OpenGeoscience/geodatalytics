@@ -42,9 +42,7 @@ class TaskResult(models.Model):
         return f"{self.name} ({self.id})"
 
     def write_error(self, err):
-        if self.error:
-            self.error += ", "
-        self.error += err
+        self.error = err
         self.save()
 
     def write_status(self, stat):
