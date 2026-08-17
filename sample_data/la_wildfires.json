@@ -20,7 +20,11 @@
     "type": "Dataset",
     "name": "MODIS 1km 48h USA + Hawaii",
     "description": "MODIS 1km USA (Conterminous) + Hawaii 48h shapefile. From: https://firms.modaps.eosdis.nasa.gov/active_fire/",
-    "category": "region",
+    "category": "events",
+    "tags": [
+      "spectroradiometer",
+      "wildfire"
+    ],
     "files": [
       {
         "path": "la-fire-2025/modis-1-48.zip",
@@ -34,6 +38,10 @@
     "name": "USA Current Wildfire Perimeters",
     "description": "NIFC, taken on Feb 4, 2025. From: https://data-nifc.opendata.arcgis.com/",
     "category": "region",
+    "tags": [
+      "region boundaries",
+      "wildfire"
+    ],
     "files": [
       {
         "path": "la-fire-2025/current_fire_perimeters.geojson",
@@ -46,7 +54,10 @@
     "type": "Dataset",
     "name": "USA Current Wildfire Incidents",
     "description": "IRWIN, taken on Feb 4, 2025. From: https://forestsandrangelands.gov/WFIT/applications/IRWIN/index.shtml",
-    "category": "region",
+    "category": "events",
+    "tags": [
+      "wildfire"
+    ],
     "files": [
       {
         "path": "la-fire-2025/current_fire_incidents.geojson",
@@ -60,6 +71,10 @@
     "name": "California Fire Perimeters",
     "description": "NIFC + FIRIS, taken Feb 4, 2025. From: https://www.fire.ca.gov/incidents/2025/1/7/palisades-fire",
     "category": "region",
+    "tags": [
+      "region boundaries",
+      "wildfire"
+    ],
     "files": [
       {
         "path": "la-fire-2025/ca_perimeters_nifc_firis.geojson",
@@ -72,7 +87,11 @@
     "type": "Dataset",
     "name": "Palisades Satellite Imagery",
     "description": "MAXAR, Jan 14, 2025. From: https://registry.opendata.aws/maxar-open-data/",
-    "category": "region",
+    "category": "imagery",
+    "tags": [
+      "aerial imagery",
+      "wildfire"
+    ],
     "files": [
       {
         "path": "la-fire-2025/palidades-2025-01-14.tif",
@@ -85,7 +104,11 @@
     "type": "Dataset",
     "name": "Eaton/Altadena Satellite Imagery",
     "description": "MAXAR, Jan 14-19, 2025. From: https://registry.opendata.aws/maxar-open-data/",
-    "category": "region",
+    "category": "imagery",
+    "tags": [
+      "aerial imagery",
+      "wildfire"
+    ],
     "files": [
       {
         "path": "la-fire-2025/eaton-2025-01-14_to_19.tif",

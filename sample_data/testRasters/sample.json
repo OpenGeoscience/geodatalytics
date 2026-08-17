@@ -16,6 +16,10 @@
     "name": "Sequential Test Rasters",
     "description": "Clipped Sentinel-2 images downloaded and clipped around point",
     "category": "imagery",
+    "tags": [
+      "test",
+      "aerial imagery"
+    ],
     "files": [
       {
         "path": "sequentialTestRasters/S2C_T18TWN_20250822T155805_L2A_visual_clip_10km.tif",
