@@ -24,7 +24,6 @@ import {
   useProjectStore,
   useFramePreviewStore,
 } from ".";
-import { layerStyleKey } from "./style";
 
 interface SourceDBObjects {
   dataset?: Dataset;
@@ -55,7 +54,7 @@ export const useLayerStore = defineStore("layer", () => {
   function getMapLayersFromLayerObject(layer: Layer) {
     return mapStore
       .getUserMapLayers()
-      .filter((layerId) => layerId.startsWith(layerStyleKey(layer)));
+      .filter((layerId) => layerId.startsWith(styleStore.layerStyleKey(layer)));
   }
 
   async function fetchAvailableLayer(layerId: number) {
@@ -224,7 +223,7 @@ export const useLayerStore = defineStore("layer", () => {
       const frames = layerFrames(layer);
       const multiFrame = frames.length > 1;
       frames.forEach((frame) => {
-        const styleId = layerStyleKey(layer);
+        const styleId = styleStore.layerStyleKey(layer);
         if (!styleStore.selectedLayerStyles[styleId]) {
           if (
             layer.default_style?.style_spec &&

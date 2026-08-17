@@ -4,7 +4,6 @@ import type { Layer } from "@/types";
 import ColormapPreview from "./ColormapPreview.vue";
 
 import { useLayerStore, useStyleStore, useFramePreviewStore } from "@/store";
-import { colormapMarkersSubsample, layerStyleKey } from "@/store/style";
 const layerStore = useLayerStore();
 const styleStore = useStyleStore();
 const framePreviewStore = useFramePreviewStore();
@@ -20,7 +19,7 @@ const filteredLegend = computed(() => {
 });
 
 function getColormapPreviews(layer: Layer) {
-  const styleKey = layerStyleKey(layer);
+  const styleKey = styleStore.layerStyleKey(layer);
   const currentStyleSpec = styleStore.selectedLayerStyles[styleKey].style_spec;
   if (!currentStyleSpec) return [];
   const currentFrame = layerStore
@@ -59,7 +58,7 @@ function getColormapPreviews(layer: Layer) {
           new Set(colorByProp.value_set.filter((v) => v)),
         );
         const sortedValues = valueSet.sort((a: any, b: any) => a - b);
-        const markers = colormapMarkersSubsample(
+        const markers = styleStore.colormapMarkersSubsample(
           colormap,
           colorConfig.colormap,
           nColors,

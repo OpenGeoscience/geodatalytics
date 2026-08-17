@@ -23,7 +23,7 @@ import {
 import { prefetchFramePreviewUrls } from "@/utils/framePreviewCache";
 import { useLayerStore } from "./layer";
 import { useMapStore } from "./map";
-import { layerStyleKey, useStyleStore } from "./style";
+import { useStyleStore } from "./style";
 
 function orderedRasterFrames(frames: LayerFrame[]) {
   return frames
@@ -145,7 +145,9 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   }
 
   function isDisplayingPreview(layer: Layer) {
-    return displayingPreviewLayerKeys.value.has(layerStyleKey(layer));
+    return displayingPreviewLayerKeys.value.has(
+      styleStore.layerStyleKey(layer),
+    );
   }
 
   function bumpGeneration(layerKeyValue: string) {
@@ -281,7 +283,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       return;
     }
     const map = mapStore.getMap();
-    const layerKeyValue = layerStyleKey(layer);
+    const layerKeyValue = styleStore.layerStyleKey(layer);
     const style = styleStore.selectedLayerStyles[layerKeyValue];
     const previews = previewsForLayer(layer, style);
 
@@ -372,7 +374,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
   function dismissPreviewForLayer(layer: Layer) {
     const map = mapStore.getMap();
-    const layerKeyValue = layerStyleKey(layer);
+    const layerKeyValue = styleStore.layerStyleKey(layer);
 
     bumpGeneration(layerKeyValue);
     removeAllPreviewLayersForLayerKey(map, layerKeyValue);
@@ -396,7 +398,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   }
 
   function cleanupLayer(layer: Layer) {
-    const layerKeyValue = layerStyleKey(layer);
+    const layerKeyValue = styleStore.layerStyleKey(layer);
     transitionGenerationByLayerKey.delete(layerKeyValue);
     activePreviewByLayerKey.delete(layerKeyValue);
     clearPreviewDisplayed(layerKeyValue);
@@ -436,7 +438,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
         layer.multiframe_previews = updatedLayer.multiframe_previews;
         layer.preview_status = updatedLayer.preview_status;
 
-        const key = layerStyleKey(layer);
+        const key = styleStore.layerStyleKey(layer);
         const selectedStyle = styleStore.selectedLayerStyles[key];
         if (!usesLayerDefaultPreviews(layer, selectedStyle)) {
           return;
@@ -475,7 +477,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       if (layer.id !== layerId) {
         return;
       }
-      const key = layerStyleKey(layer);
+      const key = styleStore.layerStyleKey(layer);
       const selectedStyle = styleStore.selectedLayerStyles[key];
       // Only reattach when this copy still has the regenerated style selected;
       // the user may have swapped to a different style while generation ran.
