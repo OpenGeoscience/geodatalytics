@@ -26,6 +26,26 @@ SIMPLE_SPEC = {
     "filters": [],
 }
 
+NONE_SPEC = {
+    "default_frame": 1,
+    "opacity": 0.5,
+    "colors": [
+        {
+            "name": "all",
+            "visible": True,
+            "use_feature_props": True,
+        }
+    ],
+    "sizes": [
+        {
+            "name": "all",
+            "zoom_scaling": True,
+            "single_size": 4,
+        }
+    ],
+    "filters": [],
+}
+
 COMPLEX_SPEC = {
     "default_frame": 1,
     "opacity": 0.5,
@@ -134,6 +154,25 @@ def test_style_config_update(layer_style):
     with pytest.raises(SizeConfig.size_range.RelatedObjectDoesNotExist):
         size_config.size_range  # noqa: B018
     assert layer_style.filter_configs.count() == 0
+
+
+@pytest.mark.django_db
+def test_style_config_none_color_mode_clears_colormap_and_single_color(layer_style):
+    layer_style.save_style_configs(COMPLEX_SPEC)
+    layer_style.save_style_configs(NONE_SPEC)
+    assert layer_style.repr_style_configs() == NONE_SPEC
+    color_config = layer_style.color_configs.first()
+    assert color_config.single_color == ""
+    with pytest.raises(ColorConfig.colormap.RelatedObjectDoesNotExist):
+        color_config.colormap  # noqa: B018
+
+    layer_style.save_style_configs(SIMPLE_SPEC)
+    layer_style.save_style_configs(NONE_SPEC)
+    assert layer_style.repr_style_configs() == NONE_SPEC
+    color_config = layer_style.color_configs.first()
+    assert color_config.single_color == ""
+    with pytest.raises(ColorConfig.colormap.RelatedObjectDoesNotExist):
+        color_config.colormap  # noqa: B018
 
 
 @pytest.mark.parametrize(
