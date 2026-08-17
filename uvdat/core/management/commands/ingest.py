@@ -326,7 +326,7 @@ def ingest_datasets(
                 fg="cyan",
             )
 
-        dataset_for_conversion.set_tags(dataset.get("tags"))
+        dataset_for_conversion.set_tags(dataset.get("tags") or [])
         dataset_for_conversion.set_owner(superuser)
 
 
