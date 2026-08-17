@@ -140,13 +140,33 @@ const dataRange = computed(() => {
 });
 
 async function init() {
-  if (props.activeLayer === props.layer) {
-    getLayerStyles(props.layer.id).then(
-      (styles) => (availableStyles.value = styles),
-    );
-    resetCurrentStyle();
-    fetchRasterBands();
-    if (currentStyleSpec.value) setAvailableGroups();
+  if (props.activeLayer !== props.layer) return;
+  availableStyles.value = await getLayerStyles(props.layer.id);
+  if (props.activeLayer !== props.layer) return;
+  resetCurrentStyle();
+  fetchRasterBands();
+  if (currentStyleSpec.value) setAvailableGroups();
+}
+
+function applyNoneStyle() {
+  const styleSpec = styleStore.getDefaultStyleSpec(
+    currentFrame.value?.raster,
+    props.layer.id,
+  );
+  setCurrentLayerStyle({
+    name: "None",
+    is_default: true,
+    style_spec: cloneDeep(styleSpec),
+  });
+  currentStyleSpec.value = styleSpec;
+}
+
+function applyStyleSelection(style: LayerStyle | undefined) {
+  if (style?.id !== undefined && style.style_spec) {
+    setCurrentLayerStyle(cloneDeep(style));
+    currentStyleSpec.value = cloneDeep(style.style_spec);
+  } else {
+    applyNoneStyle();
   }
 }
 
@@ -157,29 +177,41 @@ function resetCurrentStyle() {
   }
   // When copying styles, use deep copies via cloneDeep
   // so that changes to the current style do not affect the original copy
-  if (currentLayerStyle.value?.id) {
-    // keep current style selected but discard any unsaved changes
-    currentStyleSpec.value = cloneDeep(currentLayerStyle.value.style_spec);
-  } else {
-    // no current style selected, set one
-    if (props.layer.default_style) {
-      // apply layer's default style
-      setCurrentLayerStyle(cloneDeep(props.layer.default_style));
-      currentStyleSpec.value = cloneDeep(props.layer.default_style.style_spec);
-    } else {
-      // layer has no default style; apply None style
-      setCurrentLayerStyle({ name: "None", is_default: true });
-      currentStyleSpec.value = styleStore.getDefaultStyleSpec(
-        currentFrame.value?.raster,
-        props.layer.id,
-      );
-    }
+  const selectedId = currentLayerStyle.value?.id;
+  const selectedFromList =
+    selectedId !== undefined
+      ? availableStyles.value?.find((style) => style.id === selectedId)
+      : undefined;
+  if (selectedFromList) {
+    applyStyleSelection(selectedFromList);
+    return;
   }
+
+  // The selected style is missing or was deleted. Prefer a live default.
+  if (availableStyles.value) {
+    applyStyleSelection(
+      availableStyles.value.find((style) => style.is_default),
+    );
+    return;
+  }
+
+  // Styles list not loaded yet (initial mount): use cached layer default or None
+  applyStyleSelection(props.layer.default_style ?? undefined);
 }
 
 function selectStyle(style: LayerStyle) {
-  setCurrentLayerStyle(style);
-  currentStyleSpec.value = style.style_spec;
+  if (style?.id === undefined) {
+    applyNoneStyle();
+    currentGroups.value = { color: undefined, size: undefined };
+    return;
+  }
+  if (
+    availableStyles.value &&
+    !availableStyles.value.some((s) => s.id === style.id)
+  ) {
+    return;
+  }
+  applyStyleSelection(style);
   currentGroups.value = { color: undefined, size: undefined };
 }
 
@@ -554,19 +586,7 @@ function deleteStyle() {
   deleteLayerStyle(currentLayerStyle.value.id).then(() => {
     getLayerStyles(props.layer.id).then((styles) => {
       availableStyles.value = styles;
-      const newDefault = styles.find((style) => style.is_default);
-      if (newDefault) {
-        setCurrentLayerStyle(newDefault);
-        currentStyleSpec.value = newDefault.style_spec;
-      } else {
-        setCurrentLayerStyle({ name: "None", is_default: true });
-        currentStyleSpec.value = {
-          ...styleStore.getDefaultStyleSpec(
-            currentFrame.value?.raster,
-            props.layer.id,
-          ),
-        };
-      }
+      applyStyleSelection(styles.find((style) => style.is_default));
       refreshLayer();
       showDeleteConfirmation.value = false;
     });
