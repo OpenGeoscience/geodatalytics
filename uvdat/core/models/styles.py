@@ -102,7 +102,7 @@ class LayerStyle(models.Model):
             else:
                 # Color mode "None": restore default RGB/grayscale (no override)
                 color_config.single_color = ""
-                with contextlib.suppress(ColorConfig.colormap.RelatedObjectDoesNotExist):
+                if color_config.colormap:
                     color_config.colormap.delete()
             color_config.save()
         ColorConfig.objects.filter(style=self).exclude(name__in=color_config_names).delete()

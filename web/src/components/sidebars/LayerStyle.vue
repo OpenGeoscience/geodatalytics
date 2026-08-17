@@ -186,7 +186,6 @@ function selectStyle(style: LayerStyle) {
 function fetchRasterBands() {
   if (!currentStyleSpec.value) return;
   if (showRasterOptions.value) {
-    setGroupColorMode("all", "none");
     if (frames.value.length) {
       if (currentFrame.value?.raster) {
         rasterBands.value = currentFrame.value.raster.metadata.bands;
