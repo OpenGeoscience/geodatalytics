@@ -6,6 +6,7 @@ import {
   getChart,
   getTaskResult,
   getNetwork,
+  getRegion,
   subscribeToTaskResult,
 } from "@/api/rest";
 import VueMarkdown from "vue-markdown-render";
@@ -19,6 +20,7 @@ import {
   useAnalysisStore,
   useProjectStore,
   useAppStore,
+  useMapStore,
 } from "@/store";
 
 const panelStore = usePanelStore();
@@ -27,6 +29,7 @@ const projectStore = useProjectStore();
 const networkStore = useNetworkStore();
 const layerStore = useLayerStore();
 const appStore = useAppStore();
+const mapStore = useMapStore();
 
 const searchText = ref<string | undefined>();
 const filteredAnalysisTypes = computed(() => {
@@ -73,8 +76,6 @@ const networkInput = computed(() => {
   }
   return network;
 });
-const selectedInputs = ref<Record<string, any>>({});
-const inputSelectionRules = [(v: any) => (v ? true : "Input required.")];
 const additionalAnimationLayers = ref();
 const inputForm = ref();
 const runAllowed = computed(() => {
@@ -83,6 +84,19 @@ const runAllowed = computed(() => {
     projectStore.permissions[projectStore.currentProject.id],
   );
 });
+
+function getInputSelectionRules(key: string) {
+  return [
+    (v: any) => {
+      const options = analysisStore.currentAnalysisType?.input_options[key];
+      return v
+        ? !options.length || options.map((opt: any) => opt.id).includes(v)
+          ? true
+          : "Must select from options"
+        : "Input required.";
+    },
+  ];
+}
 
 function run() {
   if (!runAllowed.value) return;
@@ -95,7 +109,7 @@ function run() {
       runAnalysis(
         analysisStore.currentAnalysisType.db_value,
         projectStore.currentProject.id,
-        selectedInputs.value,
+        analysisStore.selectedInputs,
       ).then((result) => {
         analysisStore.currentAnalysisTab = "old";
         analysisStore.currentResult = result;
@@ -130,6 +144,12 @@ function inputIsNumeric(key: string) {
   );
 }
 
+function inputOptionHover(type: string, option: any) {
+  if (type.toLocaleLowerCase() === "region") {
+    mapStore.showRegion(option);
+  }
+}
+
 async function getFullObject(type: string, value: any) {
   if (type !== "number" && typeof value === "number") {
     value = { id: value };
@@ -145,6 +165,9 @@ async function getFullObject(type: string, value: any) {
   }
   if (type == "taskresult") {
     value = await getTaskResult(value.id);
+  }
+  if (type == "region") {
+    value = await getRegion(value.id);
   }
   if (typeof value === "object") {
     value.type = type;
@@ -237,11 +260,11 @@ watch(
   () => {
     fetchResults();
     const type = analysisStore.currentAnalysisType;
-    selectedInputs.value = {};
+    analysisStore.selectedInputs = {};
     if (type) {
       Object.keys(type.input_types).forEach((key) => {
         if (inputIsNumeric(key)) {
-          selectedInputs.value[key] = type.input_options[key][0].min;
+          analysisStore.selectedInputs[key] = type.input_options[key][0].min;
         }
       });
     }
@@ -262,6 +285,7 @@ watch(
     () => analysisStore.currentResult,
     () => layerStore.selectedLayers,
     () => analysisStore.currentChart,
+    () => mapStore.regionShownId,
   ],
   fillInputsAndOutputs,
   { deep: true },
@@ -339,7 +363,7 @@ watch(
                   {{ key.replaceAll("_", " ") }}
                   <div class="px-2 mb-2">
                     <SliderNumericInput
-                      :model="selectedInputs[key]"
+                      :model="analysisStore.selectedInputs[key]"
                       :min="
                         analysisStore.currentAnalysisType.input_options[key][0]
                           .min
@@ -352,7 +376,9 @@ watch(
                         analysisStore.currentAnalysisType.input_options[key][0]
                           .step
                       "
-                      @update="(v: number) => (selectedInputs[key] = v)"
+                      @update="
+                        (v: number) => (analysisStore.selectedInputs[key] = v)
+                      "
                     />
                   </div>
                 </div>
@@ -362,33 +388,95 @@ watch(
                       'string' &&
                     !analysisStore.currentAnalysisType.input_options[key].length
                   "
-                  v-model="selectedInputs[key]"
+                  v-model="analysisStore.selectedInputs[key]"
                   :label="key.replaceAll('_', ' ')"
-                  :rules="inputSelectionRules"
+                  :rules="getInputSelectionRules(key)"
                   density="compact"
                   hide-details="auto"
                   class="my-1"
                 />
-                <v-select
-                  v-else-if="value.length"
-                  v-model="selectedInputs[key]"
+                <v-combobox
+                  v-else-if="value"
+                  :model-value="analysisStore.selectedInputs[key]"
                   :label="key.replaceAll('_', ' ')"
                   :items="value"
-                  :rules="inputSelectionRules"
+                  :rules="getInputSelectionRules(key)"
                   item-value="id"
                   item-title="name"
                   density="compact"
                   hide-details="auto"
                   class="my-1"
+                  @update:model-value="
+                    (v) => (analysisStore.selectedInputs[key] = v.id)
+                  "
                 >
                   <template #item="{ props, item }">
                     <v-list-item
                       v-tooltip="(item as any).name"
                       v-bind="props"
                       style="max-width: 400px"
+                      @mouseover="
+                        inputOptionHover(
+                          analysisStore.currentAnalysisType.input_types[key],
+                          item,
+                        )
+                      "
+                      @mouseleave="
+                        inputOptionHover(
+                          analysisStore.currentAnalysisType.input_types[key],
+                          undefined,
+                        )
+                      "
                     />
                   </template>
-                </v-select>
+                  <template #append>
+                    <v-icon
+                      v-if="
+                        analysisStore.currentAnalysisType.input_types[key] ===
+                        'Region'
+                      "
+                      v-tooltip="'Draw New Region'"
+                      icon="mdi-shape-polygon-plus"
+                      @click="analysisStore.drawNewRegion(key)"
+                    />
+                  </template>
+                </v-combobox>
+                <div
+                  v-if="
+                    analysisStore.currentAnalysisType.input_types[key] ===
+                    'Region'
+                  "
+                >
+                  <span
+                    v-if="
+                      analysisStore.drawingRegion &&
+                      analysisStore.drawingRegionForInput === key
+                    "
+                    >Click anywhere on the map to place points and draw a closed
+                    polygon.</span
+                  >
+                  <div
+                    v-else-if="analysisStore.drawnRegionCoords"
+                    class="d-flex"
+                  >
+                    <v-text-field
+                      v-model="analysisStore.newRegionName"
+                      label="Region Name"
+                      density="compact"
+                      autofocus
+                      @keydown.enter="analysisStore.saveNewRegion"
+                    />
+                    <v-btn
+                      color="primary"
+                      variant="flat"
+                      style="min-width: 40px; min-height: 40px"
+                      :disabled="!analysisStore.newRegionName"
+                      @click="analysisStore.saveNewRegion"
+                    >
+                      <v-icon icon="mdi-arrow-right" />
+                    </v-btn>
+                  </div>
+                </div>
               </div>
               <v-btn style="width: 100%" variant="tonal" @click="run">
                 Run Analysis
@@ -556,7 +644,7 @@ watch(
       <v-list v-else-if="filteredAnalysisTypes?.length" density="compact">
         <v-list-item
           v-for="simType in filteredAnalysisTypes"
-          :key="simType.id"
+          :key="simType.db_value"
           @click="analysisStore.currentAnalysisType = simType"
         >
           {{ simType.name }}

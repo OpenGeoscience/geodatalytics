@@ -7,6 +7,7 @@ import type {
   Network,
   RasterData,
   VectorData,
+  Region,
 } from "@/types";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -17,6 +18,7 @@ import {
   useLayerStore,
   useAnalysisStore,
   useProjectStore,
+  useMapStore,
 } from ".";
 
 const showableTypes = [
@@ -27,6 +29,7 @@ const showableTypes = [
   "taskresult",
   "rasterdata",
   "vectordata",
+  "region",
 ];
 
 interface Showable {
@@ -37,6 +40,7 @@ interface Showable {
   rasterdata?: RasterData;
   vectordata?: VectorData;
   taskresult?: TaskResult;
+  region?: Region;
 }
 
 function defaultPanelArrangement(): FloatingPanelConfig[] {
@@ -101,6 +105,7 @@ export const usePanelStore = defineStore("panel", () => {
   const layerStore = useLayerStore();
   const appStore = useAppStore();
   const projectStore = useProjectStore();
+  const mapStore = useMapStore();
 
   const panelArrangement = ref<FloatingPanelConfig[]>([]);
   const draggingPanel = ref<string | undefined>();
@@ -221,7 +226,9 @@ export const usePanelStore = defineStore("panel", () => {
   }
 
   function isVisible(showable: Showable): boolean {
-    if (showable.chart) {
+    if (showable.region) {
+      return mapStore.regionShownId === showable.region.id;
+    } else if (showable.chart) {
       const chartPanel = panelArrangement.value.find(
         (panel) => panel.id === "charts",
       );
@@ -285,7 +292,9 @@ export const usePanelStore = defineStore("panel", () => {
   }
 
   async function show(showable: Showable) {
-    if (showable.chart) {
+    if (showable.region) {
+      mapStore.showRegion(showable.region);
+    } else if (showable.chart) {
       let chart = showable.chart;
       if (!chart.chart_data) {
         chart = await getChart(chart.id);
