@@ -73,7 +73,7 @@ class LayerStyle(models.Model):
             color_config.use_feature_props = color_spec.get("use_feature_props", True)
             single_color = color_spec.get("single_color")
             colormap_spec = color_spec.get("colormap")
-            if single_color is not None:
+            if single_color:
                 color_config.single_color = single_color
                 with contextlib.suppress(ColorConfig.colormap.RelatedObjectDoesNotExist):
                     color_config.colormap.delete()
@@ -99,6 +99,11 @@ class LayerStyle(models.Model):
                     colormap_config.save()
                 except ColorConfig.colormap.RelatedObjectDoesNotExist:
                     ColormapConfig.objects.create(**colormap_config_args)
+            else:
+                # Color mode "None": restore default RGB/grayscale (no override)
+                color_config.single_color = ""
+                with contextlib.suppress(ColorConfig.colormap.RelatedObjectDoesNotExist):
+                    color_config.colormap.delete()
             color_config.save()
         ColorConfig.objects.filter(style=self).exclude(name__in=color_config_names).delete()
 
