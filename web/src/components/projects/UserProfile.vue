@@ -21,7 +21,7 @@ const initials = computed(() => {
 </script>
 
 <template>
-  <v-list-item v-if="props.user">
+  <v-list-item v-if="props.user" :subtitle="props.user.username">
     <template #title>
       <span style="text-transform: capitalize">{{ nameLabel }}</span>
     </template>

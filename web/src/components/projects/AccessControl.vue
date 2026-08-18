@@ -24,6 +24,13 @@ const editMode = computed(
   () => projectStore.permissions[props.project.id] === "owner",
 );
 
+function userSearch(value, queryText, item) {
+  const lowercaseValues = Object.entries(item.raw)
+    .filter(([key]) => ["first_name", "last_name", "username"].includes(key))
+    .map(([, value]) => value.toLowerCase());
+  return lowercaseValues.some((v) => v.includes(queryText.toLowerCase()));
+}
+
 function savePermissions() {
   if (!editMode.value || props.project.owner.id === undefined) return;
   let owner: number = props.project.owner.id;
@@ -203,6 +210,8 @@ onMounted(() => {
             :clearable="userSelectDialogMode === 'add'"
             :chips="userSelectDialogMode === 'add'"
             :closable-chips="userSelectDialogMode === 'add'"
+            item-title="username"
+            :custom-filter="userSearch"
             @update:model-value="
               (v: User | User[]) => {
                 if (Array.isArray(v)) selectedUsers = v;
