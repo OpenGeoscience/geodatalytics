@@ -121,6 +121,11 @@ LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 ACCOUNT_SIGNUP_FORM_CLASS = "resonant_utils.allauth.FullNameSignupForm"
 
+# Override defaults set by Resonant: https://github.com/kitware-resonant/cookiecutter-resonant/blob/master/django-resonant-settings/resonant_settings/allauth.py#L36
+ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter"
+ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2*"]
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
+
 # Use codes for email verification; links can be modified by Microsoft Safe Links
 ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = True
 
