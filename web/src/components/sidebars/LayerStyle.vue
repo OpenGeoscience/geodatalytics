@@ -139,10 +139,16 @@ const dataRange = computed(() => {
   return undefined;
 });
 
+const isActiveLayer = computed(() => props.activeLayer === props.layer);
+
 async function init() {
-  if (props.activeLayer !== props.layer) return;
-  availableStyles.value = await getLayerStyles(props.layer.id);
-  if (props.activeLayer !== props.layer) return;
+  if (!isActiveLayer.value) return;
+
+  const styles = await getLayerStyles(props.layer.id);
+  // This layer may no longer be active after the async request.
+  if (!isActiveLayer.value) return;
+
+  availableStyles.value = styles;
   resetCurrentStyle();
   fetchRasterBands();
   if (currentStyleSpec.value) setAvailableGroups();
@@ -638,14 +644,12 @@ onMounted(resetCurrentStyle);
 
 <template>
   <v-menu
-    :model-value="props.activeLayer === props.layer"
+    :model-value="isActiveLayer"
     location="end center"
     :close-on-content-click="false"
     persistent
     no-click-animation
-    @update:model-value="
-      emit('setLayerActive', props.activeLayer !== props.layer)
-    "
+    @update:model-value="emit('setLayerActive', !isActiveLayer)"
   >
     <template #activator="{ props: activatorProps }">
       <v-icon
