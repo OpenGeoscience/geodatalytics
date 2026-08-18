@@ -225,7 +225,7 @@ export const useProjectStore = defineStore("project", () => {
         (n) => n.id === viewState.current_network,
       );
 
-      // @ts-expect-error for "Type instantiation is excessively deep and possibly infinite"
+      // @ts-ignore "Type instantiation is excessively deep and possibly infinite"
       mapStore.currentBasemap = mapStore.availableBasemaps?.find(
         (b) => b.id === viewState.current_basemap,
       );
