@@ -126,7 +126,13 @@ function getRasterTilesQuery(styleSpec: StyleSpec, colormaps: Colormap[]) {
   const colorSpecs = styleSpec.colors || [];
   colorSpecs.forEach((colorSpec) => {
     const colorQuery: Record<string, any> = {};
-    if (colorSpec.colormap) {
+    const colormap = colorSpec.colormap?.id
+      ? colormaps.find((cmap) => cmap.id === colorSpec.colormap?.id)
+      : undefined;
+    // Only send a style override when there is an actual palette. A colormap
+    // object without a selected colormap (or Color mode "None") must omit
+    // style so large-image renders native RGB / grayscale.
+    if (colormap?.markers && colorSpec.colormap) {
       if (colorSpec.colormap.range) {
         colorQuery.min = colorSpec.colormap.range[0];
         colorQuery.max = colorSpec.colormap.range[1];
@@ -137,24 +143,19 @@ function getRasterTilesQuery(styleSpec: StyleSpec, colormaps: Colormap[]) {
       if (colorSpec.colormap.clamp === false) {
         colorQuery.clamp = false;
       }
-      const colormap = colormaps.find(
-        (cmap) => cmap.id === colorSpec.colormap?.id,
-      );
-      if (colormap?.markers) {
-        colorQuery.palette = colormapMarkersSubsample(
-          colormap,
-          colorSpec.colormap,
-        )?.map((marker) => marker.color);
-      }
+      colorQuery.palette = colormapMarkersSubsample(
+        colormap,
+        colorSpec.colormap,
+      )?.map((marker) => marker.color);
     } else if (colorSpec.single_color) {
       colorQuery.palette = colorSpec.single_color;
     }
     if (colorSpec.name === "all") {
       if (colorSpec.visible) query = colorQuery;
-    } else {
+    } else if (colorSpec.visible && Object.keys(colorQuery).length) {
       if (!query.bands) query.bands = [];
       colorQuery.band = colorSpec.name.replace("Band ", "");
-      if (colorSpec.visible) query.bands.push(colorQuery);
+      query.bands.push(colorQuery);
     }
   });
   styleSpec.filters.forEach((f) => {
@@ -632,6 +633,9 @@ export const useStyleStore = defineStore("style", () => {
       const mapLayer = map.getLayer(mapLayerId) as MapLibreLayerWithMetadata;
       const source = map.getSource(mapLayer.source) as RasterTileSource;
       source?.setTiles([result.tileURL]);
+      if (mapLayer.source) {
+        mapStore.rasterSourceTileURLs[mapLayer.source] = result.tileURL;
+      }
     }
   }
 
