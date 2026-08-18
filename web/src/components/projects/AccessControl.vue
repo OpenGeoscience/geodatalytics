@@ -24,10 +24,15 @@ const editMode = computed(
   () => projectStore.permissions[props.project.id] === "owner",
 );
 
-function userSearch(value, queryText, item) {
+function userSearch(
+  value: string,
+  queryText: string,
+  item: { raw: Record<string, string> } | undefined,
+) {
+  if (!item) return false;
   const lowercaseValues = Object.entries(item.raw)
     .filter(([key]) => ["first_name", "last_name", "username"].includes(key))
-    .map(([, value]) => value.toLowerCase());
+    .map(([, v]) => v.toLowerCase());
   return lowercaseValues.some((v) => v.includes(queryText.toLowerCase()));
 }
 
