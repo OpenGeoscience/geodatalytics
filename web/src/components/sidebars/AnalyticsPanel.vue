@@ -113,35 +113,10 @@ function run() {
       ).then((result) => {
         analysisStore.currentAnalysisTab = "old";
         analysisStore.currentResult = result;
-        fetchResults();
+        analysisStore.fetchResults();
       });
     }
   });
-}
-
-async function fetchResults() {
-  if (!projectStore.currentProject || !analysisStore.currentAnalysisType)
-    return;
-  await analysisStore.initResults(
-    analysisStore.currentAnalysisType.db_value,
-    projectStore.currentProject.id,
-  );
-  if (analysisStore.currentResult) {
-    analysisStore.currentResult = analysisStore.availableResults.find(
-      (r) => r.id === analysisStore.currentResult?.id,
-    );
-  }
-}
-
-function inputIsNumeric(key: string) {
-  return (
-    analysisStore.currentAnalysisType &&
-    analysisStore.currentAnalysisType.input_types[key] === "number" &&
-    analysisStore.currentAnalysisType.input_options[key].length == 1 &&
-    analysisStore.currentAnalysisType.input_options[key][0].min !== undefined &&
-    analysisStore.currentAnalysisType.input_options[key][0].max !== undefined &&
-    analysisStore.currentAnalysisType.input_options[key][0].step !== undefined
-  );
 }
 
 function inputOptionHover(type: string, option: any) {
@@ -256,26 +231,10 @@ watch(networkInput, (network) => {
 });
 
 watch(
-  () => analysisStore.currentAnalysisType,
-  () => {
-    fetchResults();
-    const type = analysisStore.currentAnalysisType;
-    analysisStore.selectedInputs = {};
-    if (type) {
-      Object.keys(type.input_types).forEach((key) => {
-        if (inputIsNumeric(key)) {
-          analysisStore.selectedInputs[key] = type.input_options[key][0].min;
-        }
-      });
-    }
-  },
-);
-
-watch(
   () => analysisStore.currentAnalysisTab,
   () => {
     if (analysisStore.currentAnalysisTab === "old") {
-      fetchResults();
+      analysisStore.fetchResults();
     }
   },
 );
@@ -359,7 +318,7 @@ watch(
                 )"
                 :key="key"
               >
-                <div v-if="inputIsNumeric(key)">
+                <div v-if="analysisStore.inputIsNumeric(key)">
                   {{ key.replaceAll("_", " ") }}
                   <div class="px-2 mb-2">
                     <SliderNumericInput

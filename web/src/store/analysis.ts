@@ -52,6 +52,42 @@ export const useAnalysisStore = defineStore("analysis", () => {
     availableResults.value = await getTaskResults(analysisType, projectId);
   }
 
+  async function fetchResults() {
+    if (!projectStore.currentProject || !currentAnalysisType.value) return;
+    await initResults(
+      currentAnalysisType.value.db_value,
+      projectStore.currentProject.id,
+    );
+    if (currentResult.value) {
+      currentResult.value = availableResults.value.find(
+        (r) => r.id === currentResult.value?.id,
+      );
+    }
+  }
+
+  function initSelectedInputs() {
+    const type = currentAnalysisType.value;
+    selectedInputs.value = {};
+    if (type) {
+      Object.keys(type.input_types).forEach((key) => {
+        if (inputIsNumeric(key)) {
+          selectedInputs.value[key] = type.input_options[key][0].min;
+        }
+      });
+    }
+  }
+
+  function inputIsNumeric(key: string) {
+    return (
+      currentAnalysisType.value &&
+      currentAnalysisType.value.input_types[key] === "number" &&
+      currentAnalysisType.value.input_options[key].length == 1 &&
+      currentAnalysisType.value.input_options[key][0].min !== undefined &&
+      currentAnalysisType.value.input_options[key][0].max !== undefined &&
+      currentAnalysisType.value.input_options[key][0].step !== undefined
+    );
+  }
+
   function cancelDraw() {
     if (terradraw.value) {
       terradraw.value?.setMode("static");
@@ -162,6 +198,11 @@ export const useAnalysisStore = defineStore("analysis", () => {
     }
   }
 
+  watch(currentAnalysisType, () => {
+    fetchResults();
+    initSelectedInputs();
+  });
+
   watch(() => projectStore.currentProject, createWebSocket);
 
   return {
@@ -178,6 +219,9 @@ export const useAnalysisStore = defineStore("analysis", () => {
     initCharts,
     initAnalysisTypes,
     initResults,
+    fetchResults,
+    initSelectedInputs,
+    inputIsNumeric,
     drawingRegion,
     drawingRegionForInput,
     drawnRegionCoords,

@@ -206,6 +206,7 @@ export const useProjectStore = defineStore("project", () => {
         analysisStore.availableAnalysisTypes?.find(
           (a) => a.db_value === viewState.current_analysis_type,
         );
+      analysisStore.initSelectedInputs();
       if (analysisStore.currentAnalysisType && currentProject.value) {
         await analysisStore.initResults(
           analysisStore.currentAnalysisType.db_value,
