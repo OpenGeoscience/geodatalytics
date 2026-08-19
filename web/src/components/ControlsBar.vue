@@ -14,6 +14,8 @@ import {
   useLayerStore,
   useMapStore,
   useProjectStore,
+  useTutorialStore,
+  usePanelStore,
 } from "@/store";
 import { useMapCompareStore } from "@/store/compare";
 import {
@@ -29,6 +31,8 @@ const appStore = useAppStore();
 const layerStore = useLayerStore();
 const mapStore = useMapStore();
 const projectStore = useProjectStore();
+const tutorialStore = useTutorialStore();
+const panelStore = usePanelStore();
 const { isComparing } = storeToRefs(useMapCompareStore());
 
 const copyMenuShown = ref(false);
@@ -295,6 +299,12 @@ function copyViewStateLink(viewState: ViewState) {
   navigator.clipboard.writeText(url);
 }
 
+function showTutorial() {
+  panelStore.resetPanels();
+  tutorialStore.showTutorialStep = 1;
+  tutorialStore.showWelcomeMessage = false;
+}
+
 watch(basemapList, createBasemapPreviews);
 watch(newBasemapTab, switchBasemapCreateTab);
 watch(newBasemapTileURL, debounce(setNewBasemapStyleFromTileURL, 1000));
@@ -498,6 +508,21 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
               <div>Pan</div>
               <div>arrows, drag</div>
             </div>
+          </v-card-text>
+        </v-card>
+      </v-menu>
+    </v-btn>
+    <v-btn class="control-btn" variant="flat">
+      <v-icon icon="mdi-help-circle-outline"></v-icon>
+      <v-menu
+        activator="parent"
+        :open-on-hover="true"
+        :close-on-content-click="false"
+      >
+        <v-card class="control-menu">
+          <div class="control-menu-title">Help</div>
+          <v-card-text class="pa-3">
+            <v-btn block @click="showTutorial"> Show Tutorial </v-btn>
           </v-card-text>
         </v-card>
       </v-menu>
