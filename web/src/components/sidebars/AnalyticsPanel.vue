@@ -430,15 +430,20 @@ watch(
                     />
                   </template>
                   <template #append>
-                    <v-icon
-                      v-if="
-                        analysisStore.currentAnalysisType.input_types[key] ===
-                        'Region'
-                      "
-                      v-tooltip="'Draw New Region'"
-                      icon="mdi-shape-polygon-plus"
-                      @click="analysisStore.drawNewRegion(key)"
-                    />
+                    <div v-if="analysisStore.currentAnalysisType.input_types[key] === 'Region'">
+                      <v-icon
+                        v-if="analysisStore.drawingRegion || analysisStore.drawnRegionCoords"
+                        v-tooltip="'Cancel Draw'"
+                        icon="mdi-close"
+                        @click="analysisStore.cancelDraw()"
+                      />
+                      <v-icon
+                        v-else
+                        v-tooltip="'Draw New Region'"
+                        icon="mdi-shape-polygon-plus"
+                        @click="analysisStore.drawNewRegion(key)"
+                      />
+                    </div>
                   </template>
                 </v-combobox>
                 <div

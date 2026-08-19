@@ -52,6 +52,17 @@ export const useAnalysisStore = defineStore("analysis", () => {
     availableResults.value = await getTaskResults(analysisType, projectId);
   }
 
+  function cancelDraw() {
+    if (terradraw.value) {
+      terradraw.value?.setMode("static");
+      terradraw.value.clear();
+    }
+    drawingRegion.value = false;
+    drawingRegionForInput.value = undefined;
+    drawnRegionCoords.value = undefined;
+    newRegionName.value = undefined;
+  }
+
   function drawNewRegion(inputName: string) {
     drawingRegion.value = true;
     drawingRegionForInput.value = inputName;
@@ -171,6 +182,7 @@ export const useAnalysisStore = defineStore("analysis", () => {
     drawingRegionForInput,
     drawnRegionCoords,
     newRegionName,
+    cancelDraw,
     drawNewRegion,
     saveNewRegion,
   };
