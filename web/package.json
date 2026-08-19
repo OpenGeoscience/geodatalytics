@@ -1,6 +1,6 @@
 {
   "name": "uvdat",
-  "version": "1.45.0",
+  "version": "1.46.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,27 +18,27 @@
   "dependencies": {
     "@mdi/font": "7.4.47",
     "@resonant/oauth-client": "1.1.0",
-    "@sentry/vue": "10.67.0",
-    "@turf/turf": "7.3.5",
-    "axios": "1.18.1",
+    "@sentry/vue": "10.70.0",
+    "@turf/turf": "7.4.0",
+    "axios": "1.19.0",
     "chroma-js": "3.2.0",
     "dayjs": "1.11.21",
     "django-s3-file-field": "1.1.0",
-    "html2canvas-pro": "2.2.3",
+    "html2canvas-pro": "2.3.8",
     "json-editor-vue": "0.19.1",
     "lodash": "4.18.1",
     "maplibre-gl": "5.24.0",
     "pinia": "3.0.4",
-    "pmtiles": "4.4.1",
-    "proj4": "2.20.9",
+    "pmtiles": "4.5.0",
+    "proj4": "2.21.0",
     "sortablejs": "1.15.7",
-    "vue": "3.5.40",
+    "vue": "3.5.41",
     "vue-chartjs": "5.3.4",
     "vue-maplibre-compare": "1.0.27",
     "vue-markdown-render": "2.3.1",
     "vue-router": "5.2.0",
     "vuedraggable": "4.1.0",
-    "vuetify": "4.1.5"
+    "vuetify": "4.1.9"
   },
   "devDependencies": {
     "@sentry/vite-plugin": "5.2.1",

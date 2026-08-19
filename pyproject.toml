@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling==1.31.0"]
+requires = ["hatchling==1.32.0"]
 build-backend = "hatchling.build"
 
 [project]
 name = "geodatalytics"
-version = "1.45.0"
+version = "1.46.1"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
@@ -15,43 +15,43 @@ dependencies = [
   "channels-redis==4.3.0",
   "channels[daphne]==4.3.2",
   "django[argon2]==6.0.7",
-  "django-allauth==65.18.0",
+  "django-allauth==65.19.1",
   "django-auth-style==0.15.0",
   "django-click==2.5.0",
   "django-cors-headers==4.9.0",
   "django-environ==0.14.0",
   "django-extensions==4.1",
   "django-filter==25.2",
-  "django-guardian==3.3.2",
+  "django-guardian==3.3.3",
   "django-large-image==0.10.3",
-  "django-oauth-toolkit==3.3.0",
+  "django-oauth-toolkit==3.4.0",
   "django-resonant-settings[allauth,celery]==0.51.1",
   "django-resonant-utils[allauth,s3_storage]==0.19.0",
   "django-stubs-ext==6.0.3",
-  "djangorestframework==3.17.1",
+  "djangorestframework==3.18.0",
   "drf-yasg==1.21.15",
   # Needed for GeoDjango and "large-image[gdal]"
   'gdal==3.12.3.1',
   "geopandas==1.1.4",
-  "large-image-converter==1.35.0",
-  "large-image[gdal]==1.35.0",
+  "large-image-converter==1.35.2",
+  "large-image[gdal]==1.35.2",
   "matplotlib==3.11.1", # for raster colormaps
   "networkx==3.6.1",
-  "numpy==2.5.1",
+  "numpy==2.5.2",
   "pooch[progress]==1.9.0",
   "psycopg[binary,pool]==3.3.4",
   # Needed by "large-image-converter"
   "pylibtiff==0.7.0.4.7.1",
-  "pyshp==3.1.4",
-  "rasterio==1.5.0",
+  "pyshp==3.1.6",
+  "rasterio==1.5.1",
   "rich==15.0.0",
   "webcolors==25.10.0",
   "whitenoise[brotli]==6.12.0",
   # Production-only
   "django-s3-file-field[s3]==1.1.0",
   "django-storages[s3]==1.14.6",
-  "sentry-sdk[celery,django,pure_eval]==2.66.0",
-  "uvicorn==0.51.0",
+  "sentry-sdk[celery,django,pure_eval]==2.68.0",
+  "uvicorn==0.52.3",
   "websockets==16.1.1",
 ]
 
@@ -64,18 +64,18 @@ development = [
   "django-minio-storage==0.5.9",
   "django-resonant-utils[minio_storage]==0.19.0",
   "django-s3-file-field[minio]==1.1.0",
-  "ipython==9.15.0",
+  "ipython==9.16.1",
   "watchdog==6.0.0",
   "werkzeug==3.1.8",
 ]
 tasks = [
-  "geoai-py==0.41.2",
-  "osmnx==2.1.0",
+  "geoai-py==0.42.0",
+  "osmnx==2.1.1",
   # Needed by "uvdat-flood-sim[large-image-writer]"
   "pyvips==3.1.1.8.18.1",
   "uvdat-flood-sim[large-image-writer]==1.0.4",
   "xdg-base-dirs==6.0.2",
-  "huggingface-hub==1.24.0",
+  "huggingface-hub==1.27.0",
 ]
 
 [dependency-groups]

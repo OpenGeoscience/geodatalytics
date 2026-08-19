@@ -130,7 +130,7 @@ export const useTutorialStore = defineStore("tutorial", () => {
     },
     {
       message:
-        "The controls bar has a set of additional tools: basemap configuration, fitting to visible layers, screenshots, saved views, and map controls.",
+        "The controls bar has a set of additional tools: basemap configuration, fitting to visible layers, screenshots, saved views, map controls, and a help menu. You can restart this tutorial from the help menu at any time.",
       position: ["70px", "400px"],
       proceed: () => {},
     },

@@ -66,6 +66,12 @@ export const useLayerStore = defineStore("layer", () => {
         return l.id === layer.id ? layer : l;
       });
     }
+    // Keep selected copies in sync without replacing them (copy_id, visibility, etc.)
+    selectedLayers.value.forEach((selected) => {
+      if (selected.id === layer.id) {
+        selected.default_style = layer.default_style;
+      }
+    });
     return layer;
   }
 

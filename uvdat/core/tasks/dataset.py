@@ -66,7 +66,7 @@ def create_layers_and_frames(  # noqa: C901, PLR0912, PLR0915
                 metadata = layer_data.metadata or {}
                 bands = metadata.get("bands")
                 raster_frames = metadata.get("frames")
-                summary = layer_data.summary if hasattr(layer_data, "summary") else {}
+                summary = getattr(layer_data, "summary", {}) or {}
                 properties = summary.get("properties")
                 if properties and frame_property and frame_property in properties:
                     property_summary = properties.get(frame_property)
