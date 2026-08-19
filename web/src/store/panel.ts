@@ -314,7 +314,10 @@ export const usePanelStore = defineStore("panel", () => {
     } else if (showable.dataset) {
       const id = showable.dataset.id;
       if (visible) await layerStore.fetchAvailableLayersForDataset(id);
-      layerStore.availableLayers
+      const layersList = visible
+        ? layerStore.availableLayers
+        : layerStore.selectedLayers;
+      layersList
         .filter((layer: Layer) => layer.dataset === id)
         .forEach((layer: Layer) => setVisibility({ layer }, visible));
     } else if (showable.layer) {
