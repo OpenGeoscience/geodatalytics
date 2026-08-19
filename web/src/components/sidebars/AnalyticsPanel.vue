@@ -412,7 +412,7 @@ watch(
                 >
                   <template #item="{ props, item }">
                     <v-list-item
-                      v-tooltip="(item as any).name"
+                      v-tooltip="`${(item as any).name}`"
                       v-bind="props"
                       style="max-width: 400px"
                       @mouseover="
@@ -430,9 +430,17 @@ watch(
                     />
                   </template>
                   <template #append>
-                    <div v-if="analysisStore.currentAnalysisType.input_types[key] === 'Region'">
+                    <div
+                      v-if="
+                        analysisStore.currentAnalysisType.input_types[key] ===
+                        'Region'
+                      "
+                    >
                       <v-icon
-                        v-if="analysisStore.drawingRegion || analysisStore.drawnRegionCoords"
+                        v-if="
+                          analysisStore.drawingRegion ||
+                          analysisStore.drawnRegionCoords
+                        "
                         v-tooltip="'Cancel Draw'"
                         icon="mdi-close"
                         @click="analysisStore.cancelDraw()"
@@ -523,14 +531,18 @@ watch(
                         <td v-if="value">
                           {{ value.name || value }}
                           <v-btn
-                            v-if="value.showable && !value.visible"
+                            v-if="value.showable"
                             density="compact"
                             color="primary"
                             @click="
-                              () => panelStore.show({ [value.type]: value })
+                              () =>
+                                panelStore.setVisibility(
+                                  { [value.type]: value },
+                                  !value.visible,
+                                )
                             "
                           >
-                            Show
+                            {{ value.visible ? "Hide" : "Show" }}
                           </v-btn>
                         </td>
                       </tr>
@@ -593,15 +605,19 @@ watch(
                             <td>
                               {{ value?.name }}
                               <v-btn
-                                v-if="value && value.showable && !value.visible"
+                                v-if="value && value.showable"
                                 color="primary"
                                 density="compact"
                                 style="display: block"
                                 @click="
-                                  () => panelStore.show({ [value.type]: value })
+                                  () =>
+                                    panelStore.setVisibility(
+                                      { [value.type]: value },
+                                      !value.visible,
+                                    )
                                 "
                               >
-                                Show
+                                {{ value.visible ? "Hide" : "Show" }}
                               </v-btn>
                             </td>
                           </template>

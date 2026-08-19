@@ -604,7 +604,7 @@ export const useMapStore = defineStore("map", () => {
     }
   }
 
-  function showRegion(region: Region) {
+  function showRegion(region: Region | undefined) {
     regionShownId.value = region?.id;
     const map = getMap();
     const regionSourceId = "show-region-source";
