@@ -31,6 +31,12 @@ from uvdat.core.models import (
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
+        fields = ["id", "username", "first_name", "last_name"]
+
+
+class MeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
         fields = ["id", "username", "first_name", "last_name", "is_superuser"]
 
 
