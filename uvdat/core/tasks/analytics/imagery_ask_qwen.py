@@ -5,6 +5,7 @@ import io
 
 from celery import shared_task
 from django.conf import settings
+from django.contrib.gis.geos import Polygon
 from django_large_image import utilities
 import large_image
 import numpy as np
@@ -141,6 +142,21 @@ def imagery_ask_qwen(result_id):
     imagery_path = utilities.field_file_to_local_path(imagery.cloud_optimized_geotiff)
     src = large_image.open(imagery_path)
     src_bounds = src.getBounds()
+    if not region.boundary.intersects(
+        Polygon.from_bbox(
+            (
+                src_bounds.get("xmin"),
+                src_bounds.get("ymin"),
+                src_bounds.get("xmax"),
+                src_bounds.get("ymax"),
+            )
+        )
+    ):
+        result.write_outputs(
+            {"response": "Selected region does not intersect imagery; not running task."}
+        )
+        return
+
     (xmin, ymin, xmax, ymax) = (
         max(xmin, src_bounds.get("xmin")),
         max(ymin, src_bounds.get("ymin")),
