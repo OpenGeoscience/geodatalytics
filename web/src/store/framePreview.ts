@@ -347,19 +347,15 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     hidePreviousPreview(map, layerKeyValue);
 
     if (!preview) {
+      // Drop any leftover overlay (including adjacent preloads) so a stale
+      // image cannot flash while tiles catch up after a style change.
+      removeAllPreviewLayersForLayerKey(map, layerKeyValue);
+      activePreviewByLayerKey.delete(layerKeyValue);
       clearPreviewDisplayed(layerKeyValue);
       ensureRasterTilesOnMap(
         currentFrame,
         tileSourceId,
         tileLayerId,
-        targetOpacity,
-      );
-      void preloadAdjacentPreviewLayers(
-        map,
-        layerKeyValue,
-        previews,
-        rasterFrames,
-        layer.current_frame_index,
         targetOpacity,
       );
       return;
@@ -435,6 +431,37 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     if (map.getLayer(tileLayerId)) {
       map.setPaintProperty(tileLayerId, "raster-opacity", targetOpacity);
     }
+  }
+
+  /** Clear stale preview payloads + map overlays after a style change. */
+  function clearPreviewsForStyleChange(layer: Layer, styleId?: number) {
+    layerStore.selectedLayers.forEach((candidate) => {
+      if (candidate.id !== layer.id) return;
+
+      const key = styleStore.layerStyleKey(candidate);
+      const selectedStyle = styleStore.selectedLayerStyles[key];
+      if (!selectedStyle) return;
+
+      const matches =
+        styleId !== undefined
+          ? selectedStyle.id === styleId
+          : candidate.copy_id === layer.copy_id;
+      if (!matches) return;
+
+      styleStore.selectedLayerStyles[key] = {
+        ...selectedStyle,
+        preview_status: "notready",
+        multiframe_previews: undefined,
+      };
+      if (
+        selectedStyle.is_default ||
+        usesLayerDefaultPreviews(candidate, selectedStyle)
+      ) {
+        candidate.preview_status = "notready";
+        candidate.multiframe_previews = undefined;
+      }
+      dismissPreviewForLayer(candidate);
+    });
   }
 
   function cleanupLayer(layer: Layer) {
@@ -551,6 +578,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     hasReadyPreviewForCurrentFrame,
     showPreviewThenTiles,
     dismissPreviewForLayer,
+    clearPreviewsForStyleChange,
     onPreviewTaskComplete,
     cleanupLayer,
     clearAll,
