@@ -115,6 +115,10 @@ function adjacentRasterFrames(
   );
 }
 
+// Wait for scrubbing to pause before attaching/fetching raster tiles. Previews
+// stay immediate so the slider feels responsive on large multiframe rasters.
+const TILE_LOAD_SETTLE_MS = 1000;
+
 export const useFramePreviewStore = defineStore("framePreview", () => {
   const layerStore = useLayerStore();
   const mapStore = useMapStore();
@@ -122,6 +126,10 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
   const activePreviewByLayerKey = new Map<string, number>();
   const transitionGenerationByLayerKey = new Map<string, number>();
+  const tileLoadTimerByLayerKey = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
 
   // Reactive set of layer keys whose preview overlay is currently visible on
   // the map (i.e. the user is looking at a preview image, not the real tiles).
@@ -150,10 +158,35 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     );
   }
 
+  function clearTileLoadTimer(layerKeyValue: string) {
+    const timer = tileLoadTimerByLayerKey.get(layerKeyValue);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      tileLoadTimerByLayerKey.delete(layerKeyValue);
+    }
+  }
+
   function bumpGeneration(layerKeyValue: string) {
+    clearTileLoadTimer(layerKeyValue);
     const next = (transitionGenerationByLayerKey.get(layerKeyValue) ?? 0) + 1;
     transitionGenerationByLayerKey.set(layerKeyValue, next);
     return next;
+  }
+
+  function scheduleTileLoadAfterSettle(
+    layerKeyValue: string,
+    generation: number,
+    loadTiles: () => void,
+  ) {
+    clearTileLoadTimer(layerKeyValue);
+    const timer = setTimeout(() => {
+      tileLoadTimerByLayerKey.delete(layerKeyValue);
+      if (transitionGenerationByLayerKey.get(layerKeyValue) !== generation) {
+        return;
+      }
+      loadTiles();
+    }, TILE_LOAD_SETTLE_MS);
+    tileLoadTimerByLayerKey.set(layerKeyValue, timer);
   }
 
   function prefetchLayerPreviews(layer: Layer, style?: LayerStyle) {
@@ -361,14 +394,26 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       return;
     }
 
+    const settledFrameIndex = layer.current_frame_index;
     const previewMapLayerId = await upsertPreviewLayer(
       map,
       layerKeyValue,
-      layer.current_frame_index,
+      settledFrameIndex,
       preview,
       currentFrame.raster.metadata,
       targetOpacity,
     );
+    if (transitionGenerationByLayerKey.get(layerKeyValue) !== generation) {
+      // A newer scrub already took over; don't steal its settle timer or cover
+      // its preview with this stale overlay.
+      if (
+        previewMapLayerId &&
+        layer.current_frame_index !== settledFrameIndex
+      ) {
+        hidePreviewLayer(map, layerKeyValue, settledFrameIndex);
+      }
+      return;
+    }
     if (!previewMapLayerId) {
       clearPreviewDisplayed(layerKeyValue);
       ensureRasterTilesOnMap(
@@ -380,10 +425,14 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       return;
     }
 
-    activePreviewByLayerKey.set(layerKeyValue, layer.current_frame_index);
+    activePreviewByLayerKey.set(layerKeyValue, settledFrameIndex);
     markPreviewDisplayed(layerKeyValue);
 
-    ensureRasterTilesOnMap(currentFrame, tileSourceId, tileLayerId, 0);
+    // Keep any already-attached tiles invisible while scrubbing; do not start
+    // fetching a new frame's tiles until the settle debounce fires.
+    if (map.getLayer(tileLayerId)) {
+      map.setPaintProperty(tileLayerId, "raster-opacity", 0);
+    }
     if (map.getLayer(previewMapLayerId)) {
       map.moveLayer(previewMapLayerId);
     }
@@ -393,19 +442,28 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       layerKeyValue,
       previews,
       rasterFrames,
-      layer.current_frame_index,
+      settledFrameIndex,
       targetOpacity,
     );
 
-    void transitionToTiles(
-      layer,
-      layer.current_frame_index,
-      layerKeyValue,
-      generation,
-      targetOpacity,
-      tileLayerId,
-      tileSourceId,
-    );
+    scheduleTileLoadAfterSettle(layerKeyValue, generation, () => {
+      if (layer.current_frame_index !== settledFrameIndex) {
+        return;
+      }
+      ensureRasterTilesOnMap(currentFrame, tileSourceId, tileLayerId, 0);
+      if (map.getLayer(previewMapLayerId)) {
+        map.moveLayer(previewMapLayerId);
+      }
+      void transitionToTiles(
+        layer,
+        settledFrameIndex,
+        layerKeyValue,
+        generation,
+        targetOpacity,
+        tileLayerId,
+        tileSourceId,
+      );
+    });
   }
 
   function dismissPreviewForLayer(layer: Layer) {
@@ -466,6 +524,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
   function cleanupLayer(layer: Layer) {
     const layerKeyValue = styleStore.layerStyleKey(layer);
+    clearTileLoadTimer(layerKeyValue);
     transitionGenerationByLayerKey.delete(layerKeyValue);
     activePreviewByLayerKey.delete(layerKeyValue);
     clearPreviewDisplayed(layerKeyValue);
@@ -473,6 +532,8 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   }
 
   function clearAll() {
+    tileLoadTimerByLayerKey.forEach((timer) => clearTimeout(timer));
+    tileLoadTimerByLayerKey.clear();
     transitionGenerationByLayerKey.clear();
     activePreviewByLayerKey.clear();
     displayingPreviewLayerKeys.value = new Set();
