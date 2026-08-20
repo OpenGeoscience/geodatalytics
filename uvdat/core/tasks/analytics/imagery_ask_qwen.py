@@ -120,6 +120,17 @@ def imagery_ask_qwen(result_id):
     )
 
     result = TaskResult.objects.get(id=result_id)
+    if any(
+        setting == "changeme"
+        for setting in [
+            settings.UVDAT_HF_ENDPOINT_NAMES,
+            settings.UVDAT_HF_NAMESPACE,
+            settings.UVDAT_HF_TOKEN,
+        ]
+    ):
+        result.write_outputs({"response": "Huggingface configuration not set; not running task."})
+        return
+
     imagery = RasterData.objects.get(id=result.inputs.get("imagery"))
     text_prompt = result.inputs.get("text_prompt")
     max_tokens = int(result.inputs.get("max_tokens"))
