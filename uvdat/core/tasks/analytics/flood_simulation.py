@@ -221,6 +221,7 @@ def flood_simulation(result_id):
             }
         )
 
+        result.project.datasets.add(dataset)
         result.write_outputs(
             {
                 "flood": dataset.id,
