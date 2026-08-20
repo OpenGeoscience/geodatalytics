@@ -16,6 +16,7 @@ import type {
 } from "@/types";
 import { getProjectColormaps } from "@/api/rest";
 import chroma from "chroma-js";
+import { isPreviewMapLayerId } from "@/utils/framePreviewLayer";
 
 import {
   useMapStore,
@@ -483,6 +484,9 @@ export const useStyleStore = defineStore("style", () => {
     );
     if (!currentFrame) return;
     mapStore.getUserMapLayers().forEach((mapLayerId) => {
+      if (isPreviewMapLayerId(mapLayerId)) {
+        return;
+      }
       const { layerId, layerCopyId, frameId } =
         mapStore.parseLayerString(mapLayerId);
       if (layerId === layer.id && layerCopyId === layer.copy_id) {

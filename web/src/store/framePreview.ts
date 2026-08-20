@@ -164,6 +164,39 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     prefetchFramePreviewUrls(previews.map((preview) => preview?.url));
   }
 
+  function hasReadyPreviewForCurrentFrame(layer: Layer) {
+    if (styleStore.isLayerStyleEditing(layer)) {
+      return false;
+    }
+    const rasterFrames = orderedRasterFrames(layerStore.layerFrames(layer));
+    if (rasterFrames.length <= 1) {
+      return false;
+    }
+    const style =
+      styleStore.selectedLayerStyles[styleStore.layerStyleKey(layer)];
+    return !!previewAtFrameIndex(
+      previewsForLayer(layer, style),
+      rasterFrames,
+      layer.current_frame_index,
+    );
+  }
+
+  function ensureRasterTilesOnMap(
+    frame: LayerFrame,
+    tileSourceId: string,
+    tileLayerId: string,
+    opacity: number,
+  ) {
+    const map = mapStore.getMap();
+    if (!map.getLayer(tileLayerId)) {
+      mapStore.addLayerFrameToMap(frame, tileSourceId, true, {
+        rasterOpacity: opacity,
+      });
+      return;
+    }
+    map.setPaintProperty(tileLayerId, "raster-opacity", opacity);
+  }
+
   async function preloadAdjacentPreviewLayers(
     map: MaplibreMap,
     layerKeyValue: string,
@@ -315,9 +348,12 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
     if (!preview) {
       clearPreviewDisplayed(layerKeyValue);
-      if (map.getLayer(tileLayerId)) {
-        map.setPaintProperty(tileLayerId, "raster-opacity", targetOpacity);
-      }
+      ensureRasterTilesOnMap(
+        currentFrame,
+        tileSourceId,
+        tileLayerId,
+        targetOpacity,
+      );
       void preloadAdjacentPreviewLayers(
         map,
         layerKeyValue,
@@ -339,17 +375,21 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     );
     if (!previewMapLayerId) {
       clearPreviewDisplayed(layerKeyValue);
-      if (map.getLayer(tileLayerId)) {
-        map.setPaintProperty(tileLayerId, "raster-opacity", targetOpacity);
-      }
+      ensureRasterTilesOnMap(
+        currentFrame,
+        tileSourceId,
+        tileLayerId,
+        targetOpacity,
+      );
       return;
     }
 
     activePreviewByLayerKey.set(layerKeyValue, layer.current_frame_index);
     markPreviewDisplayed(layerKeyValue);
 
-    if (map.getLayer(tileLayerId)) {
-      map.setPaintProperty(tileLayerId, "raster-opacity", 0);
+    ensureRasterTilesOnMap(currentFrame, tileSourceId, tileLayerId, 0);
+    if (map.getLayer(previewMapLayerId)) {
+      map.moveLayer(previewMapLayerId);
     }
 
     void preloadAdjacentPreviewLayers(
@@ -508,6 +548,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     displayingPreviewLayerKeys,
     isDisplayingPreview,
     prefetchLayerPreviews,
+    hasReadyPreviewForCurrentFrame,
     showPreviewThenTiles,
     dismissPreviewForLayer,
     onPreviewTaskComplete,
