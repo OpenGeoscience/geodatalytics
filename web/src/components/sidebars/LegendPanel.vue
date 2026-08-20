@@ -118,14 +118,13 @@ function getColorPropsCoverage(layer: Layer) {
         <v-list-item v-for="layer in filteredLegend" :key="layer.id">
           {{ layer.name }}
           <v-icon
-            v-if="framePreviewStore.isDisplayingPreview(layer)"
-            v-tooltip="
-              'Showing a low-resolution preview while default resolution tiles load.'
-            "
+            v-if="framePreviewStore.iconState(layer).visible"
+            v-tooltip="framePreviewStore.iconState(layer).tooltip"
             icon="mdi-image-size-select-large"
             size="small"
-            color="primary"
+            :color="framePreviewStore.iconState(layer).color"
             class="preview-indicator ml-1"
+            :class="framePreviewStore.iconState(layer).class"
           />
           <div
             v-for="colormap_preview in getColormapPreviews(layer)"
@@ -204,6 +203,9 @@ function getColorPropsCoverage(layer: Layer) {
 <style scoped>
 .preview-indicator {
   cursor: help;
+}
+.preview-indicator--generating {
+  filter: grayscale(1);
   animation: preview-indicator-pulse 1.4s ease-in-out infinite;
 }
 @keyframes preview-indicator-pulse {

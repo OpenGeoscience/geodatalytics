@@ -158,6 +158,63 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     );
   }
 
+  // True when this multiframe layer's previews are explicitly not ready
+  // (missing / generating / regenerating). Omitted preview_status is treated
+  // as ready for backward compatibility, matching previewsAreReady().
+  function isGeneratingPreviews(layer: Layer) {
+    const rasterFrames = orderedRasterFrames(layerStore.layerFrames(layer));
+    if (rasterFrames.length <= 1) {
+      return false;
+    }
+    const style =
+      styleStore.selectedLayerStyles[styleStore.layerStyleKey(layer)];
+    if (style?.preview_status !== undefined) {
+      return style.preview_status === "notready";
+    }
+    if (
+      usesLayerDefaultPreviews(layer, style) &&
+      layer.preview_status !== undefined
+    ) {
+      return layer.preview_status === "notready";
+    }
+    return false;
+  }
+
+  function iconState(layer: Layer) {
+    if (isDisplayingPreview(layer)) {
+      return {
+        visible: true,
+        tooltip:
+          "Showing a low-resolution preview while default resolution tiles load.",
+        color: "primary" as const,
+        class: {
+          "preview-indicator--generating": false,
+          "preview-indicator--hidden": false,
+        },
+      };
+    }
+    if (isGeneratingPreviews(layer)) {
+      return {
+        visible: true,
+        tooltip: "Frame previews are being created.",
+        color: undefined,
+        class: {
+          "preview-indicator--generating": true,
+          "preview-indicator--hidden": false,
+        },
+      };
+    }
+    return {
+      visible: false,
+      tooltip: undefined,
+      color: undefined,
+      class: {
+        "preview-indicator--generating": false,
+        "preview-indicator--hidden": true,
+      },
+    };
+  }
+
   function clearTileLoadTimer(layerKeyValue: string) {
     const timer = tileLoadTimerByLayerKey.get(layerKeyValue);
     if (timer !== undefined) {
@@ -635,6 +692,8 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   return {
     displayingPreviewLayerKeys,
     isDisplayingPreview,
+    isGeneratingPreviews,
+    iconState,
     prefetchLayerPreviews,
     hasReadyPreviewForCurrentFrame,
     showPreviewThenTiles,

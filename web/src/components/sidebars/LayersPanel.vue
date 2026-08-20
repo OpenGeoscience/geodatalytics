@@ -193,19 +193,12 @@ function setLayerActive(layer: Layer, active: boolean) {
                 {{ element.name }}
                 <template #append>
                   <v-icon
-                    v-tooltip="
-                      framePreviewStore.isDisplayingPreview(element)
-                        ? 'Showing a low-resolution preview while default resolution tiles load.'
-                        : undefined
-                    "
+                    v-tooltip="framePreviewStore.iconState(element).tooltip"
                     icon="mdi-image-size-select-large"
                     size="small"
-                    color="primary"
+                    :color="framePreviewStore.iconState(element).color"
                     class="preview-indicator mr-1"
-                    :class="{
-                      'preview-indicator--hidden':
-                        !framePreviewStore.isDisplayingPreview(element),
-                    }"
+                    :class="framePreviewStore.iconState(element).class"
                   />
                   <span
                     v-if="getLayerMaxFrames(element) > 1"
@@ -312,12 +305,14 @@ function setLayerActive(layer: Layer, active: boolean) {
 }
 .preview-indicator {
   cursor: help;
-  animation: preview-indicator-pulse 1.4s ease-in-out infinite;
 }
 .preview-indicator--hidden {
   visibility: hidden;
   pointer-events: none;
-  animation: none;
+}
+.preview-indicator--generating {
+  filter: grayscale(1);
+  animation: preview-indicator-pulse 1.4s ease-in-out infinite;
 }
 @keyframes preview-indicator-pulse {
   0%,
