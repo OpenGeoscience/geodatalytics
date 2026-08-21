@@ -21,7 +21,7 @@ const initials = computed(() => {
 </script>
 
 <template>
-  <v-list-item v-if="props.user">
+  <v-list-item v-if="props.user" :subtitle="props.user.username">
     <template #title>
       <span style="text-transform: capitalize">{{ nameLabel }}</span>
     </template>
@@ -37,7 +37,7 @@ const initials = computed(() => {
         <span v-if="initials" style="text-transform: uppercase">
           {{ initials }}
           <v-tooltip activator="parent" location="end">
-            {{ nameLabel }}
+            {{ props.user.username }}
           </v-tooltip>
         </span>
         <v-icon v-else icon="mdi-account"></v-icon>
