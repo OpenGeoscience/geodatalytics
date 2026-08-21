@@ -79,8 +79,7 @@ services:
     # Docker Compose does not set the TTY width, which causes Celery errors
     tty: false
     working_dir: /home/vscode/geodatalytics
-    environment:
-      UV_ENV_FILE: ./dev/.env.docker-compose
+    env_file: ./dev/.env.docker-compose
     volumes:
       - .:/home/vscode/geodatalytics
       - pkg_cache:/home/vscode/pkg-cache
