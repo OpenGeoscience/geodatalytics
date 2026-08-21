@@ -84,12 +84,6 @@ async function loadEdges({ done }: any) {
   }
 }
 
-function showNetwork() {
-  if (networkStore.currentNetwork) {
-    panelStore.show({ network: networkStore.currentNetwork });
-  }
-}
-
 function isNetworkVisible() {
   if (networkStore.currentNetwork) {
     return panelStore.isVisible({ network: networkStore.currentNetwork });
@@ -106,7 +100,9 @@ function resetNetwork() {
 
 function toggleSelected() {
   if (networkStore.currentNetwork && networkState.value) {
-    if (!isNetworkVisible()) showNetwork();
+    if (!isNetworkVisible()) {
+      panelStore.setVisibility({ network: networkStore.currentNetwork }, true);
+    }
 
     // Any selected nodes that are already deactivated should be removed
     // from both sets, since they now need to be activated, and both sets
@@ -182,11 +178,15 @@ watch(
           <div>
             <div>{{ networkStore.currentNetwork.name }}</div>
             <v-btn
-              v-if="!isNetworkVisible()"
               density="compact"
-              @click="showNetwork()"
+              @click="
+                panelStore.setVisibility(
+                  { network: networkStore.currentNetwork },
+                  !isNetworkVisible(),
+                )
+              "
             >
-              Show
+              {{ isNetworkVisible() ? "Hide" : "Show" }}
             </v-btn>
             <v-btn density="compact" @click="resetNetwork()"> Reset </v-btn>
           </div>

@@ -233,6 +233,11 @@ class LayerFrameSerializer(serializers.ModelSerializer):
 
 
 class RegionSerializer(serializers.ModelSerializer):
+    boundary = serializers.SerializerMethodField("get_boundary")
+
+    def get_boundary(self, obj):
+        return obj.boundary.coords
+
     class Meta:
         model = Region
         fields = "__all__"

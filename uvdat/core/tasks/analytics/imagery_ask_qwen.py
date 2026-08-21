@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import base64
+import io
 
 from celery import shared_task
 from django.conf import settings
+from django.contrib.gis.geos import Polygon
 from django_large_image import utilities
 import large_image
+import numpy as np
+from PIL import Image
+from rasterio.features import rasterize
+from rasterio.transform import from_bounds
+from shapely import wkt
 
-from uvdat.core.models import RasterData, TaskResult
+from uvdat.core.models import RasterData, Region, TaskResult
 
 from .analysis_type import AnalysisInputError, AnalysisTask, AnalysisType
 
@@ -15,6 +22,7 @@ MODEL_CARD_URL = "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF"
 SYSTEM_PROMPT = (
     "You are an urban planning and geospatial analysis expert specializing in "
     "land use patterns, hydrology, transportation networks, and municipal policy. "
+    "Masked aerial imagery will be provided; ignore transparent areas of the image. "
     "Analyze the provided imagery to answer the user's question. In your answer, "
     "assume that the user is also a geospatial analyst with the same expertise."
 )
@@ -40,6 +48,7 @@ class ImageryAskQwen(AnalysisType):
             "imagery": "RasterData",
             "text_prompt": "string",
             "max_tokens": "number",
+            "region": "Region",
         }
         self.output_types = {
             "response": "markdown",
@@ -60,6 +69,7 @@ class ImageryAskQwen(AnalysisType):
             "imagery": RasterData.objects.filter(dataset__category="imagery"),
             "text_prompt": [],
             "max_tokens": [TOKEN_RANGE],
+            "region": Region.objects.all(),
         }
 
     def validate_inputs(self, inputs):
@@ -80,6 +90,11 @@ class ImageryAskQwen(AnalysisType):
         if max_tokens < TOKEN_RANGE["min"] or max_tokens > TOKEN_RANGE["max"]:
             err_msg = f"max_tokens must be between {TOKEN_RANGE['min']} and {TOKEN_RANGE['max']}."
             raise AnalysisInputError(err_msg)
+        try:
+            Region.objects.get(id=inputs.get("region"))
+        except Region.DoesNotExist as e:
+            err_msg = "Region does not exist."
+            raise AnalysisInputError(err_msg) from e
 
     def run_task(self, *, project, **inputs):
         text_prompt = inputs.get("text_prompt")
@@ -106,15 +121,66 @@ def imagery_ask_qwen(result_id):
     )
 
     result = TaskResult.objects.get(id=result_id)
+    if any(
+        setting == "changeme"
+        for setting in [
+            settings.UVDAT_HF_ENDPOINT_NAMES,
+            settings.UVDAT_HF_NAMESPACE,
+            settings.UVDAT_HF_TOKEN,
+        ]
+    ):
+        result.write_outputs({"response": "Huggingface configuration not set; not running task."})
+        return
+
     imagery = RasterData.objects.get(id=result.inputs.get("imagery"))
     text_prompt = result.inputs.get("text_prompt")
     max_tokens = int(result.inputs.get("max_tokens"))
+    region = Region.objects.get(id=result.inputs.get("region"))
+    (xmin, ymin, xmax, ymax) = region.boundary.extent
 
-    result.write_status("Encoding imagery...")
+    result.write_status("Cropping and encoding imagery...")
     imagery_path = utilities.field_file_to_local_path(imagery.cloud_optimized_geotiff)
     src = large_image.open(imagery_path)
-    thumbnail_bytes, _ = src.getThumbnail(THUMBNAIL_SIZE, THUMBNAIL_SIZE, encoding="PNG")
-    thumbnail_b64 = base64.b64encode(thumbnail_bytes).decode("utf-8")
+    src_bounds = src.getBounds()
+    if not region.boundary.intersects(
+        Polygon.from_bbox(
+            (
+                src_bounds.get("xmin"),
+                src_bounds.get("ymin"),
+                src_bounds.get("xmax"),
+                src_bounds.get("ymax"),
+            )
+        )
+    ):
+        result.write_outputs(
+            {"response": "Selected region does not intersect imagery; not running task."}
+        )
+        return
+
+    (xmin, ymin, xmax, ymax) = (
+        max(xmin, src_bounds.get("xmin")),
+        max(ymin, src_bounds.get("ymin")),
+        min(xmax, src_bounds.get("xmax")),
+        min(ymax, src_bounds.get("ymax")),
+    )
+    thumbnail, _ = src.getRegion(
+        region={"left": xmin, "right": xmax, "top": ymax, "bottom": ymin, "units": "EPSG:4326"},
+        output={"maxWidth": THUMBNAIL_SIZE, "maxHeight": THUMBNAIL_SIZE},
+        format="numpy",
+    )
+    height, width, _ = thumbnail.shape
+    mask = rasterize(
+        [wkt.loads(region.boundary.wkt)],
+        out_shape=(height, width),
+        transform=from_bounds(xmin, ymin, xmax, ymax, width, height),
+        fill=0,
+        default_value=1,
+        dtype="uint8",
+    ).astype(bool)
+    masked = np.where(mask[:, :, np.newaxis], thumbnail, 0)
+    byte_stream = io.BytesIO()
+    Image.fromarray(masked).save(byte_stream, format="PNG")
+    thumbnail_b64 = base64.b64encode(byte_stream.getvalue()).decode("utf-8")
     thumbnail_uri = f"data:image/jpeg;base64,{thumbnail_b64}"
 
     result.write_status("Starting inference endpoint...")
