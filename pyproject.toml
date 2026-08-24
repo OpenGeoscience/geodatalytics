@@ -73,7 +73,7 @@ tasks = [
   "osmnx==2.1.1",
   # Needed by "uvdat-flood-sim[large-image-writer]"
   "pyvips==3.1.1.8.18.1",
-  "uvdat-flood-sim[large-image-writer]==1.0.4",
+  "uvdat-flood-sim[large-image-writer]==1.0.5",
   "xdg-base-dirs==6.0.2",
   "huggingface-hub==1.28.0",
 ]
