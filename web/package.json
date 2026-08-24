@@ -33,14 +33,14 @@
     "proj4": "2.21.0",
     "sortablejs": "1.15.7",
     "vue": "3.5.41",
-    "terra-draw": "^1.32.3",
-    "terra-draw-maplibre-gl-adapter": "^1.4.1",
+    "terra-draw": "1.32.3",
+    "terra-draw-maplibre-gl-adapter": "1.4.1",
     "vue-chartjs": "5.3.4",
     "vue-maplibre-compare": "1.0.27",
     "vue-markdown-render": "2.3.1",
     "vue-router": "5.2.0",
     "vuedraggable": "4.1.0",
-    "vuetify": "4.1.10"
+    "vuetify": "4.1.11"
   },
   "devDependencies": {
     "@sentry/vite-plugin": "5.2.1",
