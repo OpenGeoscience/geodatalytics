@@ -133,6 +133,7 @@ def imagery_ask_qwen(result_id):
         return
 
     imagery = RasterData.objects.get(id=result.inputs.get("imagery"))
+    imagery_frame = result.inputs.get("imagery_frame", 0)  # optional, default to 0
     text_prompt = result.inputs.get("text_prompt")
     max_tokens = int(result.inputs.get("max_tokens"))
     region = Region.objects.get(id=result.inputs.get("region"))
@@ -141,7 +142,7 @@ def imagery_ask_qwen(result_id):
     result.write_status("Cropping and encoding imagery...")
     imagery_path = utilities.field_file_to_local_path(imagery.cloud_optimized_geotiff)
     src = large_image.open(imagery_path)
-    src_bounds = src.getBounds()
+    src_bounds = src.getBounds(srs="epsg:4326")
     if not region.boundary.intersects(
         Polygon.from_bbox(
             (
@@ -166,6 +167,7 @@ def imagery_ask_qwen(result_id):
     thumbnail, _ = src.getRegion(
         region={"left": xmin, "right": xmax, "top": ymax, "bottom": ymin, "units": "EPSG:4326"},
         output={"maxWidth": THUMBNAIL_SIZE, "maxHeight": THUMBNAIL_SIZE},
+        frame=imagery_frame,
         format="numpy",
     )
     height, width, _ = thumbnail.shape
