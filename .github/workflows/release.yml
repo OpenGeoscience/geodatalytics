@@ -21,7 +21,8 @@ jobs:
         with:
           node-version: 24
       - name: Run Semantic Release
-        run: |
-          uvx python-semantic-release version
+        # Pin GitPython to 3.1.59 because 3.1.60 removes `Actor.name_email_regex`, which is needed by python semantic release
+        # https://github.com/gitpython-developers/GitPython/commit/751473a5f3221d6f989291cbebcc404353fd3ba8
+        run: uvx --with 'GitPython==3.1.59' python-semantic-release version
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
