@@ -1964,8 +1964,8 @@ requires-dist = [
     { name = "geopandas", specifier = "==1.1.4" },
     { name = "huggingface-hub", marker = "extra == 'tasks'", specifier = "==1.28.0" },
     { name = "ipython", marker = "extra == 'development'", specifier = "==9.16.1" },
-    { name = "large-image", extras = ["gdal"], specifier = "==1.35.2" },
-    { name = "large-image-converter", specifier = "==1.35.2" },
+    { name = "large-image", extras = ["gdal"], specifier = "==1.35.3" },
+    { name = "large-image-converter", specifier = "==1.35.3" },
     { name = "matplotlib", specifier = "==3.11.1" },
     { name = "networkx", specifier = "==3.6.1" },
     { name = "numpy", specifier = "==2.5.2" },
@@ -2869,7 +2869,7 @@ wheels = [
 
 [[package]]
 name = "large-image"
-version = "1.35.2"
+version = "1.35.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
@@ -2878,9 +2878,9 @@ dependencies = [
     { name = "pillow" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/86/caa89b5a061d8e58aceea48ed490a45ab257a1fb72a00f9b86c23575da05/large_image-1.35.2.tar.gz", hash = "sha256:548240e1215d20b640a8c5a6a756cf8915a247a6cf906377aeb8d462d44e0a5f", size = 899922, upload-time = "2026-08-06T19:21:36.665Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/14/6f/743bb4e9f4889be7191360048b89e18d47f061c633cd5c8d13858c675516/large_image-1.35.3.tar.gz", hash = "sha256:740f12f1f343d6f214bc31be82685d3043d2b24350448b1c19b1fc27362b6ecc", size = 900154, upload-time = "2026-08-25T17:52:28.771Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/83/46bfbea5e0cc8822628cd834252d4153ce2d531cc26283a39527beabb1e0/large_image-1.35.2-py3-none-any.whl", hash = "sha256:7ddd110146dadd54a976734973d56ce6e828a32b518fe1e25328072ec9d5433e", size = 151415, upload-time = "2026-08-06T19:21:34.522Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/b3/04b3c9984207e8046853c1eb26eccb1f9505d4ab8ec2c841003059d1fb9b/large_image-1.35.3-py3-none-any.whl", hash = "sha256:6ae2bbfeea4bf7f1aed884e4ec0a82a90f27348b0c9ce9f06369bdea6c14d106", size = 151452, upload-time = "2026-08-25T17:52:27.137Z" },
 ]
 
 [package.optional-dependencies]
@@ -2893,7 +2893,7 @@ zarr = [
 
 [[package]]
 name = "large-image-converter"
-version = "1.35.2"
+version = "1.35.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "large-image-source-tiff" },
@@ -2902,14 +2902,14 @@ dependencies = [
     { name = "pyvips" },
     { name = "tifftools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/92/87/d10a3765bdcd063166a41064dae2a1f038da58f3e1957b979884a821d204/large_image_converter-1.35.2.tar.gz", hash = "sha256:f1ddd6bdbd6805ce9a4554afefd8b36ed2d020ab5007d3b4bd3f9b005563daf1", size = 26287, upload-time = "2026-08-06T19:21:55.629Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/92/893406603c2c0425f4fd5c9858a1629139d60c87cd036e76d85d224aff17/large_image_converter-1.35.3.tar.gz", hash = "sha256:643de10f43b4f7fefa7020a5ac6e0edc8843b14ea47e46d4377a797b42ad8100", size = 26326, upload-time = "2026-08-25T17:52:47.311Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/98/422d0a2cb437a7c1899c29b2c5b06e83d044fa2718ef4785b84768309917/large_image_converter-1.35.2-py3-none-any.whl", hash = "sha256:4b096edf0ad01ea18defd26c8cdd055ff9e3ca67e49d0a43fa335964a27447c2", size = 26401, upload-time = "2026-08-06T19:21:54.062Z" },
+    { url = "https://files.pythonhosted.org/packages/05/fe/374b7d24d851e74018f4d94cd3e63e3e95f5ffe896f26a6add9d06013b2d/large_image_converter-1.35.3-py3-none-any.whl", hash = "sha256:b9b0fd25047c53afe63aff4e332d4b76e83108b7fdce47b02773ddd3cad5245c", size = 26400, upload-time = "2026-08-25T17:52:45.987Z" },
 ]
 
 [[package]]
 name = "large-image-source-gdal"
-version = "1.35.2"
+version = "1.35.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "gdal" },
@@ -2917,28 +2917,28 @@ dependencies = [
     { name = "packaging" },
     { name = "pyproj" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/78/08/dd18cc63949fdfe8df0d6ae03262173a12a4ddc30292099f67b3d37e278a/large_image_source_gdal-1.35.2.tar.gz", hash = "sha256:65556be47091a8024788530bf419e9ce043acf4a289266fd848665f3b6f8fe9c", size = 23380, upload-time = "2026-08-06T19:22:28.496Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/51/86a8149a0972000c137ba6f871296f8dfc19451665a05585b95a0a8007de/large_image_source_gdal-1.35.3.tar.gz", hash = "sha256:82caafcd15f6f42e4123b1bdbe610332a0e7dd19e5467afa5f3f300d91697f50", size = 23412, upload-time = "2026-08-25T17:53:19.841Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/5f/af4e722e1288a5c99ae6a7b28ff94adb47e7031b2d940c0224a3b2a9e42f/large_image_source_gdal-1.35.2-py3-none-any.whl", hash = "sha256:893c2c2f18b0f79b7bedea8c7c79f8b476623eb1dd89e7238eb94369a4ebc876", size = 20732, upload-time = "2026-08-06T19:22:27.008Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/cd/7980e5b8cf6e46a5c3cf22e3e5b5a551c6981abf8b8d0137da7632876b6e/large_image_source_gdal-1.35.3-py3-none-any.whl", hash = "sha256:e73441f05927526ba642e75472a76e9d59a3779963545cec4a7f08800e97c8bd", size = 20730, upload-time = "2026-08-25T17:53:18.547Z" },
 ]
 
 [[package]]
 name = "large-image-source-tiff"
-version = "1.35.2"
+version = "1.35.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "large-image" },
     { name = "pylibtiff" },
     { name = "tifftools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d9/54/107c34477317d24a1aa4570aea6c4f3416b1fa3c8e08c9f7104fdc3bc593/large_image_source_tiff-1.35.2.tar.gz", hash = "sha256:37448a28c70a6c62cdb12ceaa9ce71e7f764c93003f5557e80b5fc330885b444", size = 27449, upload-time = "2026-08-06T19:23:23.976Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8d/85/28012d03137c8cdcbf631d0c573bb4f526a30b160cff8760eb1c729958b5/large_image_source_tiff-1.35.3.tar.gz", hash = "sha256:1ba4d08b419b795b928c5c39278b97ab21086ad88575778e7674ff2be4d94116", size = 27507, upload-time = "2026-08-25T17:54:13.88Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/f1/3aa7d7b3ed2a485c7b411d251696720d8fcf59b22f5735795c04f83eb2fa/large_image_source_tiff-1.35.2-py3-none-any.whl", hash = "sha256:3aac137f9572f084ecc7c6c26cd4764613dd38776290c5651ddd8e48cf0a986e", size = 25708, upload-time = "2026-08-06T19:23:22.743Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/0a/0321d6983005da9023ac5724e379c088f4fe5a9632b87477376f04984493/large_image_source_tiff-1.35.3-py3-none-any.whl", hash = "sha256:72d2408f29d7382b4c731600a38a92709d74be6f14171f2cafaef51e9e04d185", size = 25708, upload-time = "2026-08-25T17:54:12.704Z" },
 ]
 
 [[package]]
 name = "large-image-source-zarr"
-version = "1.35.2"
+version = "1.35.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
@@ -2947,9 +2947,9 @@ dependencies = [
     { name = "numcodecs" },
     { name = "zarr" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/02/58/5d564b1c60347a18ca485915a267457a4e4d027b9432fdadabb8e9635e58/large_image_source_zarr-1.35.2.tar.gz", hash = "sha256:066a926818fe69ce8e71ffa32bea44ad48b810ecf91e86b669ec77c5f565b208", size = 23397, upload-time = "2026-08-06T19:23:39.946Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/25/46/78ef08add96e82770485b88fe1c7b356b3e1135a2a52da8ddba4bceed093/large_image_source_zarr-1.35.3.tar.gz", hash = "sha256:0919a8b90d53a5119dc31319891de64487c8c96010994bf79a459878fb7042ce", size = 23435, upload-time = "2026-08-25T17:54:29.485Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/7e/ab2224561ef7c616e5f635c0c3ce6895635717a8e79bf3f91fb74206b37c/large_image_source_zarr-1.35.2-py3-none-any.whl", hash = "sha256:8c1fce6e21cf5c004ff4085b339fd5f3291d5efd072c013724b52c058c7b7614", size = 20219, upload-time = "2026-08-06T19:23:38.967Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/c4/d74ee75378f07facec3b16b584db0cc44d6215816f1efcfd06bcf062dac7/large_image_source_zarr-1.35.3-py3-none-any.whl", hash = "sha256:8df91eca5ada580954c551a69b0b67a41d317556a065659a1679c1f50a95fa90", size = 20221, upload-time = "2026-08-25T17:54:28.461Z" },
 ]
 
 [[package]]
