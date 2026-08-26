@@ -106,6 +106,7 @@ services:
     image: node:24
     command: ["sh", "-c", "npm install && npm run serve -- --host 0.0.0.0"]
     working_dir: /web
+    env_file: ./dev/.env.docker-compose
     volumes:
       - ./web:/web
       - ./.git:/web/.git # allow fetching version tag
