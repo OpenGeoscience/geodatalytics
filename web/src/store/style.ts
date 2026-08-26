@@ -16,6 +16,7 @@ import type {
 } from "@/types";
 import { getProjectColormaps } from "@/api/rest";
 import chroma from "chroma-js";
+import { isPreviewMapLayerId } from "@/utils/framePreviewLayer";
 
 import {
   useMapStore,
@@ -482,30 +483,38 @@ export const useStyleStore = defineStore("style", () => {
       (f) => f.index === layer.current_frame_index,
     );
     if (!currentFrame) return;
+
+    const styleKey = layerStyleKey(layer);
+    const currentStyleSpec: StyleSpec | undefined =
+      selectedLayerStyles.value[styleKey]?.style_spec;
+
     mapStore.getUserMapLayers().forEach((mapLayerId) => {
+      if (isPreviewMapLayerId(mapLayerId)) {
+        return;
+      }
       const { layerId, layerCopyId, frameId } =
         mapStore.parseLayerString(mapLayerId);
-      if (layerId === layer.id && layerCopyId === layer.copy_id) {
-        if (frameId === currentFrame.id) {
-          map.setLayoutProperty(
-            mapLayerId,
-            "visibility",
-            layer.visible ? "visible" : "none",
-          );
-          const styleKey = layerStyleKey(layer);
-          const currentStyleSpec: StyleSpec | undefined =
-            selectedLayerStyles.value[styleKey].style_spec;
-          if (currentStyleSpec) {
-            setMapLayerStyle(
-              mapLayerId,
-              currentStyleSpec,
-              currentFrame,
-              currentFrame.vector,
-            );
-          }
-        } else {
-          map.setLayoutProperty(mapLayerId, "visibility", "none");
-        }
+      if (layerId !== layer.id || layerCopyId !== layer.copy_id) {
+        return;
+      }
+
+      const frame = frames.find((f) => f.id === frameId);
+      if (!frame) {
+        return;
+      }
+
+      const isCurrent = frameId === currentFrame.id;
+      map.setLayoutProperty(
+        mapLayerId,
+        "visibility",
+        layer.visible && isCurrent ? "visible" : "none",
+      );
+
+      // Restyle every loaded frame, not only the current one. Otherwise a
+      // previously visited / adjacent frame keeps the old tile URL and flashes
+      // the previous style when scrubbed to after a style change.
+      if (currentStyleSpec) {
+        setMapLayerStyle(mapLayerId, currentStyleSpec, frame, frame.vector);
       }
     });
     networkStore.styleVisibleNetworks();

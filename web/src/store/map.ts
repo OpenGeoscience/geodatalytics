@@ -481,6 +481,7 @@ export const useMapStore = defineStore("map", () => {
     tileSource: Source,
     boundsSource: Source,
     multiFrame: boolean,
+    rasterOpacity = 1,
   ) {
     const map = getMap();
     const { layerId, layerCopyId, frameId } = parseSourceString(tileSource.id);
@@ -497,6 +498,9 @@ export const useMapStore = defineStore("map", () => {
       type: "raster",
       source: tileSource.id,
       metadata,
+      paint: {
+        "raster-opacity": rasterOpacity,
+      },
     });
 
     const boundsLayerId = boundsSource.id + ".fill";
@@ -537,6 +541,7 @@ export const useMapStore = defineStore("map", () => {
     raster: RasterData,
     sourceId: string,
     multiFrame: boolean,
+    rasterOpacity = 1,
   ): Source | undefined {
     const map = getMap();
 
@@ -594,7 +599,12 @@ export const useMapStore = defineStore("map", () => {
     const boundsSource = map.getSource(boundsSourceId);
 
     if (tileSource && boundsSource) {
-      createRasterFeatureMapLayers(tileSource, boundsSource, multiFrame);
+      createRasterFeatureMapLayers(
+        tileSource,
+        boundsSource,
+        multiFrame,
+        rasterOpacity,
+      );
       return tileSource;
     }
   }
@@ -603,6 +613,7 @@ export const useMapStore = defineStore("map", () => {
     frame: LayerFrame,
     sourceId: string,
     multiFrame: boolean,
+    options?: { rasterOpacity?: number },
   ) {
     if (getMapSources().includes(sourceId)) {
       return;
@@ -611,7 +622,12 @@ export const useMapStore = defineStore("map", () => {
     if (frame.vector) {
       createVectorTileSource(frame.vector, sourceId, multiFrame);
     } else if (frame.raster) {
-      createRasterTileSource(frame.raster, sourceId, multiFrame);
+      createRasterTileSource(
+        frame.raster,
+        sourceId,
+        multiFrame,
+        options?.rasterOpacity,
+      );
     } else {
       throw new Error("Layer Frame is neither raster nor vector!");
     }

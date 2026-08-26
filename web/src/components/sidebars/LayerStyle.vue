@@ -84,38 +84,23 @@ const setCurrentLayerStyle = (style: LayerStyle) => {
   styleStore.selectedLayerStyles[styleKey.value] = style;
 };
 
-// After a style save, the backend invalidates multiframe raster previews and
-// regenerates them asynchronously. Apply the saved style (which the API returns
-// with preview_status "notready" and no previews), drop any stale previews, and
-// remove the on-map preview overlay so tiles are shown until regeneration
-// completes and the WebSocket handler reattaches fresh previews.
+// After a style save, apply the API response. When previews were invalidated,
+// clear stale payloads/overlays; onPreviewTaskComplete reloads them when ready.
 const markStyleSavedAndInvalidatePreviews = (style: LayerStyle) => {
-  const previewStatus =
-    style.preview_status === "ready" && !style.multiframe_previews
-      ? "notready"
-      : (style.preview_status ?? "notready");
-  const invalidatedStyle: LayerStyle = {
-    ...style,
-    preview_status: previewStatus,
-    multiframe_previews: undefined,
-  };
-  setCurrentLayerStyle(invalidatedStyle);
-  if (invalidatedStyle.is_default) {
-    layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
-      if (
-        layer.id !== props.layer.id ||
-        layer.copy_id !== props.layer.copy_id
-      ) {
-        return layer;
-      }
-      return {
-        ...layer,
-        preview_status: invalidatedStyle.preview_status,
-        multiframe_previews: undefined,
-      };
-    });
+  const previewsStillValid =
+    style.preview_status === "ready" && !!style.multiframe_previews?.length;
+  setCurrentLayerStyle(
+    previewsStillValid
+      ? cloneDeep(style)
+      : {
+          ...style,
+          preview_status: style.preview_status ?? "notready",
+          multiframe_previews: undefined,
+        },
+  );
+  if (!previewsStillValid) {
+    framePreviewStore.clearPreviewsForStyleChange(props.layer, style.id);
   }
-  framePreviewStore.dismissPreviewForLayer(props.layer);
 };
 
 const appliedStyleName = computed(() => {
@@ -674,15 +659,38 @@ watch(
 );
 
 const debouncedStyleSpecUpdated = debounce(() => {
-  if (currentStyleSpec.value) {
-    styleStore.selectedLayerStyles[styleKey.value] = {
-      ...currentLayerStyle.value,
-      style_spec: currentStyleSpec.value,
-    };
-    styleStore.updateLayerStyles(props.layer);
-    setAvailableGroups();
-    unsavedChanges.value = true;
+  if (!currentStyleSpec.value) return;
+
+  const prev = currentLayerStyle.value;
+  const hadPreviews =
+    prev?.preview_status === "ready" || !!prev?.multiframe_previews?.length;
+  let clearPreviews = false;
+  if (hadPreviews && prev?.style_spec && showRasterOptions.value) {
+    const prevQuery = JSON.stringify(
+      styleStore.getRasterTilesQuery(prev.style_spec, styleStore.colormaps),
+    );
+    const nextQuery = JSON.stringify(
+      styleStore.getRasterTilesQuery(
+        currentStyleSpec.value,
+        styleStore.colormaps,
+      ),
+    );
+    clearPreviews = prevQuery !== nextQuery;
   }
+
+  styleStore.selectedLayerStyles[styleKey.value] = {
+    ...prev,
+    style_spec: currentStyleSpec.value,
+    ...(clearPreviews
+      ? { preview_status: "notready" as const, multiframe_previews: undefined }
+      : {}),
+  };
+  if (clearPreviews) {
+    framePreviewStore.clearPreviewsForStyleChange(props.layer, prev.id);
+  }
+  styleStore.updateLayerStyles(props.layer);
+  setAvailableGroups();
+  unsavedChanges.value = true;
 }, 100);
 watch(currentStyleSpec, debouncedStyleSpecUpdated, { deep: true });
 

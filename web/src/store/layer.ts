@@ -16,6 +16,7 @@ import {
   getVectorDataBounds,
 } from "@/api/rest";
 import proj4 from "proj4";
+import { isPreviewMapLayerId } from "@/utils/framePreviewLayer";
 
 import {
   useMapStore,
@@ -197,16 +198,16 @@ export const useLayerStore = defineStore("layer", () => {
       current_frame_index: 0,
     };
 
+    framePreviewStore.prefetchLayerPreviews(
+      newLayer,
+      newLayer.default_style ?? undefined,
+    );
     // Need to fetch the frames for this layer, if not present
     if (!layerFrames(layer).length) {
       await fetchFramesForLayer(layer.id);
     }
 
     selectedLayers.value = [newLayer, ...selectedLayers.value];
-    framePreviewStore.prefetchLayerPreviews(
-      newLayer,
-      newLayer.default_style ?? undefined,
-    );
   }
 
   function setLayerVisibility(layers: Layer[], visible = true) {
@@ -271,12 +272,15 @@ export const useLayerStore = defineStore("layer", () => {
           }
         }
 
-        // Add current frame to map if not added yet
+        // Add current frame to map if not added yet. Multiframe rasters with a
+        // ready preview skip the tile source here so the overlay can show first;
+        // showPreviewThenTiles adds the tiles afterward at opacity 0.
         const sourceId = mapStore.sourceIdFromLayerFrame(layer, frame);
         if (
           layer.visible &&
           !userMapLayers.some((mapLayerId) => mapLayerId.includes(sourceId)) &&
-          layer.current_frame_index === frame.index
+          layer.current_frame_index === frame.index &&
+          !framePreviewStore.hasReadyPreviewForCurrentFrame(layer)
         ) {
           mapStore.addLayerFrameToMap(frame, sourceId, multiFrame);
         }
@@ -291,6 +295,7 @@ export const useLayerStore = defineStore("layer", () => {
     });
     // hide any removed layers
     userMapLayers.forEach((mapLayerId) => {
+      if (isPreviewMapLayerId(mapLayerId)) return;
       const { layerId, layerCopyId } = mapStore.parseLayerString(mapLayerId);
       if (
         !selectedLayers.value.some((l) => {
