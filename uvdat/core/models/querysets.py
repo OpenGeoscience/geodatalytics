@@ -32,7 +32,13 @@ class ProjectQuerySet(models.QuerySet):
         if path is None:
             return self.all()
 
-        query = models.Q(**{f"{path}__in": projects})
+        query = None
+        for p in path.split("|"):
+            q = models.Q(**{f"{p}__in": projects})
+            if query is None:
+                query = q
+            else:
+                query |= q
         if allow_null:
             query |= models.Q(**{f"{path}__isnull": True})
         return self.filter(query).distinct()

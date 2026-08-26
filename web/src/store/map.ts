@@ -11,28 +11,33 @@ import type {
   Layer,
   StyleFilter,
   Basemap,
+  Region,
 } from "@/types";
 import type {
   MapLayerMouseEvent,
   Source,
   LayerSpecification,
+  GeoJSONSource,
 } from "maplibre-gl";
 import { Map, Popup } from "maplibre-gl";
 import { getBasemaps } from "@/api/rest";
 import { baseURL } from "@/api/auth";
 import proj4 from "proj4";
+import type { Position } from "geojson";
 import {
   useStyleStore,
   useLayerStore,
   useAppStore,
   useProjectStore,
   useFramePreviewStore,
+  useAnalysisStore,
 } from ".";
 import { layerStyleKey } from "./style";
 import {
   isPreviewMapLayerId,
   removeAllPreviewLayersForLayerKey,
 } from "@/utils/framePreviewLayer";
+import { THEMES } from "@/themes";
 
 function getLayerIsVisible(layer: MapLibreLayerWithMetadata) {
   // Since visibility must be 'visible' for a feature click to even be registered,
@@ -142,11 +147,13 @@ export const useMapStore = defineStore("map", () => {
   const clickedFeature = ref<ClickedFeatureData>();
   const compareClickedFeature = ref<ClickedFeatureData>();
   const rasterSourceTileURLs = ref<Record<string, string>>({});
+  const regionShownId = ref<number | undefined>();
 
   const styleStore = useStyleStore();
   const layerStore = useLayerStore();
   const appStore = useAppStore();
   const projectStore = useProjectStore();
+  const analysisStore = useAnalysisStore();
 
   async function fetchAvailableBasemaps() {
     availableBasemaps.value = [{ name: "None" }, ...(await getBasemaps())];
@@ -158,6 +165,7 @@ export const useMapStore = defineStore("map", () => {
       !currentBasemap.value ||
       currentBasemap.value.name.toLowerCase().includes("basic")
     ) {
+      // @ts-ignore "Type instantiation is excessively deep and possibly infinite"
       currentBasemap.value = availableBasemaps.value.find((basemap) => {
         return basemap.name.toLowerCase() === "basic " + appStore.theme;
       });
@@ -184,6 +192,7 @@ export const useMapStore = defineStore("map", () => {
   }
 
   function handleLayerClick(e: MapLayerMouseEvent, compare = false) {
+    if (analysisStore.drawingRegion) return;
     const map = getMap(compare);
     const clickedFeatures = map
       .queryRenderedFeatures(e.point)
@@ -633,6 +642,48 @@ export const useMapStore = defineStore("map", () => {
     }
   }
 
+  function showRegion(region: Region | undefined) {
+    regionShownId.value = region?.id;
+    const map = getMap();
+    const regionSourceId = "show-region-source";
+    const regionLayerId = "show-region-layer";
+    let regionSource = map.getSource(regionSourceId) as GeoJSONSource;
+    if (!regionSource) {
+      map.addSource(regionSourceId, {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: [],
+        },
+      });
+      map.addLayer({
+        id: regionLayerId,
+        type: "fill",
+        source: regionSourceId,
+        paint: {
+          "fill-outline-color": THEMES.light.colors.primary,
+          "fill-color": THEMES.light.colors.primary,
+          "fill-opacity": 0.4,
+        },
+      });
+    }
+    map.moveLayer(regionLayerId);
+    regionSource = map.getSource(regionSourceId) as GeoJSONSource;
+    regionSource.setData({
+      type: "FeatureCollection",
+      features: region?.boundary
+        ? region.boundary.map((poly) => ({
+            type: "Feature",
+            geometry: {
+              type: "Polygon",
+              coordinates: poly as Position[][],
+            },
+            properties: {},
+          }))
+        : [],
+    });
+  }
+
   watch(map, () => {
     // Once map is initialized, attempt to load URL view
     if (map.value) {
@@ -680,5 +731,7 @@ export const useMapStore = defineStore("map", () => {
     getLatestLayerInstance,
     getUserMapLayers,
     setupVectorLayerClickHandlers,
+    showRegion,
+    regionShownId,
   };
 });

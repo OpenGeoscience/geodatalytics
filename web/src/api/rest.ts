@@ -22,6 +22,7 @@ import type {
   Colormap,
   Basemap,
   ViewState,
+  Region,
 } from "@/types";
 
 export async function getUsers(): Promise<User[]> {
@@ -324,4 +325,12 @@ export async function createViewState(viewState: ViewState): Promise<any> {
 
 export async function deleteViewState(viewState: ViewState): Promise<any> {
   return (await apiClient.delete(`view-states/${viewState.id}/`)).data;
+}
+
+export async function getRegion(regionId: number): Promise<Region> {
+  return (await apiClient.get(`regions/${regionId}/`)).data;
+}
+
+export async function createRegion(region: Region): Promise<Region> {
+  return (await apiClient.post("regions/", region)).data;
 }

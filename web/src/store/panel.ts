@@ -7,16 +7,19 @@ import type {
   Network,
   RasterData,
   VectorData,
+  Region,
 } from "@/types";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { getChart, getDataset } from "@/api/rest";
+import { getChart, getDataset, getNetwork } from "@/api/rest";
 
 import {
   useAppStore,
   useLayerStore,
   useAnalysisStore,
   useProjectStore,
+  useMapStore,
+  useNetworkStore,
 } from ".";
 
 const showableTypes = [
@@ -27,6 +30,7 @@ const showableTypes = [
   "taskresult",
   "rasterdata",
   "vectordata",
+  "region",
 ];
 
 interface Showable {
@@ -37,6 +41,7 @@ interface Showable {
   rasterdata?: RasterData;
   vectordata?: VectorData;
   taskresult?: TaskResult;
+  region?: Region;
 }
 
 function defaultPanelArrangement(): FloatingPanelConfig[] {
@@ -101,6 +106,8 @@ export const usePanelStore = defineStore("panel", () => {
   const layerStore = useLayerStore();
   const appStore = useAppStore();
   const projectStore = useProjectStore();
+  const mapStore = useMapStore();
+  const networkStore = useNetworkStore();
 
   const panelArrangement = ref<FloatingPanelConfig[]>([]);
   const draggingPanel = ref<string | undefined>();
@@ -221,7 +228,9 @@ export const usePanelStore = defineStore("panel", () => {
   }
 
   function isVisible(showable: Showable): boolean {
-    if (showable.chart) {
+    if (showable.region) {
+      return mapStore.regionShownId === showable.region.id;
+    } else if (showable.chart) {
       const chartPanel = panelArrangement.value.find(
         (panel) => panel.id === "charts",
       );
@@ -284,31 +293,38 @@ export const usePanelStore = defineStore("panel", () => {
     return false;
   }
 
-  async function show(showable: Showable) {
-    if (showable.chart) {
+  async function setVisibility(showable: Showable, visible: boolean) {
+    if (showable.region) {
+      mapStore.showRegion(visible ? showable.region : undefined);
+    } else if (showable.chart) {
       let chart = showable.chart;
-      if (!chart.chart_data) {
-        chart = await getChart(chart.id);
+      if (visible) {
+        if (!chart.chart_data) {
+          chart = await getChart(chart.id);
+        }
+        const chartPanel = panelArrangement.value.find(
+          (panel) => panel.id === "charts",
+        );
+        if (chartPanel) {
+          chartPanel.visible = true;
+          chartPanel.collapsed = false;
+        }
       }
-      const chartPanel = panelArrangement.value.find(
-        (panel) => panel.id === "charts",
-      );
-      if (chartPanel && !chartPanel?.visible) chartPanel.visible = true;
-      analysisStore.currentChart = chart;
+      analysisStore.currentChart = visible ? chart : undefined;
     } else if (showable.dataset) {
       const id = showable.dataset.id;
-      layerStore.fetchAvailableLayersForDataset(id).then(() => {
-        layerStore.availableLayers
-          .filter((layer: Layer) => layer.dataset === id)
-          .forEach((layer: Layer) => {
-            show({ layer });
-          });
-      });
+      if (visible) await layerStore.fetchAvailableLayersForDataset(id);
+      const layersList = visible
+        ? layerStore.availableLayers
+        : layerStore.selectedLayers;
+      layersList
+        .filter((layer: Layer) => layer.dataset === id)
+        .forEach((layer: Layer) => setVisibility({ layer }, visible));
     } else if (showable.layer) {
-      let add = true;
+      let add = visible;
       layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
-        if (add && layer.id === showable.layer?.id) {
-          layer.visible = true;
+        if (layer.id === showable.layer?.id) {
+          layer.visible = visible;
           add = false;
         }
         return layer;
@@ -317,10 +333,24 @@ export const usePanelStore = defineStore("panel", () => {
         layerStore.addLayer(showable.layer);
       }
     } else if (showable.network) {
+      let network = showable.network;
+      if (visible) {
+        if (!network.nodes) {
+          network = await getNetwork(network.id);
+        }
+        const networkPanel = panelArrangement.value.find(
+          (panel) => panel.id === "networks",
+        );
+        if (networkPanel) {
+          networkPanel.visible = true;
+          networkPanel.collapsed = false;
+        }
+      }
+      networkStore.currentNetwork = visible ? network : undefined;
       const dataset = projectStore.availableDatasets?.find(
         (d) => d.id === showable.network?.dataset,
       );
-      return show({ dataset });
+      return setVisibility({ dataset }, visible);
     } else if (showable.taskresult) {
       const taskType = analysisStore.availableAnalysisTypes?.find(
         (t) => t.db_value === showable.taskresult?.task_type,
@@ -330,7 +360,7 @@ export const usePanelStore = defineStore("panel", () => {
           ([outputKey, outputValue]) => {
             const type = taskType.output_types[outputKey].toLowerCase();
             if (showableTypes.includes(type)) {
-              show({ [type]: { id: outputValue } });
+              setVisibility({ [type]: { id: outputValue } }, visible);
             }
           },
         );
@@ -341,23 +371,17 @@ export const usePanelStore = defineStore("panel", () => {
               inputKey
             ].find((o: any) => o.id === inputValue);
             if (showableTypes.includes(type)) {
-              show({ [type]: value });
+              setVisibility({ [type]: value }, visible);
             }
           },
         );
       }
-    } else if (showable.rasterdata) {
-      if (showable.rasterdata.dataset) {
-        getDataset(showable.rasterdata.dataset).then((dataset) => {
-          show({ dataset });
-        });
-      }
-    } else if (showable.vectordata) {
-      if (showable.vectordata.dataset) {
-        getDataset(showable.vectordata.dataset).then((dataset) => {
-          show({ dataset });
-        });
-      }
+    } else if (showable.rasterdata && showable.rasterdata.dataset) {
+      const dataset = await getDataset(showable.rasterdata.dataset);
+      setVisibility({ dataset }, visible);
+    } else if (showable.vectordata && showable.vectordata.dataset) {
+      const dataset = await getDataset(showable.vectordata.dataset);
+      setVisibility({ dataset }, visible);
     }
   }
 
@@ -372,6 +396,6 @@ export const usePanelStore = defineStore("panel", () => {
     dragPanel,
     stopDrag,
     isVisible,
-    show,
+    setVisibility,
   };
 });

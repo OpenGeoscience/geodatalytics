@@ -10,7 +10,6 @@ import large_image
 from pyproj import CRS, Transformer
 
 from uvdat.core.models import Dataset, FileItem, RasterData, TaskResult
-from uvdat.core.tasks.run_mode import TaskRunMode
 
 from .analysis_type import AnalysisTask, AnalysisType
 
@@ -155,5 +154,6 @@ def geoai_segmentation(result_id):  # noqa: PLR0915
     with mask_path.open("rb") as f:
         raster_file_item.file.save(mask_path, File(f))
 
-    dataset.spawn_conversion_task(run_mode=TaskRunMode.SYNC)
+    dataset.spawn_conversion_task(asynchronous=False)
+    result.project.datasets.add(dataset)
     result.write_outputs({"result": dataset.id})

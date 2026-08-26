@@ -2,6 +2,7 @@ import type { MapGeoJSONFeature, StyleSpecification } from "maplibre-gl";
 
 export interface User {
   id: number | undefined; // undefined id is unauthenticated
+  username?: string;
   first_name?: string;
   last_name?: string;
   is_superuser?: boolean;
@@ -246,12 +247,13 @@ export interface RasterDataValues {
   data: number[][];
 }
 
-export interface SourceRegion {
-  id: number;
+export interface Region {
+  id?: number;
   name?: string;
+  project_id?: number;
   dataset_id?: number;
   metadata?: object;
-  boundary?: object;
+  boundary?: number[][][][];
 }
 
 export interface Project {
@@ -436,7 +438,6 @@ export interface ChartOptions {
 }
 
 export interface AnalysisType {
-  id: number;
   name: string;
   db_value: string;
   description: string;

@@ -1,4 +1,5 @@
 import {
+  createRegion,
   getProjectAnalysisTypes,
   getProjectCharts,
   getTaskResults,
@@ -6,11 +7,14 @@ import {
 import type { Chart, AnalysisType, TaskResult } from "@/types";
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
-import { useProjectStore } from "./project";
 import { useFramePreviewStore } from "./framePreview";
+import { useProjectStore, useMapStore } from ".";
+import { TerraDraw, TerraDrawPolygonMode } from "terra-draw";
+import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 
 export const useAnalysisStore = defineStore("analysis", () => {
   const projectStore = useProjectStore();
+  const mapStore = useMapStore();
 
   const loadingCharts = ref<boolean>(false);
   const availableCharts = ref<Chart[]>();
@@ -21,6 +25,12 @@ export const useAnalysisStore = defineStore("analysis", () => {
   const currentAnalysisType = ref<AnalysisType>();
   const availableResults = ref<TaskResult[]>([]);
   const currentResult = ref<TaskResult>();
+  const selectedInputs = ref<Record<string, any>>({});
+  const terradraw = ref<TerraDraw | undefined>(undefined);
+  const drawingRegion = ref<boolean>(false);
+  const drawingRegionForInput = ref<undefined | string>();
+  const drawnRegionCoords = ref<number[][][] | undefined>();
+  const newRegionName = ref<string | undefined>();
   const ws = ref();
 
   async function initCharts(projectId: number) {
@@ -41,6 +51,118 @@ export const useAnalysisStore = defineStore("analysis", () => {
 
   async function initResults(analysisType: string, projectId: number) {
     availableResults.value = await getTaskResults(analysisType, projectId);
+  }
+
+  async function fetchResults() {
+    if (!projectStore.currentProject || !currentAnalysisType.value) return;
+    await initResults(
+      currentAnalysisType.value.db_value,
+      projectStore.currentProject.id,
+    );
+    if (currentResult.value) {
+      currentResult.value = availableResults.value.find(
+        (r) => r.id === currentResult.value?.id,
+      );
+    }
+  }
+
+  function initSelectedInputs() {
+    const type = currentAnalysisType.value;
+    selectedInputs.value = {};
+    if (type) {
+      Object.keys(type.input_types).forEach((key) => {
+        if (inputIsNumeric(key)) {
+          selectedInputs.value[key] = type.input_options[key][0].min;
+        }
+      });
+    }
+  }
+
+  function inputIsNumeric(key: string) {
+    return (
+      currentAnalysisType.value &&
+      currentAnalysisType.value.input_types[key] === "number" &&
+      currentAnalysisType.value.input_options[key].length == 1 &&
+      currentAnalysisType.value.input_options[key][0].min !== undefined &&
+      currentAnalysisType.value.input_options[key][0].max !== undefined &&
+      currentAnalysisType.value.input_options[key][0].step !== undefined
+    );
+  }
+
+  function cancelDraw() {
+    if (terradraw.value) {
+      terradraw.value?.setMode("static");
+      terradraw.value.clear();
+    }
+    drawingRegion.value = false;
+    drawingRegionForInput.value = undefined;
+    drawnRegionCoords.value = undefined;
+    newRegionName.value = undefined;
+  }
+
+  function drawNewRegion(inputName: string) {
+    drawingRegion.value = true;
+    drawingRegionForInput.value = inputName;
+    const map = mapStore.getMap();
+    if (!terradraw.value) {
+      terradraw.value = new TerraDraw({
+        adapter: new TerraDrawMapLibreGLAdapter({ map }),
+        modes: [new TerraDrawPolygonMode()],
+      });
+      terradraw.value.on("finish", () => {
+        terradraw.value?.setMode("static");
+        const snapshot = terradraw.value?.getSnapshot();
+        if (snapshot?.length) {
+          drawnRegionCoords.value = snapshot[0].geometry
+            .coordinates as number[][][];
+        }
+        // Only unset drawingRegion after click callbacks have completed
+        setTimeout(() => (drawingRegion.value = false), 1);
+      });
+    }
+    terradraw.value.start();
+    // Ensure that terradraw layers are on top
+    map.getStyle().layers.forEach((layer) => {
+      if (layer.id.startsWith("td-")) {
+        map.moveLayer(layer.id);
+      }
+    });
+    terradraw.value.clear();
+    terradraw.value.setMode("polygon");
+  }
+
+  function saveNewRegion() {
+    if (
+      !newRegionName.value ||
+      !drawnRegionCoords.value ||
+      !projectStore.currentProject
+    )
+      return;
+    createRegion({
+      name: newRegionName.value,
+      project_id: projectStore.currentProject.id,
+      boundary: [drawnRegionCoords.value],
+      metadata: {
+        source: "Drawn on map via UI",
+      },
+    }).then(async (region) => {
+      if (!projectStore.currentProject || !drawingRegionForInput.value) return;
+      availableAnalysisTypes.value = await getProjectAnalysisTypes(
+        projectStore.currentProject.id,
+      );
+      const matchingAnalysisType = availableAnalysisTypes.value.find(
+        (analysisType) =>
+          analysisType.db_value === currentAnalysisType.value?.db_value,
+      );
+      if (currentAnalysisType.value && matchingAnalysisType)
+        currentAnalysisType.value.input_options =
+          matchingAnalysisType.input_options;
+      selectedInputs.value[drawingRegionForInput.value] = region.id;
+      drawingRegionForInput.value = undefined;
+      newRegionName.value = undefined;
+      drawnRegionCoords.value = undefined;
+      terradraw.value?.clear();
+    });
   }
 
   function createWebSocket() {
@@ -81,6 +203,11 @@ export const useAnalysisStore = defineStore("analysis", () => {
     }
   }
 
+  watch(currentAnalysisType, () => {
+    fetchResults();
+    initSelectedInputs();
+  });
+
   watch(() => projectStore.currentProject, createWebSocket);
 
   return {
@@ -93,8 +220,19 @@ export const useAnalysisStore = defineStore("analysis", () => {
     currentAnalysisType,
     availableResults,
     currentResult,
+    selectedInputs,
     initCharts,
     initAnalysisTypes,
     initResults,
+    fetchResults,
+    initSelectedInputs,
+    inputIsNumeric,
+    drawingRegion,
+    drawingRegionForInput,
+    drawnRegionCoords,
+    newRegionName,
+    cancelDraw,
+    drawNewRegion,
+    saveNewRegion,
   };
 });

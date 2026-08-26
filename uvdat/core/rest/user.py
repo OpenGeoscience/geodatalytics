@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from .serializers import UserSerializer
+from .serializers import MeSerializer, UserSerializer
 
 
 class UserViewSet(ReadOnlyModelViewSet):
@@ -22,4 +22,4 @@ class UserViewSet(ReadOnlyModelViewSet):
         """Return the currently logged in user's information."""
         if request.user.is_anonymous:
             return HttpResponse(status=204)
-        return HttpResponse(json.dumps(UserSerializer(request.user).data), status=200)
+        return HttpResponse(json.dumps(MeSerializer(request.user).data), status=200)

@@ -233,6 +233,7 @@ def flood_simulation(result_id):
         # ready before this flood TaskResult completes.
         invalidate_and_enqueue_previews(style, run_mode=TaskRunMode.SYNC)
 
+        result.project.datasets.add(dataset)
         result.write_outputs(
             {
                 "flood": dataset.id,

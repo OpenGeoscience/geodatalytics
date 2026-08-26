@@ -23,6 +23,7 @@ export default defineConfigWithVueTs(
       "vue/valid-v-slot": ["error", { allowModifiers: true }],
       // `any` is used everywhere and will be difficult to eliminate
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
     },
   },
 
