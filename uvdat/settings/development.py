@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from django_extensions.utils import InternalIPS
 
 from .base import *
@@ -49,6 +51,15 @@ CORS_ALLOWED_ORIGIN_REGEXES = env.list(
 STORAGES["default"] = {
     "BACKEND": "minio_storage.storage.MinioMediaStorage",
 }
+
+LARGE_IMAGE_FORCE_GDAL_VSIS3 = True
+
+# GDAL /vsis3/ access for MinIO. Use the same values as MinIO storage config.
+os.environ.setdefault("AWS_ACCESS_KEY_ID", MINIO_STORAGE_ACCESS_KEY)
+os.environ.setdefault("AWS_SECRET_ACCESS_KEY", MINIO_STORAGE_SECRET_KEY)
+os.environ.setdefault("AWS_S3_ENDPOINT", MINIO_STORAGE_ENDPOINT)
+os.environ.setdefault("AWS_VIRTUAL_HOSTING", "FALSE")
+os.environ.setdefault("AWS_HTTPS", "YES" if MINIO_STORAGE_USE_HTTPS else "NO")
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
