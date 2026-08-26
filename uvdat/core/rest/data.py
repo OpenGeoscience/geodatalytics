@@ -5,7 +5,7 @@ import json
 from django.contrib.gis.db.models import Extent
 from django.db import connection
 from django.http import HttpResponse
-from django_large_image.rest import LargeImageFileDetailMixin
+from django_large_image.rest import LargeImageVSIFileDetailMixin
 import numpy as np
 from rest_framework import mixins
 from rest_framework.decorators import action
@@ -82,7 +82,7 @@ def get_filter_string(filters: dict | None = None):
     return return_str
 
 
-class RasterDataViewSet(GenericViewSet, mixins.RetrieveModelMixin, LargeImageFileDetailMixin):
+class RasterDataViewSet(GenericViewSet, mixins.RetrieveModelMixin, LargeImageVSIFileDetailMixin):
     queryset = RasterData.objects.select_related("dataset").all()
     serializer_class = RasterDataSerializer
     FILE_FIELD_NAME = "cloud_optimized_geotiff"
