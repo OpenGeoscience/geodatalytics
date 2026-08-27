@@ -14,6 +14,8 @@ import uvdat.core.rest.serializers as uvdat_serializers
 from uvdat.core.tasks.analytics import analysis_types
 from uvdat.core.tasks.analytics.analysis_type import AnalysisInputError
 
+EXCLUDE_FIELDS = ["chart_data", "chart_options", "nodes", "outputs", "metadata"]
+
 
 class AnalyticsViewSet(ReadOnlyModelViewSet):
     queryset = TaskResult.objects.all()
@@ -51,7 +53,14 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
                         None,
                     )
                     if input_serializer is not None:
-                        options = [input_serializer(o).data for o in filtered_queryset]
+                        options = [
+                            {
+                                k: v
+                                for k, v in input_serializer(o).data.items()
+                                if k not in EXCLUDE_FIELDS
+                            }
+                            for o in filtered_queryset
+                        ]
                     else:
                         options = [{"id": o.id, "name": o.name} for o in filtered_queryset]
                 elif any(not isinstance(o, dict) for o in v):
@@ -68,6 +77,7 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
                     "attribution": instance.attribution,
                     "input_options": filtered_input_options,
                     "input_types": instance.input_types,
+                    "input_defaults": instance.input_defaults,
                     "output_types": instance.output_types,
                 }
             )
