@@ -557,7 +557,6 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     }
 
     const generation = bumpGeneration(layerKeyValue);
-    hidePreviousPreview(map, layerKeyValue, settledFrameIndex);
 
     if (!preview) {
       // Drop any leftover overlay (including adjacent preloads) so a stale
@@ -606,13 +605,14 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
     activePreviewByLayerKey.set(layerKeyValue, settledFrameIndex);
     markPreviewDisplayed(layerKeyValue);
+    reorderPreviewLayers();
+    hidePreviousPreview(map, layerKeyValue, settledFrameIndex);
 
     // Keep any already-attached tiles invisible while scrubbing; do not start
     // fetching a new frame's tiles until the settle debounce fires.
     if (map.getLayer(tileLayerId)) {
       map.setPaintProperty(tileLayerId, "raster-opacity", 0);
     }
-    reorderPreviewLayers();
 
     preloadAdjacentPreviewLayers(
       map,

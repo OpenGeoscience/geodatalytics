@@ -4,13 +4,16 @@ import type {
   FramePreviewCorner,
   RasterMetadata,
 } from "@/types";
-import type { Map, MapSourceDataEvent } from "maplibre-gl";
+import type { Map as MaplibreMap, MapSourceDataEvent } from "maplibre-gl";
 import proj4 from "proj4";
 import { getCachedPreviewObjectUrl } from "./framePreviewCache";
 
 export const PREVIEW_FADE_DURATION_MS = 400;
 
 const CORNER_KEYS = ["ul", "ur", "lr", "ll"] as const;
+
+/** Tracks the preview URL attached to each map source to avoid remove/re-add flashes. */
+const previewUrlBySourceId = new Map<string, string>();
 type CornerKey = (typeof CORNER_KEYS)[number];
 
 function clampRasterOpacity(value: number): number {
@@ -110,7 +113,7 @@ function boundsToCoordinates(
 }
 
 export async function upsertPreviewLayer(
-  map: Map,
+  map: MaplibreMap,
   layerKey: string,
   frameIndex: number,
   preview: FramePreview,
@@ -128,45 +131,53 @@ export async function upsertPreviewLayer(
   const coordinates = boundsToCoordinates(
     resolvePreviewBounds(preview, raster),
   );
-  const existingSource = map.getSource(sourceId);
-  if (existingSource) {
-    if (map.getLayer(mapLayerId)) {
-      map.removeLayer(mapLayerId);
-    }
+  const previewOpacity = clampRasterOpacity(opacity);
+  const visibility = visible ? "visible" : "none";
+
+  const existingUrl = previewUrlBySourceId.get(sourceId);
+  if (
+    existingUrl === preview.url &&
+    map.getSource(sourceId) &&
+    map.getLayer(mapLayerId)
+  ) {
+    map.setPaintProperty(mapLayerId, "raster-opacity", previewOpacity);
+    map.setLayoutProperty(mapLayerId, "visibility", visibility);
+    return mapLayerId;
+  }
+
+  if (map.getLayer(mapLayerId)) {
+    map.removeLayer(mapLayerId);
+  }
+  if (map.getSource(sourceId)) {
     map.removeSource(sourceId);
   }
+  previewUrlBySourceId.delete(sourceId);
+
   map.addSource(sourceId, {
     type: "image",
     url: objectUrl,
     coordinates,
   });
+  previewUrlBySourceId.set(sourceId, preview.url);
 
-  const previewOpacity = clampRasterOpacity(opacity);
-  const visibility = visible ? "visible" : "none";
-
-  if (!map.getLayer(mapLayerId)) {
-    map.addLayer({
-      id: mapLayerId,
-      type: "raster",
-      source: sourceId,
-      layout: {
-        visibility,
-      },
-      paint: {
-        "raster-opacity": previewOpacity,
-        "raster-fade-duration": 0,
-      },
-    });
-  } else {
-    map.setPaintProperty(mapLayerId, "raster-opacity", previewOpacity);
-    map.setLayoutProperty(mapLayerId, "visibility", visibility);
-  }
+  map.addLayer({
+    id: mapLayerId,
+    type: "raster",
+    source: sourceId,
+    layout: {
+      visibility,
+    },
+    paint: {
+      "raster-opacity": previewOpacity,
+      "raster-fade-duration": 0,
+    },
+  });
 
   return mapLayerId;
 }
 
 export function hidePreviewLayer(
-  map: Map,
+  map: MaplibreMap,
   layerKey: string,
   frameIndex: number,
 ) {
@@ -177,7 +188,7 @@ export function hidePreviewLayer(
 }
 
 export function removePreviewLayer(
-  map: Map,
+  map: MaplibreMap,
   layerKey: string,
   frameIndex: number,
 ) {
@@ -189,6 +200,7 @@ export function removePreviewLayer(
   if (map.getSource(sourceId)) {
     map.removeSource(sourceId);
   }
+  previewUrlBySourceId.delete(sourceId);
 }
 
 function previewFrameIndexFromLayerId(
@@ -205,7 +217,7 @@ function previewFrameIndexFromLayerId(
 }
 
 export function removePreviewLayersExcept(
-  map: Map,
+  map: MaplibreMap,
   layerKey: string,
   keepFrameIndices: number[],
 ) {
@@ -224,7 +236,10 @@ export function removePreviewLayersExcept(
   });
 }
 
-export function removeAllPreviewLayersForLayerKey(map: Map, layerKey: string) {
+export function removeAllPreviewLayersForLayerKey(
+  map: MaplibreMap,
+  layerKey: string,
+) {
   map.getStyle().layers?.forEach((layer) => {
     if (layer.id.startsWith(`${layerKey}.preview.`)) {
       map.removeLayer(layer.id);
@@ -233,12 +248,13 @@ export function removeAllPreviewLayersForLayerKey(map: Map, layerKey: string) {
   Object.keys(map.getStyle().sources ?? {}).forEach((sourceId) => {
     if (sourceId.startsWith(`${layerKey}.preview.`)) {
       map.removeSource(sourceId);
+      previewUrlBySourceId.delete(sourceId);
     }
   });
 }
 
 export function waitForRasterSourceLoaded(
-  map: Map,
+  map: MaplibreMap,
   sourceId: string,
   timeoutMs = 10000,
 ): Promise<void> {
@@ -270,7 +286,7 @@ export function waitForRasterSourceLoaded(
 }
 
 export async function fadeRasterOpacities(
-  map: Map,
+  map: MaplibreMap,
   layers: { id: string; from: number; to: number }[],
   durationMs: number,
 ) {
