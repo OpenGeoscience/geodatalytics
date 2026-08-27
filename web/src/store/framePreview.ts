@@ -641,6 +641,32 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     });
   }
 
+  /**
+   * Drop stale preview overlays and hide current-frame tiles so the next
+   * showPreviewThenTiles call re-attaches previews for the active style.
+   */
+  function prepareForStylePreviewReset(layer: Layer) {
+    const map = mapStore.getMap();
+    const layerKeyValue = styleStore.layerStyleKey(layer);
+
+    bumpGeneration(layerKeyValue);
+    removeAllPreviewLayersForLayerKey(map, layerKeyValue);
+    activePreviewByLayerKey.delete(layerKeyValue);
+    clearPreviewDisplayed(layerKeyValue);
+
+    const frames = layerStore.layerFrames(layer);
+    const currentFrame = frames.find(
+      (frame) => frame.index === layer.current_frame_index,
+    );
+    if (currentFrame?.raster && layer.visible) {
+      const tileLayerId = `${mapStore.sourceIdFromLayerFrame(layer, currentFrame)}.raster`;
+      if (map.getLayer(tileLayerId)) {
+        map.setPaintProperty(tileLayerId, "raster-opacity", 0);
+      }
+    }
+    reorderPreviewLayers();
+  }
+
   function dismissPreviewForLayer(layer: Layer) {
     const map = mapStore.getMap();
     const layerKeyValue = styleStore.layerStyleKey(layer);
@@ -818,6 +844,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     reorderPreviewLayers,
     showPreviewThenTiles,
     dismissPreviewForLayer,
+    prepareForStylePreviewReset,
     clearPreviewsForStyleChange,
     onPreviewTaskComplete,
     cleanupLayer,

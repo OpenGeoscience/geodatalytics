@@ -173,7 +173,7 @@ async function init() {
   if (currentStyleSpec.value) setAvailableGroups();
 }
 
-function applyNoneStyle() {
+function applyNoneStyle(resetPreviews = false) {
   const styleSpec = styleStore.getDefaultStyleSpec(
     currentFrame.value?.raster,
     props.layer.id,
@@ -182,16 +182,32 @@ function applyNoneStyle() {
     name: "None",
     is_default: true,
     style_spec: cloneDeep(styleSpec),
+    preview_status: props.layer.preview_status,
+    ...(props.layer.preview_status === "ready" &&
+    props.layer.multiframe_previews
+      ? { multiframe_previews: props.layer.multiframe_previews }
+      : {}),
   });
   currentStyleSpec.value = styleSpec;
+  if (resetPreviews) {
+    framePreviewStore.prepareForStylePreviewReset(props.layer);
+    styleStore.updateLayerStyles(props.layer);
+  }
 }
 
-function applyStyleSelection(style: LayerStyle | undefined) {
+function applyStyleSelection(
+  style: LayerStyle | undefined,
+  resetPreviews = false,
+) {
   if (style?.id !== undefined && style.style_spec) {
     setCurrentLayerStyle(cloneDeep(style));
     currentStyleSpec.value = cloneDeep(style.style_spec);
+    if (resetPreviews) {
+      framePreviewStore.prepareForStylePreviewReset(props.layer);
+      styleStore.updateLayerStyles(props.layer);
+    }
   } else {
-    applyNoneStyle();
+    applyNoneStyle(resetPreviews);
   }
 }
 
@@ -226,7 +242,7 @@ function resetCurrentStyle() {
 
 function selectStyle(style: LayerStyle) {
   if (style?.id === undefined) {
-    applyNoneStyle();
+    applyNoneStyle(true);
     currentGroups.value = { color: undefined, size: undefined };
     return;
   }
@@ -236,11 +252,8 @@ function selectStyle(style: LayerStyle) {
   ) {
     return;
   }
-  applyStyleSelection(style);
+  applyStyleSelection(style, true);
   currentGroups.value = { color: undefined, size: undefined };
-  // Remove any preview overlay tied to the previously selected style so the map
-  // only shows previews that belong to the style now in effect.
-  framePreviewStore.dismissPreviewForLayer(props.layer);
 }
 
 function fetchRasterBands() {
@@ -622,13 +635,17 @@ function saveAsNew() {
 
 function deleteStyle() {
   if (!editMode.value || !currentLayerStyle.value?.id) return;
-  deleteLayerStyle(currentLayerStyle.value.id).then(() => {
-    getLayerStyles(props.layer.id).then((styles) => {
-      availableStyles.value = styles;
-      applyStyleSelection(styles.find((style) => style.is_default));
-      refreshLayer();
-      showDeleteConfirmation.value = false;
-    });
+  deleteLayerStyle(currentLayerStyle.value.id).then(async () => {
+    const [styles] = await Promise.all([
+      getLayerStyles(props.layer.id),
+      layerStore.fetchAvailableLayer(props.layer.id),
+    ]);
+    availableStyles.value = styles;
+    applyStyleSelection(
+      styles.find((style) => style.is_default),
+      true,
+    );
+    showDeleteConfirmation.value = false;
   });
 }
 

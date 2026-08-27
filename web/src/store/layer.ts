@@ -71,6 +71,8 @@ export const useLayerStore = defineStore("layer", () => {
     selectedLayers.value.forEach((selected) => {
       if (selected.id === layer.id) {
         selected.default_style = layer.default_style;
+        selected.multiframe_previews = layer.multiframe_previews;
+        selected.preview_status = layer.preview_status;
       }
     });
     return layer;
