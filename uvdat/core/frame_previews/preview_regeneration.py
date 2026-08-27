@@ -10,7 +10,7 @@ from uvdat.core.frame_previews.lookup import (
     preview_status_for_fingerprint,
     previews_current_for_fingerprint,
 )
-from uvdat.core.models import Layer, LayerStyle, Project, RasterFramePreview, TaskResult
+from uvdat.core.models import Layer, LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
 from uvdat.core.models.task_result import suppress_task_notifications
 
@@ -88,21 +88,6 @@ def mark_previews_regenerating(
         preview.save()
         frame_ids.append(frame.id)
     return frame_ids
-
-
-def _resolve_preview_task_project(
-    layer: Layer,
-    project,
-    layer_style: LayerStyle | None,
-):
-    if project is not None:
-        return project
-    if layer_style is not None:
-        return layer_style.project
-    # Prefer a project that already includes this dataset so the analytics
-    # WebSocket (project-scoped) receives completion. Conversion-time tasks
-    # before a project link still fall back to the conversion channel.
-    return Project.objects.filter(datasets=layer.dataset_id).first()
 
 
 def _dispatch_frame_preview_task(
@@ -183,7 +168,7 @@ def invalidate_and_enqueue_layer_previews(
         result = TaskResult.objects.create(
             name=f"Frame previews: {layer.name} - {style_name}",
             task_type="frame_preview",
-            project=_resolve_preview_task_project(layer, project, layer_style),
+            project=layer_style.project if layer_style is not None else project,
             inputs=inputs,
         )
 
