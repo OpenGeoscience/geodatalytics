@@ -284,15 +284,10 @@ export const useLayerStore = defineStore("layer", () => {
         ) {
           mapStore.addLayerFrameToMap(frame, sourceId, multiFrame);
         }
-
-        userMapLayers.forEach((mapLayerId) => {
-          if (mapLayerId.includes(sourceId)) {
-            map.moveLayer(mapLayerId); // handles reordering
-          }
-        });
       });
       styleStore.updateLayerStyles(layer);
     });
+    framePreviewStore.reorderPreviewLayers();
     // hide any removed layers
     userMapLayers.forEach((mapLayerId) => {
       if (isPreviewMapLayerId(mapLayerId)) return;

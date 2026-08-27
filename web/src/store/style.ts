@@ -522,7 +522,7 @@ export const useStyleStore = defineStore("style", () => {
     const hasMultiframeRaster =
       frames.length > 1 && frames.some((f) => f.raster);
     if (hasMultiframeRaster && !isLayerStyleEditing(layer)) {
-      void framePreviewStore.showPreviewThenTiles(layer);
+      framePreviewStore.showPreviewThenTiles(layer);
     }
   }
 

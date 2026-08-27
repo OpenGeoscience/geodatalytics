@@ -12,7 +12,7 @@ export function prefetchFramePreviewUrls(urls: (string | null | undefined)[]) {
       return;
     }
     prefetchedUrls.add(url);
-    void fetch(url);
+    fetch(url);
   });
 }
 

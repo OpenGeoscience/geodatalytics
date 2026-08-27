@@ -12,6 +12,7 @@ import { getLayerStyle } from "@/api/rest";
 import {
   fadeRasterOpacities,
   hidePreviewLayer,
+  isPreviewMapLayerId,
   PREVIEW_FADE_DURATION_MS,
   previewLayerId,
   removeAllPreviewLayersForLayerKey,
@@ -246,6 +247,63 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     tileLoadTimerByLayerKey.set(layerKeyValue, timer);
   }
 
+  /**
+   * Restore map layer z-order to match the layers panel.
+   *
+   * Walk selectedLayers bottom-to-top. For each layer, move its tile layers
+   * up, then its preview overlays above those tiles. Lower panel rows are
+   * processed first so higher rows end up on top.
+   */
+  function reorderPreviewLayers() {
+    if (!mapStore.map) {
+      return;
+    }
+    const map = mapStore.getMap();
+    const userMapLayers = mapStore.getUserMapLayers();
+
+    layerStore.selectedLayers.toReversed().forEach((layer) => {
+      const layerKeyValue = styleStore.layerStyleKey(layer);
+
+      layerStore.layerFrames(layer).forEach((frame) => {
+        const sourceId = mapStore.sourceIdFromLayerFrame(layer, frame);
+        userMapLayers.forEach((mapLayerId) => {
+          if (isPreviewMapLayerId(mapLayerId)) {
+            return;
+          }
+          if (mapLayerId.includes(sourceId) && map.getLayer(mapLayerId)) {
+            map.moveLayer(mapLayerId);
+          }
+        });
+      });
+
+      const previewPrefix = `${layerKeyValue}.preview.`;
+      const activeFrameIndex = activePreviewByLayerKey.get(layerKeyValue);
+      userMapLayers.forEach((mapLayerId) => {
+        if (!mapLayerId.startsWith(previewPrefix)) {
+          return;
+        }
+        if (
+          activeFrameIndex !== undefined &&
+          mapLayerId === previewLayerId(layerKeyValue, activeFrameIndex)
+        ) {
+          return;
+        }
+        if (map.getLayer(mapLayerId)) {
+          map.moveLayer(mapLayerId);
+        }
+      });
+      if (activeFrameIndex !== undefined) {
+        const activePreviewMapLayerId = previewLayerId(
+          layerKeyValue,
+          activeFrameIndex,
+        );
+        if (map.getLayer(activePreviewMapLayerId)) {
+          map.moveLayer(activePreviewMapLayerId);
+        }
+      }
+    });
+  }
+
   function prefetchLayerPreviews(layer: Layer, style?: LayerStyle) {
     const previews = previewsForLayer(layer, style);
     if (!previews?.length) {
@@ -339,11 +397,58 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     prefetchFramePreviewUrls(urlsToPrefetch);
   }
 
-  function hidePreviousPreview(map: MaplibreMap, layerKeyValue: string) {
+  function hidePreviousPreview(
+    map: MaplibreMap,
+    layerKeyValue: string,
+    nextFrameIndex: number,
+  ) {
     const previousFrameIndex = activePreviewByLayerKey.get(layerKeyValue);
-    if (previousFrameIndex !== undefined) {
+    if (
+      previousFrameIndex !== undefined &&
+      previousFrameIndex !== nextFrameIndex
+    ) {
       hidePreviewLayer(map, layerKeyValue, previousFrameIndex);
     }
+  }
+
+  function isPreviewLayerVisible(
+    map: MaplibreMap,
+    mapLayerId: string,
+  ): boolean {
+    if (!map.getLayer(mapLayerId)) {
+      return false;
+    }
+    return map.getLayoutProperty(mapLayerId, "visibility") === "visible";
+  }
+
+  /** Skip preview work when this layer is already settled for the current frame. */
+  function previewAlreadySettled(
+    map: MaplibreMap,
+    layerKeyValue: string,
+    settledFrameIndex: number,
+    tileLayerId: string,
+    previewMapLayerId: string,
+    targetOpacity: number,
+  ): boolean {
+    const activeFrameIndex = activePreviewByLayerKey.get(layerKeyValue);
+    if (activeFrameIndex === settledFrameIndex) {
+      return isPreviewLayerVisible(map, previewMapLayerId);
+    }
+
+    if (activeFrameIndex !== undefined) {
+      return false;
+    }
+
+    // Preview transition finished; tiles are showing at target opacity.
+    if (map.getLayer(previewMapLayerId)) {
+      return false;
+    }
+    if (!map.getLayer(tileLayerId)) {
+      return false;
+    }
+    const tileOpacity =
+      (map.getPaintProperty(tileLayerId, "raster-opacity") as number) ?? 0;
+    return tileOpacity >= targetOpacity - 0.01;
   }
 
   async function transitionToTiles(
@@ -375,6 +480,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       removePreviewLayer(map, layerKeyValue, frameIndex);
       activePreviewByLayerKey.delete(layerKeyValue);
       clearPreviewDisplayed(layerKeyValue);
+      reorderPreviewLayers();
       return;
     }
 
@@ -399,6 +505,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     removePreviewLayer(map, layerKeyValue, frameIndex);
     activePreviewByLayerKey.delete(layerKeyValue);
     clearPreviewDisplayed(layerKeyValue);
+    reorderPreviewLayers();
   }
 
   async function showPreviewThenTiles(layer: Layer) {
@@ -432,9 +539,25 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     const tileSourceId = mapStore.sourceIdFromLayerFrame(layer, currentFrame);
     const tileLayerId = `${tileSourceId}.raster`;
     const targetOpacity = style?.style_spec?.opacity ?? 1;
+    const settledFrameIndex = layer.current_frame_index;
+    const previewMapLayerId = previewLayerId(layerKeyValue, settledFrameIndex);
+
+    if (
+      previewAlreadySettled(
+        map,
+        layerKeyValue,
+        settledFrameIndex,
+        tileLayerId,
+        previewMapLayerId,
+        targetOpacity,
+      )
+    ) {
+      reorderPreviewLayers();
+      return;
+    }
 
     const generation = bumpGeneration(layerKeyValue);
-    hidePreviousPreview(map, layerKeyValue);
+    hidePreviousPreview(map, layerKeyValue, settledFrameIndex);
 
     if (!preview) {
       // Drop any leftover overlay (including adjacent preloads) so a stale
@@ -451,8 +574,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       return;
     }
 
-    const settledFrameIndex = layer.current_frame_index;
-    const previewMapLayerId = await upsertPreviewLayer(
+    const upsertedPreviewLayerId = await upsertPreviewLayer(
       map,
       layerKeyValue,
       settledFrameIndex,
@@ -464,14 +586,14 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       // A newer scrub already took over; don't steal its settle timer or cover
       // its preview with this stale overlay.
       if (
-        previewMapLayerId &&
+        upsertedPreviewLayerId &&
         layer.current_frame_index !== settledFrameIndex
       ) {
         hidePreviewLayer(map, layerKeyValue, settledFrameIndex);
       }
       return;
     }
-    if (!previewMapLayerId) {
+    if (!upsertedPreviewLayerId) {
       clearPreviewDisplayed(layerKeyValue);
       ensureRasterTilesOnMap(
         currentFrame,
@@ -490,28 +612,24 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     if (map.getLayer(tileLayerId)) {
       map.setPaintProperty(tileLayerId, "raster-opacity", 0);
     }
-    if (map.getLayer(previewMapLayerId)) {
-      map.moveLayer(previewMapLayerId);
-    }
+    reorderPreviewLayers();
 
-    void preloadAdjacentPreviewLayers(
+    preloadAdjacentPreviewLayers(
       map,
       layerKeyValue,
       previews,
       rasterFrames,
       settledFrameIndex,
       targetOpacity,
-    );
+    ).then(() => reorderPreviewLayers());
 
     scheduleTileLoadAfterSettle(layerKeyValue, generation, () => {
       if (layer.current_frame_index !== settledFrameIndex) {
         return;
       }
       ensureRasterTilesOnMap(currentFrame, tileSourceId, tileLayerId, 0);
-      if (map.getLayer(previewMapLayerId)) {
-        map.moveLayer(previewMapLayerId);
-      }
-      void transitionToTiles(
+      reorderPreviewLayers();
+      transitionToTiles(
         layer,
         settledFrameIndex,
         layerKeyValue,
@@ -546,6 +664,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     if (map.getLayer(tileLayerId)) {
       map.setPaintProperty(tileLayerId, "raster-opacity", targetOpacity);
     }
+    reorderPreviewLayers();
   }
 
   /** Clear stale preview payloads + map overlays after a style change. */
@@ -640,7 +759,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
         prefetchLayerPreviews(layer, styleStore.selectedLayerStyles[key]);
         if (!styleStore.isLayerStyleEditing(layer)) {
-          void showPreviewThenTiles(layer);
+          showPreviewThenTiles(layer);
         }
       });
       return;
@@ -656,7 +775,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
     // Keep availableLayers current so re-adding this layer picks up the new
     // default-style previews. Fire-and-forget; selected copies are updated below.
-    void layerStore.fetchAvailableLayer(layerId).catch(() => undefined);
+    layerStore.fetchAvailableLayer(layerId).catch(() => undefined);
 
     layerStore.selectedLayers.forEach((layer) => {
       if (layer.id !== layerId) {
@@ -684,7 +803,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
 
       prefetchLayerPreviews(layer, styleStore.selectedLayerStyles[key]);
       if (!styleStore.isLayerStyleEditing(layer)) {
-        void showPreviewThenTiles(layer);
+        showPreviewThenTiles(layer);
       }
     });
   }
@@ -696,6 +815,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     iconState,
     prefetchLayerPreviews,
     hasReadyPreviewForCurrentFrame,
+    reorderPreviewLayers,
     showPreviewThenTiles,
     dismissPreviewForLayer,
     clearPreviewsForStyleChange,
