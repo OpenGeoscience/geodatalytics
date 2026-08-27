@@ -7,13 +7,20 @@ import {
 import type { Chart, AnalysisType, TaskResult } from "@/types";
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
-import { useProjectStore, useMapStore } from ".";
+import {
+  useProjectStore,
+  useMapStore,
+  useLayerStore,
+  useNetworkStore,
+} from ".";
 import { TerraDraw, TerraDrawPolygonMode } from "terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 
 export const useAnalysisStore = defineStore("analysis", () => {
   const projectStore = useProjectStore();
   const mapStore = useMapStore();
+  const layerStore = useLayerStore();
+  const networkStore = useNetworkStore();
 
   const loadingCharts = ref<boolean>(false);
   const availableCharts = ref<Chart[]>();
@@ -70,8 +77,61 @@ export const useAnalysisStore = defineStore("analysis", () => {
     selectedInputs.value = {};
     if (type) {
       Object.keys(type.input_types).forEach((key) => {
-        if (inputIsNumeric(key)) {
+        if (type.input_defaults[key]) {
+          selectedInputs.value[key] = type.input_defaults[key];
+        } else if (inputIsNumeric(key)) {
           selectedInputs.value[key] = type.input_options[key][0].min;
+        } else {
+          const inputType = type.input_types[key].toLowerCase();
+          const optionsIds = type.input_options[key].map((c: any) => c.id);
+          const currentFrames = layerStore.selectedLayers
+            .filter((l) => l.visible)
+            .map(
+              (l) => layerStore.framesByLayerId[l.id][l.current_frame_index],
+            );
+          if (inputType === "rasterdata") {
+            const currentRasterFrame = currentFrames.find((f) => f.raster);
+            if (
+              currentRasterFrame?.raster &&
+              optionsIds.includes(currentRasterFrame.raster.id)
+            ) {
+              selectedInputs.value[key] = currentRasterFrame.raster;
+            }
+          } else if (inputType === "vectordata") {
+            const currentVectorFrame = currentFrames.find((f) => f.vector);
+            if (
+              currentVectorFrame?.raster &&
+              optionsIds.includes(currentVectorFrame.raster.id)
+            ) {
+              selectedInputs.value[key] = currentVectorFrame.raster;
+            }
+          } else if (inputType === "network") {
+            if (
+              networkStore.currentNetwork &&
+              optionsIds.includes(networkStore.currentNetwork.id)
+            ) {
+              selectedInputs.value[key] = networkStore.currentNetwork;
+            } else {
+              const networksByVectorId = Object.fromEntries(
+                networkStore.availableNetworks.map((n) => [n.vector_data, n]),
+              );
+              const currentNetworkFrame = currentFrames.find(
+                (f) => f.vector && networksByVectorId[f.vector.id],
+              );
+              if (currentNetworkFrame && currentNetworkFrame.vector) {
+                const currentNetwork =
+                  networksByVectorId[currentNetworkFrame.vector.id];
+                if (optionsIds.includes(currentNetwork.id))
+                  selectedInputs.value[key] = currentNetwork;
+              }
+            }
+          } else if (
+            inputType === "chart" &&
+            currentChart.value &&
+            optionsIds.includes(currentChart.value.id)
+          ) {
+            selectedInputs.value[key] = currentChart.value;
+          }
         }
       });
     }
