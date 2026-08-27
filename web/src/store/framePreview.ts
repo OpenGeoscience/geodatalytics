@@ -5,6 +5,7 @@ import type {
   Layer,
   LayerFrame,
   LayerStyle,
+  PreviewStatus,
   TaskResult,
 } from "@/types";
 import type { Map as MaplibreMap } from "maplibre-gl";
@@ -53,6 +54,11 @@ function usesLayerDefaultPreviews(
   // No DB default style: treat is_default / synthetic default as the layer default.
   return style.is_default === true;
 }
+
+type PreviewPayload = {
+  preview_status?: PreviewStatus;
+  multiframe_previews?: (FramePreview | null)[];
+};
 
 function previewsAreReady(
   layer: Layer,
@@ -125,6 +131,113 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   const mapStore = useMapStore();
   const styleStore = useStyleStore();
 
+  // Style/layer ids with preview regeneration in flight (drives the icon).
+  const generatingPreviewStyleIds = ref<Set<number>>(new Set());
+  const generatingPreviewLayerIds = ref<Set<number>>(new Set());
+
+  function markPreviewGenerating(styleId?: number, layerId?: number) {
+    if (styleId !== undefined) {
+      generatingPreviewStyleIds.value = new Set([
+        ...generatingPreviewStyleIds.value,
+        styleId,
+      ]);
+    }
+    if (layerId !== undefined) {
+      generatingPreviewLayerIds.value = new Set([
+        ...generatingPreviewLayerIds.value,
+        layerId,
+      ]);
+    }
+  }
+
+  function markPreviewReady(styleId?: number, layerId?: number) {
+    if (styleId !== undefined) {
+      const next = new Set(generatingPreviewStyleIds.value);
+      next.delete(styleId);
+      generatingPreviewStyleIds.value = next;
+    }
+    if (layerId !== undefined) {
+      const next = new Set(generatingPreviewLayerIds.value);
+      next.delete(layerId);
+      generatingPreviewLayerIds.value = next;
+    }
+  }
+
+  function attachPreviewsForLayer(layer: Layer) {
+    if (styleStore.isLayerStyleEditing(layer)) {
+      return;
+    }
+    const style =
+      styleStore.selectedLayerStyles[styleStore.layerStyleKey(layer)];
+    if (!previewsAreReady(layer, style)) {
+      return;
+    }
+    prepareForStylePreviewReset(layer);
+    void showPreviewThenTiles(layer);
+  }
+
+  function applyStylePreviewToMatchingLayers(
+    layerId: number,
+    layerStyleId: number,
+    payload: PreviewPayload,
+  ) {
+    layerStore.selectedLayers.forEach((layer) => {
+      if (layer.id !== layerId) {
+        return;
+      }
+      const key = styleStore.layerStyleKey(layer);
+      const selectedStyle = styleStore.selectedLayerStyles[key];
+      if (!selectedStyle || selectedStyle.id !== layerStyleId) {
+        return;
+      }
+
+      styleStore.patchSelectedLayerStyle(key, payload);
+      if (
+        selectedStyle.is_default ||
+        usesLayerDefaultPreviews(layer, selectedStyle)
+      ) {
+        layer.preview_status = payload.preview_status;
+        layer.multiframe_previews = payload.multiframe_previews;
+      }
+
+      prefetchLayerPreviews(layer, styleStore.selectedLayerStyles[key]);
+      if (!styleStore.isLayerStyleEditing(layer)) {
+        prepareForStylePreviewReset(layer);
+        void showPreviewThenTiles(layer);
+      }
+    });
+  }
+
+  function applyDefaultPreviewToMatchingLayers(
+    layerId: number,
+    payload: PreviewPayload,
+  ) {
+    layerStore.selectedLayers.forEach((layer) => {
+      if (layer.id !== layerId) {
+        return;
+      }
+      layer.preview_status = payload.preview_status;
+      layer.multiframe_previews = payload.multiframe_previews;
+
+      const key = styleStore.layerStyleKey(layer);
+      const selectedStyle = styleStore.selectedLayerStyles[key];
+      if (!usesLayerDefaultPreviews(layer, selectedStyle)) {
+        return;
+      }
+
+      styleStore.patchSelectedLayerStyle(
+        key,
+        payload,
+        selectedStyle ?? { name: "None", is_default: true },
+      );
+      prefetchLayerPreviews(layer, styleStore.selectedLayerStyles[key]);
+      if (!styleStore.isLayerStyleEditing(layer)) {
+        prepareForStylePreviewReset(layer);
+        void showPreviewThenTiles(layer);
+      }
+    });
+  }
+
   const activePreviewByLayerKey = new Map<string, number>();
   const transitionGenerationByLayerKey = new Map<string, number>();
   const tileLoadTimerByLayerKey = new Map<
@@ -169,6 +282,15 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     }
     const style =
       styleStore.selectedLayerStyles[styleStore.layerStyleKey(layer)];
+    if (style?.id != null && generatingPreviewStyleIds.value.has(style.id)) {
+      return true;
+    }
+    if (
+      usesLayerDefaultPreviews(layer, style) &&
+      generatingPreviewLayerIds.value.has(layer.id)
+    ) {
+      return true;
+    }
     if (style?.preview_status !== undefined) {
       return style.preview_status === "notready";
     }
@@ -708,11 +830,20 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
           : candidate.copy_id === layer.copy_id;
       if (!matches) return;
 
-      styleStore.selectedLayerStyles[key] = {
-        ...selectedStyle,
+      if (styleId !== undefined) {
+        markPreviewGenerating(styleId);
+      }
+      if (
+        selectedStyle.is_default ||
+        usesLayerDefaultPreviews(candidate, selectedStyle)
+      ) {
+        markPreviewGenerating(undefined, candidate.id);
+      }
+
+      styleStore.patchSelectedLayerStyle(key, {
         preview_status: "notready",
         multiframe_previews: undefined,
-      };
+      });
       if (
         selectedStyle.is_default ||
         usesLayerDefaultPreviews(candidate, selectedStyle)
@@ -738,6 +869,8 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     tileLoadTimerByLayerKey.clear();
     transitionGenerationByLayerKey.clear();
     activePreviewByLayerKey.clear();
+    generatingPreviewStyleIds.value = new Set();
+    generatingPreviewLayerIds.value = new Set();
     displayingPreviewLayerKeys.value = new Set();
   }
 
@@ -761,32 +894,10 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
         return;
       }
 
-      layerStore.selectedLayers.forEach((layer) => {
-        if (layer.id !== layerId) {
-          return;
-        }
-        layer.multiframe_previews = updatedLayer.multiframe_previews;
-        layer.preview_status = updatedLayer.preview_status;
-
-        const key = styleStore.layerStyleKey(layer);
-        const selectedStyle = styleStore.selectedLayerStyles[key];
-        if (!usesLayerDefaultPreviews(layer, selectedStyle)) {
-          return;
-        }
-
-        styleStore.selectedLayerStyles[key] = {
-          ...(selectedStyle ?? {
-            name: "None",
-            is_default: true,
-          }),
-          preview_status: updatedLayer.preview_status,
-          multiframe_previews: updatedLayer.multiframe_previews,
-        };
-
-        prefetchLayerPreviews(layer, styleStore.selectedLayerStyles[key]);
-        if (!styleStore.isLayerStyleEditing(layer)) {
-          showPreviewThenTiles(layer);
-        }
+      markPreviewReady(undefined, layerId);
+      applyDefaultPreviewToMatchingLayers(layerId, {
+        preview_status: updatedLayer.preview_status,
+        multiframe_previews: updatedLayer.multiframe_previews,
       });
       return;
     }
@@ -795,42 +906,16 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     try {
       updatedStyle = await getLayerStyle(layerStyleId);
     } catch {
-      // If the style was deleted or the fetch fails, there is nothing to attach.
       return;
     }
 
-    // Keep availableLayers current so re-adding this layer picks up the new
-    // default-style previews. Fire-and-forget; selected copies are updated below.
+    markPreviewReady(layerStyleId, layerId);
+
     layerStore.fetchAvailableLayer(layerId).catch(() => undefined);
 
-    layerStore.selectedLayers.forEach((layer) => {
-      if (layer.id !== layerId) {
-        return;
-      }
-      const key = styleStore.layerStyleKey(layer);
-      const selectedStyle = styleStore.selectedLayerStyles[key];
-      // Only reattach when this copy still has the regenerated style selected;
-      // the user may have swapped to a different style while generation ran.
-      if (!selectedStyle || selectedStyle.id !== layerStyleId) {
-        return;
-      }
-
-      styleStore.selectedLayerStyles[key] = {
-        ...selectedStyle,
-        preview_status: updatedStyle.preview_status,
-        multiframe_previews: updatedStyle.multiframe_previews,
-      };
-
-      // Mirror onto the layer object so the default-style fallback stays valid.
-      if (updatedStyle.is_default) {
-        layer.multiframe_previews = updatedStyle.multiframe_previews;
-        layer.preview_status = updatedStyle.preview_status;
-      }
-
-      prefetchLayerPreviews(layer, styleStore.selectedLayerStyles[key]);
-      if (!styleStore.isLayerStyleEditing(layer)) {
-        showPreviewThenTiles(layer);
-      }
+    applyStylePreviewToMatchingLayers(layerId, layerStyleId, {
+      preview_status: updatedStyle.preview_status,
+      multiframe_previews: updatedStyle.multiframe_previews,
     });
   }
 
@@ -847,6 +932,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     prepareForStylePreviewReset,
     clearPreviewsForStyleChange,
     onPreviewTaskComplete,
+    attachPreviewsForLayer,
     cleanupLayer,
     clearAll,
   };

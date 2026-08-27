@@ -695,15 +695,12 @@ const debouncedStyleSpecUpdated = debounce(() => {
     clearPreviews = prevQuery !== nextQuery;
   }
 
-  styleStore.selectedLayerStyles[styleKey.value] = {
-    ...prev,
-    style_spec: currentStyleSpec.value,
-    ...(clearPreviews
-      ? { preview_status: "notready" as const, multiframe_previews: undefined }
-      : {}),
-  };
   if (clearPreviews) {
     framePreviewStore.clearPreviewsForStyleChange(props.layer, prev.id);
+  } else {
+    styleStore.patchSelectedLayerStyle(styleKey.value, {
+      style_spec: currentStyleSpec.value,
+    });
   }
   styleStore.updateLayerStyles(props.layer);
   setAvailableGroups();

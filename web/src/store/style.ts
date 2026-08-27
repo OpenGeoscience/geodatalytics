@@ -418,6 +418,21 @@ export const useStyleStore = defineStore("style", () => {
     return editingStyleLayerKeys.value.has(layerStyleKey(layer));
   }
 
+  function patchSelectedLayerStyle(
+    key: string,
+    patch: Partial<LayerStyle>,
+    base?: LayerStyle,
+  ) {
+    const current = selectedLayerStyles.value[key] ?? base;
+    if (!current) {
+      return;
+    }
+    selectedLayerStyles.value = {
+      ...selectedLayerStyles.value,
+      [key]: { ...current, ...patch },
+    };
+  }
+
   function setLayerStyleEditing(layer: Layer, editing: boolean) {
     const key = layerStyleKey(layer);
     const next = new Set(editingStyleLayerKeys.value);
@@ -430,6 +445,7 @@ export const useStyleStore = defineStore("style", () => {
     next.delete(key);
     editingStyleLayerKeys.value = next;
     updateLayerStyles(layer);
+    framePreviewStore.attachPreviewsForLayer(layer);
   }
 
   function clearStyleEditing() {
@@ -716,6 +732,7 @@ export const useStyleStore = defineStore("style", () => {
     getVectorColorPaintProperty,
     isLayerStyleEditing,
     setLayerStyleEditing,
+    patchSelectedLayerStyle,
     clearStyleEditing,
     updateLayerStyles,
     setMapLayerStyle,
