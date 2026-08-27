@@ -32,6 +32,10 @@ class FloodNetworkFailure(AnalysisType):
             "depth_tolerance_meters": "number",
             "station_radius_meters": "number",
         }
+        self.input_defaults = {
+            "depth_tolerance_meters": 0.1,
+            "station_radius_meters": 30,
+        }
         self.output_types = {"failures": "network_animation"}
         self.attribution = "Northeastern University & Kitware, Inc."
 

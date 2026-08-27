@@ -30,6 +30,12 @@ class GeoAISegmentation(AnalysisType):
             "threshold": "number",
             "smoothing_sigma": "number",
         }
+        self.input_defaults = {
+            "tile_size": 512,
+            "tile_overlap": 16,
+            "threshold": 0.5,
+            "smoothing_sigma": 1,
+        }
         self.output_types = {"result": "Dataset"}
         self.attribution = "Open Geospatial Solutions"
 

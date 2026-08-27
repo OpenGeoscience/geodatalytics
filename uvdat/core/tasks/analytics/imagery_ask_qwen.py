@@ -50,6 +50,9 @@ class ImageryAskQwen(AnalysisType):
             "max_tokens": "number",
             "region": "Region",
         }
+        self.input_defaults = {
+            "max_tokens": TOKEN_RANGE["max"],
+        }
         self.output_types = {
             "response": "markdown",
         }

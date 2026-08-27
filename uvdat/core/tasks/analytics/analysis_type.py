@@ -14,6 +14,7 @@ class AnalysisType(ABC):
         self.details = None
         self.db_value = ""  # cannot be longer than 25 characters
         self.input_types = {}
+        self.input_defaults = {}
         self.output_types = {}
         self.attribution = "Kitware, Inc."
 
