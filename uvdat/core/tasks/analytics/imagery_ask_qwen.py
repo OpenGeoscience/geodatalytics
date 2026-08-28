@@ -53,6 +53,7 @@ class ImageryAskQwen(AnalysisType):
         self.input_defaults = {
             "max_tokens": TOKEN_RANGE["max"],
         }
+        self.optional_inputs = ["region"]
         self.output_types = {
             "response": "markdown",
         }
@@ -93,11 +94,13 @@ class ImageryAskQwen(AnalysisType):
         if max_tokens < TOKEN_RANGE["min"] or max_tokens > TOKEN_RANGE["max"]:
             err_msg = f"max_tokens must be between {TOKEN_RANGE['min']} and {TOKEN_RANGE['max']}."
             raise AnalysisInputError(err_msg)
-        try:
-            Region.objects.get(id=inputs.get("region"))
-        except Region.DoesNotExist as e:
-            err_msg = "Region does not exist."
-            raise AnalysisInputError(err_msg) from e
+        region_id = inputs.get("region")
+        if region_id is not None:
+            try:
+                Region.objects.get(id=region_id)
+            except Region.DoesNotExist as e:
+                err_msg = "Region does not exist."
+                raise AnalysisInputError(err_msg) from e
 
     def run_task(self, *, project, **inputs):
         text_prompt = inputs.get("text_prompt")
@@ -139,14 +142,16 @@ def imagery_ask_qwen(result_id):
     imagery_frame = result.inputs.get("imagery_frame", 0)  # optional, default to 0
     text_prompt = result.inputs.get("text_prompt")
     max_tokens = int(result.inputs.get("max_tokens"))
-    region = Region.objects.get(id=result.inputs.get("region"))
-    (xmin, ymin, xmax, ymax) = region.boundary.extent
+    region = None
+    region_id = result.inputs.get("region")
+    if region_id is not None:
+        region = Region.objects.get(id=region_id)
 
     result.write_status("Cropping and encoding imagery...")
     imagery_path = utilities.field_file_to_local_path(imagery.cloud_optimized_geotiff)
     src = large_image.open(imagery_path)
     src_bounds = src.getBounds(srs="epsg:4326")
-    if not region.boundary.intersects(
+    if region is not None and not region.boundary.intersects(
         Polygon.from_bbox(
             (
                 src_bounds.get("xmin"),
@@ -162,11 +167,19 @@ def imagery_ask_qwen(result_id):
         return
 
     (xmin, ymin, xmax, ymax) = (
-        max(xmin, src_bounds.get("xmin")),
-        max(ymin, src_bounds.get("ymin")),
-        min(xmax, src_bounds.get("xmax")),
-        min(ymax, src_bounds.get("ymax")),
+        src_bounds.get("xmin"),
+        src_bounds.get("ymin"),
+        src_bounds.get("xmax"),
+        src_bounds.get("ymax"),
     )
+    if region is not None:
+        (rxmin, rymin, rxmax, rymax) = region.boundary.extent
+        (xmin, ymin, xmax, ymax) = (
+            max(xmin, rxmin),
+            max(ymin, rymin),
+            min(xmax, rxmax),
+            min(ymax, rymax),
+        )
     thumbnail, _ = src.getRegion(
         region={"left": xmin, "right": xmax, "top": ymax, "bottom": ymin, "units": "EPSG:4326"},
         output={"maxWidth": THUMBNAIL_SIZE, "maxHeight": THUMBNAIL_SIZE},
@@ -174,15 +187,18 @@ def imagery_ask_qwen(result_id):
         format="numpy",
     )
     height, width, _ = thumbnail.shape
-    mask = rasterize(
-        [wkt.loads(region.boundary.wkt)],
-        out_shape=(height, width),
-        transform=from_bounds(xmin, ymin, xmax, ymax, width, height),
-        fill=0,
-        default_value=1,
-        dtype="uint8",
-    ).astype(bool)
-    masked = np.where(mask[:, :, np.newaxis], thumbnail, 0)
+    if region is not None:
+        mask = rasterize(
+            [wkt.loads(region.boundary.wkt)],
+            out_shape=(height, width),
+            transform=from_bounds(xmin, ymin, xmax, ymax, width, height),
+            fill=0,
+            default_value=1,
+            dtype="uint8",
+        ).astype(bool)
+        masked = np.where(mask[:, :, np.newaxis], thumbnail, 0)
+    else:
+        masked = thumbnail
     byte_stream = io.BytesIO()
     Image.fromarray(masked).save(byte_stream, format="PNG")
     thumbnail_b64 = base64.b64encode(byte_stream.getvalue()).decode("utf-8")
