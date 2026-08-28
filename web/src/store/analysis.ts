@@ -95,22 +95,22 @@ export const useAnalysisStore = defineStore("analysis", () => {
               currentRasterFrame?.raster &&
               optionsIds.includes(currentRasterFrame.raster.id)
             ) {
-              selectedInputs.value[key] = currentRasterFrame.raster;
+              selectedInputs.value[key] = currentRasterFrame.raster.id;
             }
           } else if (inputType === "vectordata") {
             const currentVectorFrame = currentFrames.find((f) => f.vector);
             if (
-              currentVectorFrame?.raster &&
-              optionsIds.includes(currentVectorFrame.raster.id)
+              currentVectorFrame?.vector &&
+              optionsIds.includes(currentVectorFrame.vector.id)
             ) {
-              selectedInputs.value[key] = currentVectorFrame.raster;
+              selectedInputs.value[key] = currentVectorFrame.vector.id;
             }
           } else if (inputType === "network") {
             if (
               networkStore.currentNetwork &&
               optionsIds.includes(networkStore.currentNetwork.id)
             ) {
-              selectedInputs.value[key] = networkStore.currentNetwork;
+              selectedInputs.value[key] = networkStore.currentNetwork.id;
             } else {
               const networksByVectorId = Object.fromEntries(
                 networkStore.availableNetworks.map((n) => [n.vector_data, n]),
@@ -122,7 +122,7 @@ export const useAnalysisStore = defineStore("analysis", () => {
                 const currentNetwork =
                   networksByVectorId[currentNetworkFrame.vector.id];
                 if (optionsIds.includes(currentNetwork.id))
-                  selectedInputs.value[key] = currentNetwork;
+                  selectedInputs.value[key] = currentNetwork.id;
               }
             }
           } else if (
@@ -130,7 +130,7 @@ export const useAnalysisStore = defineStore("analysis", () => {
             currentChart.value &&
             optionsIds.includes(currentChart.value.id)
           ) {
-            selectedInputs.value[key] = currentChart.value;
+            selectedInputs.value[key] = currentChart.value.id;
           }
         }
       });
