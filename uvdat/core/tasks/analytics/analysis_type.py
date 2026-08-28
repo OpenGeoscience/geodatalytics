@@ -15,6 +15,7 @@ class AnalysisType(ABC):
         self.db_value = ""  # cannot be longer than 25 characters
         self.input_types = {}
         self.input_defaults = {}
+        self.optional_inputs = []
         self.output_types = {}
         self.attribution = "Kitware, Inc."
 
@@ -33,7 +34,7 @@ class AnalysisType(ABC):
 
     def validate_inputs(self, inputs):
         for input_name in self.input_types:
-            if input_name not in inputs:
+            if input_name not in inputs and input_name not in self.optional_inputs:
                 raise AnalysisInputError(f"{input_name} not provided.")
 
     @abstractmethod

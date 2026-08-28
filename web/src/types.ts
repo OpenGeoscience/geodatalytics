@@ -410,6 +410,7 @@ export interface AnalysisType {
   attribution: string;
   input_options: Record<string, any>;
   input_defaults: Record<string, any>;
+  optional_inputs: string[];
   input_types: Record<string, any>;
   output_types: Record<string, any>;
 }

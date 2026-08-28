@@ -78,6 +78,7 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
                     "input_options": filtered_input_options,
                     "input_types": instance.input_types,
                     "input_defaults": instance.input_defaults,
+                    "optional_inputs": instance.optional_inputs,
                     "output_types": instance.output_types,
                 }
             )
