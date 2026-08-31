@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 
 from django.core.files.base import ContentFile
 import pytest
@@ -17,7 +18,9 @@ from uvdat.core.frame_previews.preview_regeneration import (
 )
 from uvdat.core.frame_previews.raster_style import (
     apply_source_filters_to_style_query,
+    ensure_nodata_in_style_query,
     raster_source_filter_kwargs,
+    resolve_preview_style_json,
 )
 from uvdat.core.models import LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
@@ -107,6 +110,37 @@ def test_apply_source_filters_to_style_query_embeds_band_not_frame():
     assert "frame" not in query
     assert apply_source_filters_to_style_query({}, {"frame": 3, "band": 1}) == {"band": 1}
     assert apply_source_filters_to_style_query({}, {"band": 1}) == {"band": 1}
+
+
+def test_ensure_nodata_in_style_query_adds_auto():
+    assert ensure_nodata_in_style_query({"min": 0, "max": 2, "palette": ["#000", "#fff"]}) == {
+        "min": 0,
+        "max": 2,
+        "palette": ["#000", "#fff"],
+        "nodata": "auto",
+    }
+    assert ensure_nodata_in_style_query({"bands": [{"band": 1, "min": 0}]}) == {
+        "bands": [{"band": 1, "min": 0, "nodata": "auto"}],
+    }
+    assert ensure_nodata_in_style_query({"nodata": -9999}) == {"nodata": -9999}
+
+
+def test_resolve_preview_style_json_native_single_band():
+    assert resolve_preview_style_json({}, None, band_count=1) is not None
+    assert json.loads(resolve_preview_style_json({}, None, band_count=1))["nodata"] == "auto"
+    assert resolve_preview_style_json({}, None, band_count=3) is None
+
+
+def test_resolve_preview_style_json_styled_adds_nodata():
+    styled = json.loads(
+        resolve_preview_style_json(
+            {"min": 0, "max": 2, "palette": ["#002081", "#2AD3FF"]},
+            None,
+            band_count=1,
+        )
+    )
+    assert styled["nodata"] == "auto"
+    assert styled["min"] == 0
 
 
 @pytest.mark.parametrize(

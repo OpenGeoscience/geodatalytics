@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import io
-import json
 import logging
 import time
 from typing import TYPE_CHECKING, Any
@@ -15,8 +14,8 @@ from PIL import Image
 
 from uvdat.core.frame_previews.fingerprint import params_fingerprint
 from uvdat.core.frame_previews.raster_style import (
-    apply_source_filters_to_style_query,
     raster_source_filter_kwargs,
+    resolve_preview_style_json,
 )
 from uvdat.core.models import (
     Layer,
@@ -87,6 +86,7 @@ def resolve_resolution_fraction(resolution_fraction: float | None = None) -> flo
 
 
 def _raster_max_dimension(metadata: dict[str, Any]) -> int:
+    """Largest source pixel dimension from large-image metadata (sizeX/sizeY)."""
     size_x = metadata.get("sizeX") or metadata.get("width") or 0
     size_y = metadata.get("sizeY") or metadata.get("height") or 0
     return max(int(size_x), int(size_y))
@@ -147,17 +147,51 @@ def generate_frame_preview_png(
     not embedded in the style query, so one style query can be reused for every
     frame in a multiframe layer.
     """
-    style_query = apply_source_filters_to_style_query(base_style_query, source_filters)
-    style = json.dumps(style_query) if style_query else None
     source_kwargs = raster_source_filter_kwargs(source_filters)
     raster_path = utilities.field_file_to_local_path(raster.cloud_optimized_geotiff)
-    source = tilesource.get_tilesource_from_path(
-        raster_path,
-        encoding="PNG",
-        style=style,
+    style = resolve_preview_style_json(
+        base_style_query,
+        source_filters,
+        band_count=None,
     )
+    if style is None:
+        # Single-band rasters (e.g. flood depth) need an explicit preview style with
+        # nodata + alpha palette—style=None thumbnails leave nodata as opaque black.
+        # Multi-band RGB rasters keep style=None so large-image builds the usual
+        # per-band default (red/green/blue) without forcing a grayscale preview style.
+        probe = tilesource.get_tilesource_from_path(
+            raster_path,
+            encoding="PNG",
+            style=None,
+        )
+        metadata = probe.getMetadata()
+        band_count = metadata.get("bandCount") or probe.bandCount or 1
+        style = resolve_preview_style_json(
+            base_style_query,
+            source_filters,
+            band_count=int(band_count),
+        )
+        # Reopen when the probe result calls for a preview-specific style; otherwise
+        # reuse the probe source and avoid a second large-image open.
+        source = (
+            tilesource.get_tilesource_from_path(
+                raster_path,
+                encoding="PNG",
+                style=style,
+            )
+            if style is not None
+            else probe
+        )
+    else:
+        source = tilesource.get_tilesource_from_path(
+            raster_path,
+            encoding="PNG",
+            style=style,
+        )
     max_dimension = resolve_preview_max_dimension(
         resolution_fraction,
+        # Sample output dimensions from metadata so thumbnail max edge respects the
+        # source raster size (small rasters are not upscaled beyond native resolution).
         _raster_max_dimension(source.getMetadata()),
     )
     thumb_data, _mime_type = source.getThumbnail(
