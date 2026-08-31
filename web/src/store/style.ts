@@ -504,6 +504,9 @@ export const useStyleStore = defineStore("style", () => {
     const currentStyleSpec: StyleSpec | undefined =
       selectedLayerStyles.value[styleKey]?.style_spec;
 
+    const deferRasterTileUpdates =
+      framePreviewStore.shouldDeferRasterTileUpdates(layer);
+
     mapStore.getUserMapLayers().forEach((mapLayerId) => {
       if (isPreviewMapLayerId(mapLayerId)) {
         return;
@@ -526,10 +529,13 @@ export const useStyleStore = defineStore("style", () => {
         layer.visible && isCurrent ? "visible" : "none",
       );
 
-      // Restyle every loaded frame, not only the current one. Otherwise a
-      // previously visited / adjacent frame keeps the old tile URL and flashes
-      // the previous style when scrubbed to after a style change.
-      if (currentStyleSpec) {
+      // While preview overlays are driving frame scrubbing, only toggle
+      // visibility — setTiles on already-attached frames would fetch tiles
+      // for every step (and for non-current frames) in the background.
+      if (currentStyleSpec && !deferRasterTileUpdates) {
+        // Restyle every loaded frame, not only the current one. Otherwise a
+        // previously visited frame keeps the old tile URL and flashes the
+        // previous style when scrubbed to after a style change.
         setMapLayerStyle(mapLayerId, currentStyleSpec, frame, frame.vector);
       }
     });
@@ -692,9 +698,14 @@ export const useStyleStore = defineStore("style", () => {
     if (result.tileURL) {
       const mapLayer = map.getLayer(mapLayerId) as MapLibreLayerWithMetadata;
       const source = map.getSource(mapLayer.source) as RasterTileSource;
-      source?.setTiles([result.tileURL]);
-      if (mapLayer.source) {
-        mapStore.rasterSourceTileURLs[mapLayer.source] = result.tileURL;
+      const previousURL = mapLayer.source
+        ? mapStore.rasterSourceTileURLs[mapLayer.source]
+        : undefined;
+      if (source && previousURL !== result.tileURL) {
+        source.setTiles([result.tileURL]);
+        if (mapLayer.source) {
+          mapStore.rasterSourceTileURLs[mapLayer.source] = result.tileURL;
+        }
       }
     }
   }

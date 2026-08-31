@@ -61,12 +61,16 @@ function removeLayers(layers: Layer[]) {
 }
 
 const debouncedUpdateFrame = debounce((layer: Layer, value: number) => {
-  layerStore.selectedLayers = layerStore.selectedLayers.map((l: Layer) => {
-    if (l.id === layer.id && l.copy_id === layer.copy_id) {
-      l.current_frame_index = value;
-    }
-    return l;
-  });
+  const target = layerStore.selectedLayers.find(
+    (l: Layer) => l.id === layer.id && l.copy_id === layer.copy_id,
+  );
+  if (!target || target.current_frame_index === value) {
+    return;
+  }
+  target.current_frame_index = value;
+  // Update only this layer — avoid re-running updateLayerStyles (and setTiles)
+  // on every other selected multiframe layer on each scrub step.
+  layerStore.updateLayerFrame(target);
 }, 10);
 
 function getLayerMaxFrames(layer: Layer) {

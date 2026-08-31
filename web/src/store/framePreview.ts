@@ -272,6 +272,14 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     );
   }
 
+  /** True while scrubbing with preview overlays — skip raster tile URL refreshes. */
+  function shouldDeferRasterTileUpdates(layer: Layer) {
+    const layerKeyValue = styleStore.layerStyleKey(layer);
+    return (
+      isDisplayingPreview(layer) || tileLoadTimerByLayerKey.has(layerKeyValue)
+    );
+  }
+
   // True when this multiframe layer's previews are explicitly not ready
   // (missing / generating / regenerating). Omitted preview_status is treated
   // as ready for backward compatibility, matching previewsAreReady().
@@ -922,6 +930,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
   return {
     displayingPreviewLayerKeys,
     isDisplayingPreview,
+    shouldDeferRasterTileUpdates,
     isGeneratingPreviews,
     iconState,
     prefetchLayerPreviews,
