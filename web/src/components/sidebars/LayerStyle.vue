@@ -782,6 +782,7 @@ onMounted(resetCurrentStyle);
         </table>
 
         <v-tabs
+          v-if="showVectorOptions"
           v-model="tab"
           align-tabs="center"
           fixed-tabs
@@ -1640,13 +1641,6 @@ onMounted(resetCurrentStyle);
             </div>
           </v-window-item>
           <v-window-item value="size" class="pa-2">
-            <div v-if="showRasterOptions">
-              <v-label class="secondary-text px-3">Raster Options</v-label>
-              <v-divider class="mt-1 mb-2" />
-              <v-label class="secondary-text px-3"
-                >Size options do not apply to raster data.</v-label
-              >
-            </div>
             <div v-if="showVectorOptions">
               <v-label class="secondary-text px-3">Vector Options</v-label>
               <v-divider class="mt-1 mb-2" />
@@ -1895,13 +1889,6 @@ onMounted(resetCurrentStyle);
             </div>
           </v-window-item>
           <v-window-item value="filters" class="pa-2">
-            <div v-if="showRasterOptions">
-              <v-label class="secondary-text px-3">Raster Options</v-label>
-              <v-divider class="mt-1 mb-2" />
-              <v-label class="secondary-text px-3"
-                >Filter options do not apply to raster data.</v-label
-              >
-            </div>
             <div v-if="showVectorOptions">
               <v-card-subtitle>Vector Options</v-card-subtitle>
               <v-divider class="mt-1 mb-2" />
