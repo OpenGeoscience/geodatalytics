@@ -232,12 +232,6 @@ export interface Project {
   owner: User;
   collaborators: User[];
   followers: User[];
-  item_counts: {
-    datasets: number;
-    regions: number;
-    charts: number;
-    analyses: number;
-  };
   allow_unauthenticated: boolean;
 }
 

@@ -69,7 +69,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField("get_owner")
     collaborators = serializers.SerializerMethodField("get_collaborators")
     followers = serializers.SerializerMethodField("get_followers")
-    item_counts = serializers.SerializerMethodField("get_item_counts")
 
     def get_center(self, obj):
         # Web client expects Lon, Lat
@@ -85,13 +84,6 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_followers(self, obj: Project):
         return [UserSerializer(user).data for user in obj.followers()]
-
-    def get_item_counts(self, obj):
-        return {
-            "datasets": obj.datasets.count(),
-            "charts": obj.charts.count(),
-            "analyses": obj.task_results.count(),
-        }
 
     def to_internal_value(self, data):
         center = data.get("default_map_center")
