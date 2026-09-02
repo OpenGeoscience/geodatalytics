@@ -487,32 +487,6 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
       </v-menu>
     </v-btn>
     <v-btn class="control-btn" variant="flat">
-      <v-icon icon="mdi-information-outline"></v-icon>
-      <v-menu
-        activator="parent"
-        :open-on-hover="true"
-        :close-on-content-click="false"
-      >
-        <v-card class="control-menu">
-          <div class="control-menu-title">Input Controls</div>
-          <v-card-text class="pa-3">
-            <div style="text-align: right; width: 100%">
-              <v-icon icon="mdi-keyboard"></v-icon>,
-              <v-icon icon="mdi-mouse"></v-icon>
-            </div>
-            <div class="control-menu-row">
-              <div>Zoom</div>
-              <div>+/-, scroll</div>
-            </div>
-            <div class="control-menu-row">
-              <div>Pan</div>
-              <div>arrows, drag</div>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-menu>
-    </v-btn>
-    <v-btn class="control-btn" variant="flat">
       <v-icon icon="mdi-help-circle-outline"></v-icon>
       <v-menu
         activator="parent"
@@ -523,6 +497,21 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
           <div class="control-menu-title">Help</div>
           <v-card-text class="pa-3">
             <v-btn block @click="showTutorial"> Show Tutorial </v-btn>
+            <div class="mt-3">
+              <span>Map Controls</span>
+              <div style="text-align: right; width: 100%">
+                <v-icon icon="mdi-keyboard"></v-icon>,
+                <v-icon icon="mdi-mouse"></v-icon>
+              </div>
+              <div class="control-menu-row">
+                <div>Zoom</div>
+                <div>+/-, scroll</div>
+              </div>
+              <div class="control-menu-row">
+                <div>Pan</div>
+                <div>arrows, drag</div>
+              </div>
+            </div>
           </v-card-text>
         </v-card>
       </v-menu>
