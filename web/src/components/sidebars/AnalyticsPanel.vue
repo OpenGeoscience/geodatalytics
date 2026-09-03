@@ -106,6 +106,19 @@ function getInputOptionalLabel(key: string) {
     : "";
 }
 
+function getPreviousValuesForInput(key: string) {
+  return [
+    ...new Set(
+      analysisStore.availableResults
+        .toSorted(
+          (a, b) =>
+            new Date(a.created).getTime() - new Date(b.created).getTime(),
+        )
+        .map((result) => result.inputs[key].toLocaleLowerCase()),
+    ),
+  ];
+}
+
 function run() {
   if (!runAllowed.value) return;
   inputForm.value.validate().then(({ valid }: { valid: boolean }) => {
@@ -353,7 +366,7 @@ watch(
                     />
                   </div>
                 </div>
-                <v-text-field
+                <v-combobox
                   v-else-if="
                     analysisStore.currentAnalysisType.input_types[key] ===
                       'string' &&
@@ -362,6 +375,9 @@ watch(
                   v-model="analysisStore.selectedInputs[key]"
                   :label="key.replaceAll('_', ' ') + getInputOptionalLabel(key)"
                   :rules="getInputSelectionRules(key)"
+                  :items="getPreviousValuesForInput(key)"
+                  :menu-props="{ maxWidth: '500px' }"
+                  clearable
                   density="compact"
                   hide-details="auto"
                   class="my-1"
