@@ -93,9 +93,17 @@ function getInputSelectionRules(key: string) {
         ? !options.length || options.map((opt: any) => opt.id).includes(v)
           ? true
           : "Must select from options"
-        : "Input required.";
+        : analysisStore.currentAnalysisType?.optional_inputs?.includes(key)
+          ? true
+          : "Input required.";
     },
   ];
+}
+
+function getInputOptionalLabel(key: string) {
+  return analysisStore.currentAnalysisType?.optional_inputs?.includes(key)
+    ? " (optional)"
+    : "";
 }
 
 function run() {
@@ -323,6 +331,7 @@ watch(
               >
                 <div v-if="analysisStore.inputIsNumeric(key)">
                   {{ key.replaceAll("_", " ") }}
+                  {{ getInputOptionalLabel(key) }}
                   <div class="px-2 mb-2">
                     <SliderNumericInput
                       :model="analysisStore.selectedInputs[key]"
@@ -351,7 +360,7 @@ watch(
                     !analysisStore.currentAnalysisType.input_options[key].length
                   "
                   v-model="analysisStore.selectedInputs[key]"
-                  :label="key.replaceAll('_', ' ')"
+                  :label="key.replaceAll('_', ' ') + getInputOptionalLabel(key)"
                   :rules="getInputSelectionRules(key)"
                   density="compact"
                   hide-details="auto"
@@ -360,16 +369,21 @@ watch(
                 <v-combobox
                   v-else-if="value"
                   :model-value="analysisStore.selectedInputs[key]"
-                  :label="key.replaceAll('_', ' ')"
+                  :label="key.replaceAll('_', ' ') + getInputOptionalLabel(key)"
                   :items="value"
                   :rules="getInputSelectionRules(key)"
+                  :clearable="
+                    analysisStore.currentAnalysisType.optional_inputs?.includes(
+                      key,
+                    )
+                  "
                   item-value="id"
                   item-title="name"
                   density="compact"
                   hide-details="auto"
                   class="my-1"
                   @update:model-value="
-                    (v) => (analysisStore.selectedInputs[key] = v.id)
+                    (v) => (analysisStore.selectedInputs[key] = v?.id)
                   "
                 >
                   <template #item="{ props, item }">

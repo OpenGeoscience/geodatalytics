@@ -37,6 +37,9 @@ class NetworkRecovery(AnalysisType):
             "network_failure": "TaskResult",
             "recovery_mode": "string",
         }
+        self.input_defaults = {
+            "recovery_mode": "betweenness",
+        }
         self.output_types = {
             "recoveries": "network_animation",
             "gcc_chart": "Chart",

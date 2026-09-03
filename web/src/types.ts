@@ -200,6 +200,7 @@ export interface RasterMetadata {
   tileHeight: number;
   source_filenames: string[];
   uploaded: string;
+  frames?: { Frame: number; Index: number }[];
 }
 
 export interface RasterDataValues {
@@ -409,6 +410,8 @@ export interface AnalysisType {
   details: string;
   attribution: string;
   input_options: Record<string, any>;
+  input_defaults: Record<string, any>;
+  optional_inputs: string[];
   input_types: Record<string, any>;
   output_types: Record<string, any>;
 }
