@@ -200,6 +200,7 @@ export interface RasterMetadata {
   tileHeight: number;
   source_filenames: string[];
   uploaded: string;
+  frames?: { Frame: number; Index: number }[];
 }
 
 export interface RasterDataValues {

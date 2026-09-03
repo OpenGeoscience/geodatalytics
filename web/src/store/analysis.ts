@@ -86,9 +86,10 @@ export const useAnalysisStore = defineStore("analysis", () => {
           const optionsIds = type.input_options[key].map((c: any) => c.id);
           const currentFrames = layerStore.selectedLayers
             .filter((l) => l.visible)
-            .map(
-              (l) => layerStore.framesByLayerId[l.id][l.current_frame_index],
-            );
+            .map((l) => ({
+              ...layerStore.framesByLayerId[l.id][l.current_frame_index],
+              frame_index: l.current_frame_index,
+            }));
           if (inputType === "rasterdata") {
             const currentRasterFrame = currentFrames.find((f) => f.raster);
             if (
@@ -96,6 +97,13 @@ export const useAnalysisStore = defineStore("analysis", () => {
               optionsIds.includes(currentRasterFrame.raster.id)
             ) {
               selectedInputs.value[key] = currentRasterFrame.raster.id;
+              if (
+                currentRasterFrame.raster.metadata?.frames?.length &&
+                currentRasterFrame.frame_index
+              ) {
+                selectedInputs.value[key + "_frame"] =
+                  currentRasterFrame.frame_index;
+              }
             }
           } else if (inputType === "vectordata") {
             const currentVectorFrame = currentFrames.find((f) => f.vector);
