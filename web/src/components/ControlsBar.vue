@@ -497,21 +497,27 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
           <div class="control-menu-title">Help</div>
           <v-card-text class="pa-3">
             <v-btn block @click="showTutorial"> Show Tutorial </v-btn>
-            <div class="mt-3">
-              <span>Map Controls</span>
-              <div style="text-align: right; width: 100%">
-                <v-icon icon="mdi-keyboard"></v-icon>,
-                <v-icon icon="mdi-mouse"></v-icon>
-              </div>
-              <div class="control-menu-row">
-                <div>Zoom</div>
-                <div>+/-, scroll</div>
-              </div>
-              <div class="control-menu-row">
-                <div>Pan</div>
-                <div>arrows, drag</div>
-              </div>
-            </div>
+            <table class="map-controls-table">
+              <thead>
+                <tr>
+                  <td>Map Controls</td>
+                  <td><v-icon icon="mdi-keyboard"></v-icon></td>
+                  <td><v-icon icon="mdi-mouse"></v-icon></td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Zoom</td>
+                  <td>+/-</td>
+                  <td>scroll</td>
+                </tr>
+                <tr>
+                  <td>Pan</td>
+                  <td>arrows</td>
+                  <td>drag</td>
+                </tr>
+              </tbody>
+            </table>
           </v-card-text>
         </v-card>
       </v-menu>
@@ -734,6 +740,20 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
   display: flex;
   justify-content: space-between;
   margin-bottom: 5px;
+}
+
+.map-controls-table {
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.map-controls-table thead {
+  border-bottom: 1px solid rgb(var(--v-theme-on-surface));
+}
+
+.map-controls-table td {
+  padding: 4px 8px;
+  text-align: center;
 }
 
 .basemap-list .v-list-item {
