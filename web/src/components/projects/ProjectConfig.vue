@@ -299,15 +299,15 @@ watch(
     </v-card>
     <div v-if="projectStore.currentProject" class="project-row text-body-small">
       <v-btn
-        size="sm"
         flat
         variant="text"
         prepend-icon="mdi-map-marker"
-        class="px-0"
+        class="pa-0"
+        size="x-small"
         color="primary"
         @click="() => mapStore.resetMapPosition(projectStore.currentProject)"
       >
-        Project default map position
+        Go to default map position
       </v-btn>
       <v-btn
         v-if="
@@ -315,12 +315,14 @@ watch(
             projectStore.permissions[projectStore.currentProject?.id],
           )
         "
-        size="sm"
-        class="px-1"
+        variant="text"
+        color="primary"
+        size="x-small"
+        class="pa-0"
         flat
         @click="() => saveProjectMapLocation(projectStore.currentProject)"
       >
-        Save current position
+        Set default map position
         <v-icon
           v-if="saving === 'done'"
           icon="mdi-check"
@@ -576,11 +578,6 @@ watch(
   margin: 4px 8px;
   align-items: center;
   justify-content: space-between;
-}
-.item-counts {
-  display: flex;
-  align-items: baseline;
-  column-gap: 4px;
 }
 .tutorial-popup {
   position: absolute !important;
