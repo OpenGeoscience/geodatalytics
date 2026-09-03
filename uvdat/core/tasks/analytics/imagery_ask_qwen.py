@@ -216,6 +216,7 @@ def imagery_ask_qwen(result_id):
         model="unsloth/Qwen3.5-9B-GGUF",
         messages=messages,
         max_tokens=max_tokens,
+        frequency_penalty=0.5,
     )
     response = ""
     for choice in chat.choices:
