@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "geodatalytics"
-version = "1.49.0"
+version = "1.50.0"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
