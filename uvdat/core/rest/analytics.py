@@ -14,7 +14,7 @@ import uvdat.core.rest.serializers as uvdat_serializers
 from uvdat.core.tasks.analytics import analysis_types
 from uvdat.core.tasks.analytics.analysis_type import AnalysisInputError
 
-EXCLUDE_FIELDS = ["chart_data", "chart_options", "nodes", "outputs", "metadata"]
+EXCLUDE_FIELDS = ["chart_data", "chart_options", "nodes", "outputs"]
 
 
 class AnalyticsViewSet(ReadOnlyModelViewSet):
