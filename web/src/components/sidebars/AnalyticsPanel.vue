@@ -169,8 +169,11 @@ async function fillInputsAndOutputs() {
             const fullValue = analysisStore.currentAnalysisType?.input_options[
               key
             ]?.find((o: any) => o.id == value);
-            const type =
-              analysisStore.currentAnalysisType?.input_types[key].toLowerCase();
+            const type = key.endsWith("_frame")
+              ? "number"
+              : analysisStore.currentAnalysisType?.input_types[
+                  key
+                ].toLowerCase();
             return [key, await getFullObject(type, fullValue || value)];
           },
         ),
@@ -416,6 +419,38 @@ watch(
                 <div
                   v-if="
                     analysisStore.currentAnalysisType.input_types[key] ===
+                    'RasterData'
+                  "
+                >
+                  <div
+                    v-for="selectedValue in analysisStore.currentAnalysisType.input_options[
+                      key
+                    ].filter(
+                      (option: any) =>
+                        option.id === analysisStore.selectedInputs[key],
+                    )"
+                    :key="selectedValue.id"
+                  >
+                    <div v-if="selectedValue.metadata?.frames?.length">
+                      {{ key }} frame
+                      <SliderNumericInput
+                        :model="
+                          analysisStore.selectedInputs[`${key}_frame`] || 0
+                        "
+                        :min="0"
+                        :max="selectedValue.metadata.frames.length - 1"
+                        :step="1"
+                        @update="
+                          (v) =>
+                            (analysisStore.selectedInputs[`${key}_frame`] = v)
+                        "
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  v-if="
+                    analysisStore.currentAnalysisType.input_types[key] ===
                     'Region'
                   "
                 >
@@ -498,6 +533,9 @@ watch(
                                 panelStore.setVisibility(
                                   { [value.type]: value },
                                   !value.visible,
+                                  fullInputs
+                                    ? fullInputs[`${key}_frame`]?.name
+                                    : undefined,
                                 )
                             "
                           >
@@ -573,6 +611,9 @@ watch(
                                     panelStore.setVisibility(
                                       { [value.type]: value },
                                       !value.visible,
+                                      fullOutputs
+                                        ? fullOutputs[`${key}_frame`]?.name
+                                        : undefined,
                                     )
                                 "
                               >
