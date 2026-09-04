@@ -25,6 +25,14 @@ STORAGES["default"] = {
     "BACKEND": "storages.backends.s3.S3Storage",
 }
 
+LARGE_IMAGE_FORCE_GDAL_VSIS3 = True
+# GDAL /vsis3/ access for S3. Use the same values as S3 storage config.
+# https://gdal.org/en/stable/user/virtual_file_systems.html#vsis3-aws-s3-files
+# Django Resonant S3 storage config:
+# https://github.com/kitware-resonant/cookiecutter-resonant/blob/master/django-resonant-settings/resonant_settings/production/s3_storage.py
+# the default values for AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION
+# are already set in the .env file so don't need to be set here
+
 # sentry_sdk is able to directly use environment variables like 'SENTRY_DSN', but prefix them
 # with 'DJANGO_' to avoid conflicts with other Sentry-using services.
 sentry_sdk.init(
