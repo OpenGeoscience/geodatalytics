@@ -132,7 +132,7 @@ class LayerFrameFactory(factory.django.DjangoModelFactory):
 
     name = factory.Faker("name")
     layer = factory.SubFactory(LayerFactory)
-    vector = factory.SubFactory(VectorDataFactory)
+    vector = None
     raster = factory.SubFactory(RasterDataFactory)
 
 

@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from uvdat.core.frame_previews.fingerprint import style_fingerprint
+from uvdat.core.frame_previews.lookup import ordered_complete_previews
 
 from .colormap import Colormap
 from .layer import Layer
 from .project import Project
 from .querysets import ProjectQuerySet
+
+if TYPE_CHECKING:
+    from uvdat.core.frame_previews.types import FramePreviewData
 
 
 class LayerStyle(models.Model):
@@ -26,6 +32,9 @@ class LayerStyle(models.Model):
             MaxValueValidator(1),
         ],
     )
+    # django-large-image ``style`` query JSON for raster tiles/previews.
+    # Provided by the client on style create/update (same object used for tile URLs).
+    raster_style_params = models.JSONField(blank=True, null=True, default=None)
 
     project_filter_path = "layer__dataset__project"
     objects = ProjectQuerySet.as_manager()
@@ -163,6 +172,7 @@ class LayerStyle(models.Model):
             filter_config.save()
             filter_config_ids.append(filter_config.id)
         FilterConfig.objects.filter(style=self).exclude(id__in=filter_config_ids).delete()
+        self.save(update_fields=["default_frame", "opacity"])
 
     def repr_style_configs(self):
         colors = []
@@ -226,6 +236,10 @@ class LayerStyle(models.Model):
             "sizes": sizes,
             "filters": filters,
         }
+
+    def multiframe_previews(self, layer=None) -> list[FramePreviewData] | None:
+        layer = layer or self.layer
+        return ordered_complete_previews(layer, style_fingerprint(self))
 
 
 def get_default_colormap():

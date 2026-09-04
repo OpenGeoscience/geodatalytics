@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from uvdat.core.tasks.dataset import create_layers_and_frames
+from uvdat.core.tasks.run_mode import TaskRunMode
 
 from .export_networks import perform_export
 from .import_networks import perform_import
@@ -34,5 +35,5 @@ def convert_dataset(dataset, options):
             layer_options=options.get("layers"),
             network_options=options.get("network_options"),
             region_options=options.get("region_options"),
-            asynchronous=False,
+            run_mode=TaskRunMode.SYNC,
         )

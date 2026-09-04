@@ -29,8 +29,14 @@ import {
   useLayerStore,
   useAppStore,
   useProjectStore,
+  useFramePreviewStore,
   useAnalysisStore,
 } from ".";
+import { layerStyleKey } from "./style";
+import {
+  isPreviewMapLayerId,
+  removeAllPreviewLayersForLayerKey,
+} from "@/utils/framePreviewLayer";
 import { THEMES } from "@/themes";
 
 function getLayerIsVisible(layer: MapLibreLayerWithMetadata) {
@@ -59,17 +65,13 @@ function sourceIdFromMapLayerId(mapLayerId: string) {
   return mapLayerId.split(".").slice(0, -1).join(".");
 }
 
-function uniqueLayerIdFromLayer(layer: Layer) {
-  return `${layer.id}.${layer.copy_id}`;
-}
-
 /**
  * Note: Rasters also have an extra `bounds` source, which allows for
  * interaction with the raster layer. This is not considered in this
  * function, as it's rarely accessed directly.
  */
 function sourceIdFromLayerFrame(layer: Layer, frame: LayerFrame) {
-  const parts: (number | string)[] = [uniqueLayerIdFromLayer(layer), frame.id];
+  const parts: (number | string)[] = [layerStyleKey(layer), frame.id];
 
   if (frame.vector) {
     parts.push("vector");
@@ -334,12 +336,21 @@ export const useMapStore = defineStore("map", () => {
 
   function removeLayers(layerIds: string[]) {
     const map = getMap();
+    const framePreviewStore = useFramePreviewStore();
+    const cleanedLayerKeys = new Set<string>();
 
     // Must collect all source Ids so they can be removed after all layers
     // have been removed, since multple layers may use the same source
     const sourceIdsToRemove = new Set<string>();
     const updatedLayerIds: string[] = [];
     layerIds.forEach((id) => {
+      if (isPreviewMapLayerId(id)) {
+        return;
+      }
+      const layerKey = id.split(".").slice(0, 2).join(".");
+      if (layerKey.includes(".")) {
+        cleanedLayerKeys.add(layerKey);
+      }
       // Rasters have implicit bounds layers that also need to be removed
       if (id.includes(".raster.")) {
         updatedLayerIds.push(id.replace(".raster.", ".bounds."));
@@ -357,6 +368,17 @@ export const useMapStore = defineStore("map", () => {
     // Now remove the sources
     sourceIdsToRemove.forEach((id) => {
       map.removeSource(id);
+    });
+
+    cleanedLayerKeys.forEach((layerKey) => {
+      removeAllPreviewLayersForLayerKey(map, layerKey);
+      const [layerId, copyId] = layerKey.split(".").map(Number);
+      const layer = layerStore.selectedLayers.find(
+        (candidate) => candidate.id === layerId && candidate.copy_id === copyId,
+      );
+      if (layer) {
+        framePreviewStore.cleanupLayer(layer);
+      }
     });
   }
 
@@ -468,6 +490,7 @@ export const useMapStore = defineStore("map", () => {
     tileSource: Source,
     boundsSource: Source,
     multiFrame: boolean,
+    rasterOpacity = 1,
   ) {
     const map = getMap();
     const { layerId, layerCopyId, frameId } = parseSourceString(tileSource.id);
@@ -484,6 +507,9 @@ export const useMapStore = defineStore("map", () => {
       type: "raster",
       source: tileSource.id,
       metadata,
+      paint: {
+        "raster-opacity": rasterOpacity,
+      },
     });
 
     const boundsLayerId = boundsSource.id + ".fill";
@@ -524,6 +550,7 @@ export const useMapStore = defineStore("map", () => {
     raster: RasterData,
     sourceId: string,
     multiFrame: boolean,
+    rasterOpacity = 1,
   ): Source | undefined {
     const map = getMap();
 
@@ -581,7 +608,12 @@ export const useMapStore = defineStore("map", () => {
     const boundsSource = map.getSource(boundsSourceId);
 
     if (tileSource && boundsSource) {
-      createRasterFeatureMapLayers(tileSource, boundsSource, multiFrame);
+      createRasterFeatureMapLayers(
+        tileSource,
+        boundsSource,
+        multiFrame,
+        rasterOpacity,
+      );
       return tileSource;
     }
   }
@@ -590,6 +622,7 @@ export const useMapStore = defineStore("map", () => {
     frame: LayerFrame,
     sourceId: string,
     multiFrame: boolean,
+    options?: { rasterOpacity?: number },
   ) {
     if (getMapSources().includes(sourceId)) {
       return;
@@ -598,7 +631,12 @@ export const useMapStore = defineStore("map", () => {
     if (frame.vector) {
       createVectorTileSource(frame.vector, sourceId, multiFrame);
     } else if (frame.raster) {
-      createRasterTileSource(frame.raster, sourceId, multiFrame);
+      createRasterTileSource(
+        frame.raster,
+        sourceId,
+        multiFrame,
+        options?.rasterOpacity,
+      );
     } else {
       throw new Error("Layer Frame is neither raster nor vector!");
     }
@@ -690,7 +728,6 @@ export const useMapStore = defineStore("map", () => {
     parseSourceString,
     parseLayerString,
     sourceIdFromLayerFrame,
-    uniqueLayerIdFromLayer,
     getLatestLayerInstance,
     getUserMapLayers,
     setupVectorLayerClickHandlers,

@@ -31,9 +31,7 @@ const currentStyleSpecs = ref<{
   B: StyleSpec | undefined;
 }>({ A: undefined, B: undefined });
 
-const styleKey = computed(() => {
-  return `${props.layer.id}.${props.layer.copy_id}`;
-});
+const styleKey = computed(() => styleStore.layerStyleKey(props.layer));
 
 const currentLayerStyles = computed(() => {
   let A = compareStore.compareLayerStyles.A[styleKey.value];

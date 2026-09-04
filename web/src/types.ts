@@ -27,6 +27,35 @@ export interface Dataset {
   n_layers?: number;
 }
 
+export interface FramePreviewCorner {
+  x: number;
+  y: number;
+}
+
+export interface FramePreviewBounds {
+  srs: string;
+  xmin: number;
+  xmax: number;
+  ymin: number;
+  ymax: number;
+  ul?: FramePreviewCorner;
+  ur?: FramePreviewCorner;
+  lr?: FramePreviewCorner;
+  ll?: FramePreviewCorner;
+}
+
+export interface FramePreview {
+  url: string;
+  width: number;
+  height: number;
+  bounds: FramePreviewBounds;
+}
+
+// Style-level preview lifecycle, derived by the API from per-frame rows.
+// "ready" means every raster frame has a complete preview image; anything
+// else (missing, generating, regenerating, failed) is reported as "notready".
+export type PreviewStatus = "ready" | "notready";
+
 export interface Layer {
   id: number;
   copy_id: number;
@@ -37,6 +66,8 @@ export interface Layer {
   visible: boolean;
   current_frame_index: number;
   default_style: LayerStyle | null;
+  multiframe_previews?: (FramePreview | null)[];
+  preview_status?: PreviewStatus;
 }
 
 export interface LayerFrame {
@@ -127,6 +158,10 @@ export interface LayerStyle {
   project?: number;
   is_default: boolean;
   style_spec?: StyleSpec;
+  /** Client-computed django-large-image style JSON, persisted on save for rasters. */
+  raster_style_params?: Record<string, unknown> | null;
+  multiframe_previews?: (FramePreview | null)[];
+  preview_status?: PreviewStatus;
 }
 
 export interface VectorData {

@@ -16,12 +16,14 @@ import {
   getVectorDataBounds,
 } from "@/api/rest";
 import proj4 from "proj4";
+import { isPreviewMapLayerId } from "@/utils/framePreviewLayer";
 
 import {
   useMapStore,
   useStyleStore,
   useNetworkStore,
   useProjectStore,
+  useFramePreviewStore,
 } from ".";
 
 interface SourceDBObjects {
@@ -43,6 +45,7 @@ export const useLayerStore = defineStore("layer", () => {
   const networkStore = useNetworkStore();
   const styleStore = useStyleStore();
   const projectStore = useProjectStore();
+  const framePreviewStore = useFramePreviewStore();
 
   /**
    * Return the maplibre layers associated with a Layer DB object
@@ -52,9 +55,7 @@ export const useLayerStore = defineStore("layer", () => {
   function getMapLayersFromLayerObject(layer: Layer) {
     return mapStore
       .getUserMapLayers()
-      .filter((layerId) =>
-        layerId.startsWith(mapStore.uniqueLayerIdFromLayer(layer)),
-      );
+      .filter((layerId) => layerId.startsWith(styleStore.layerStyleKey(layer)));
   }
 
   async function fetchAvailableLayer(layerId: number) {
@@ -70,6 +71,8 @@ export const useLayerStore = defineStore("layer", () => {
     selectedLayers.value.forEach((selected) => {
       if (selected.id === layer.id) {
         selected.default_style = layer.default_style;
+        selected.multiframe_previews = layer.multiframe_previews;
+        selected.preview_status = layer.preview_status;
       }
     });
     return layer;
@@ -198,6 +201,10 @@ export const useLayerStore = defineStore("layer", () => {
       current_frame_index: frame || 0,
     };
 
+    framePreviewStore.prefetchLayerPreviews(
+      newLayer,
+      newLayer.default_style ?? undefined,
+    );
     // Need to fetch the frames for this layer, if not present
     if (!layerFrames(layer).length) {
       await fetchFramesForLayer(layer.id);
@@ -215,6 +222,78 @@ export const useLayerStore = defineStore("layer", () => {
 
   watch(selectedLayers, updateLayersShown);
   watch(framesByLayerId, updateLayersShown);
+
+  /** Sync one layer's frames/styles onto the map (frame scrubbing uses this alone). */
+  function syncLayerOnMap(layer: Layer) {
+    if (!mapStore.map) return;
+
+    const userMapLayers = mapStore.getUserMapLayers();
+    const frames = layerFrames(layer);
+    const multiFrame = frames.length > 1;
+    frames.forEach((frame) => {
+      const styleId = styleStore.layerStyleKey(layer);
+      if (!styleStore.selectedLayerStyles[styleId]) {
+        if (
+          layer.default_style?.style_spec &&
+          Object.keys(layer.default_style.style_spec).length
+        ) {
+          styleStore.selectedLayerStyles[styleId] = {
+            ...layer.default_style,
+            preview_status: layer.preview_status,
+            ...(layer.preview_status === "ready" && layer.multiframe_previews
+              ? { multiframe_previews: layer.multiframe_previews }
+              : {}),
+          };
+          if (
+            styleStore.selectedLayerStyles[styleId]?.style_spec
+              ?.default_frame !== layer.current_frame_index
+          ) {
+            layer.current_frame_index =
+              styleStore.selectedLayerStyles[styleId].style_spec
+                ?.default_frame || 0;
+          }
+        } else {
+          const firstCurrentRaster = frames.find(
+            (f) => f.index == layer.current_frame_index && f.raster,
+          )?.raster;
+          styleStore.selectedLayerStyles[styleId] = {
+            name: "None",
+            is_default: true,
+            style_spec: styleStore.getDefaultStyleSpec(
+              firstCurrentRaster,
+              layer.id,
+            ),
+            // Dataset conversion can leave ready default-fingerprint previews
+            // with no LayerStyle yet — still attach them for scrubbing.
+            preview_status: layer.preview_status,
+            ...(layer.preview_status === "ready" && layer.multiframe_previews
+              ? { multiframe_previews: layer.multiframe_previews }
+              : {}),
+          };
+        }
+      }
+
+      // Add current frame to map if not added yet. Multiframe rasters with a
+      // ready preview skip the tile source here so the overlay can show first;
+      // showPreviewThenTiles adds the tiles afterward at opacity 0.
+      const sourceId = mapStore.sourceIdFromLayerFrame(layer, frame);
+      if (
+        layer.visible &&
+        !userMapLayers.some((mapLayerId) => mapLayerId.includes(sourceId)) &&
+        layer.current_frame_index === frame.index &&
+        !framePreviewStore.hasReadyPreviewForCurrentFrame(layer)
+      ) {
+        mapStore.addLayerFrameToMap(frame, sourceId, multiFrame);
+      }
+    });
+    styleStore.updateLayerStyles(layer);
+    framePreviewStore.reorderPreviewLayers();
+  }
+
+  function updateLayerFrame(layer: Layer) {
+    syncLayerOnMap(layer);
+  }
+
   function updateLayersShown() {
     if (!mapStore.map) return; // map not yet initialized
 
@@ -223,62 +302,11 @@ export const useLayerStore = defineStore("layer", () => {
 
     // reverse selected layers list for first on top
     selectedLayers.value.toReversed().forEach((layer) => {
-      const frames = layerFrames(layer);
-      const multiFrame = frames.length > 1;
-      frames.forEach((frame) => {
-        const styleId = mapStore.uniqueLayerIdFromLayer(layer);
-        if (!styleStore.selectedLayerStyles[styleId]) {
-          if (
-            layer.default_style?.style_spec &&
-            Object.keys(layer.default_style.style_spec).length
-          ) {
-            styleStore.selectedLayerStyles[styleId] = {
-              ...layer.default_style,
-            };
-            if (
-              !layer.current_frame_index &&
-              styleStore.selectedLayerStyles[styleId]?.style_spec
-                ?.default_frame !== layer.current_frame_index
-            ) {
-              layer.current_frame_index =
-                styleStore.selectedLayerStyles[styleId].style_spec
-                  ?.default_frame || 0;
-            }
-          } else {
-            const firstCurrentRaster = frames.find(
-              (f) => f.index == layer.current_frame_index && f.raster,
-            )?.raster;
-            styleStore.selectedLayerStyles[styleId] = {
-              name: "None",
-              is_default: true,
-              style_spec: styleStore.getDefaultStyleSpec(
-                firstCurrentRaster,
-                layer.id,
-              ),
-            };
-          }
-        }
-
-        // Add current frame to map if not added yet
-        const sourceId = mapStore.sourceIdFromLayerFrame(layer, frame);
-        if (
-          layer.visible &&
-          !userMapLayers.some((mapLayerId) => mapLayerId.includes(sourceId)) &&
-          layer.current_frame_index === frame.index
-        ) {
-          mapStore.addLayerFrameToMap(frame, sourceId, multiFrame);
-        }
-
-        userMapLayers.forEach((mapLayerId) => {
-          if (mapLayerId.includes(sourceId)) {
-            map.moveLayer(mapLayerId); // handles reordering
-          }
-        });
-      });
-      styleStore.updateLayerStyles(layer);
+      syncLayerOnMap(layer);
     });
     // hide any removed layers
     userMapLayers.forEach((mapLayerId) => {
+      if (isPreviewMapLayerId(mapLayerId)) return;
       const { layerId, layerCopyId } = mapStore.parseLayerString(mapLayerId);
       if (
         !selectedLayers.value.some((l) => {
@@ -299,6 +327,7 @@ export const useLayerStore = defineStore("layer", () => {
     fetchFramesForLayer,
     layerFrames,
     updateLayersShown,
+    updateLayerFrame,
     addLayer,
     setLayerVisibility,
     getDBObjectsForSourceID,

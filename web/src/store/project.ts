@@ -20,8 +20,10 @@ import {
   usePanelStore,
   useAppStore,
   useStyleStore,
+  useFramePreviewStore,
   useTutorialStore,
 } from ".";
+import { clearFramePreviewCache } from "@/utils/framePreviewCache";
 
 export const useProjectStore = defineStore("project", () => {
   const networkStore = useNetworkStore();
@@ -119,7 +121,7 @@ export const useProjectStore = defineStore("project", () => {
     );
     const styleKeysToCurrentFrames = Object.fromEntries(
       includeLayers.map((layer) => [
-        mapStore.uniqueLayerIdFromLayer(layer),
+        styleStore.layerStyleKey(layer),
         layer.current_frame_index,
       ]),
     );
@@ -233,8 +235,8 @@ export const useProjectStore = defineStore("project", () => {
       // Ensure correct layer order
       layerStore.selectedLayers = layerStore.selectedLayers.sort(
         (layer1, layer2) => {
-          const key1 = mapStore.uniqueLayerIdFromLayer(layer1);
-          const key2 = mapStore.uniqueLayerIdFromLayer(layer2);
+          const key1 = styleStore.layerStyleKey(layer1);
+          const key2 = styleStore.layerStyleKey(layer2);
           return (
             viewState.selected_layer_order.indexOf(key1) -
             viewState.selected_layer_order.indexOf(key2)
@@ -243,7 +245,7 @@ export const useProjectStore = defineStore("project", () => {
       );
       // Ensure correct current frames
       layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
-        const styleKey = mapStore.uniqueLayerIdFromLayer(layer);
+        const styleKey = styleStore.layerStyleKey(layer);
         if (viewState.selected_layer_current_frames[styleKey]) {
           layer.current_frame_index =
             viewState.selected_layer_current_frames[styleKey];
@@ -316,6 +318,9 @@ export const useProjectStore = defineStore("project", () => {
 
     layerStore.selectedLayers = [];
     styleStore.selectedLayerStyles = {};
+    styleStore.clearStyleEditing();
+    useFramePreviewStore().clearAll();
+    clearFramePreviewCache();
 
     mapStore.clickedFeature = undefined;
 

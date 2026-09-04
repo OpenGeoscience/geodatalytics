@@ -25,6 +25,20 @@ class Layer(models.Model):
     def __str__(self):
         return f"{self.name} ({self.id})"
 
+    def raster_frames(self):
+        prefetched = getattr(self, "_raster_frames", None)
+        if prefetched is not None:
+            return prefetched
+        return list(
+            self.frames.filter(raster__isnull=False).select_related("raster").order_by("index")
+        )
+
+    def is_multiframe_raster(self) -> bool:
+        prefetched = getattr(self, "_raster_frames", None)
+        if prefetched is not None:
+            return len(prefetched) > 1
+        return self.frames.filter(raster__isnull=False).count() > 1
+
 
 class LayerFrame(models.Model):
     name = models.CharField(max_length=255, default="Layer Frame")

@@ -19,6 +19,7 @@ from uvdat.core.models import (
     NetworkNode,
     Project,
     RasterData,
+    RasterFramePreview,
     Region,
     SizeConfig,
     SizeRangeConfig,
@@ -67,6 +68,20 @@ class LayerFrameAdmin(admin.ModelAdmin):
 @admin.register(LayerStyle)
 class LayerStyleAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "layer"]
+
+
+@admin.register(RasterFramePreview)
+class RasterFramePreviewAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "layer_frame",
+        "style_fingerprint",
+        "raster_style_params",
+        "width",
+        "height",
+        "status",
+    ]
+    list_select_related = ["layer_frame"]
 
 
 @admin.register(Colormap)

@@ -7,6 +7,7 @@ import { useProjectStore } from "./project";
 import { useStyleStore } from "./style";
 import { usePanelStore } from "./panel";
 import { useConversionStore } from "./conversion";
+import { useFramePreviewStore } from "./framePreview";
 import { useTutorialStore } from "./tutorial";
 
 export {
@@ -19,5 +20,6 @@ export {
   useStyleStore,
   usePanelStore,
   useConversionStore,
+  useFramePreviewStore,
   useTutorialStore,
 };

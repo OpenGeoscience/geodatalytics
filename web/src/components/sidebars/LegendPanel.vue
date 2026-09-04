@@ -3,10 +3,10 @@ import { ref, computed } from "vue";
 import type { Layer } from "@/types";
 import ColormapPreview from "./ColormapPreview.vue";
 
-import { useLayerStore, useStyleStore } from "@/store";
-import { colormapMarkersSubsample } from "@/store/style";
+import { useLayerStore, useStyleStore, useFramePreviewStore } from "@/store";
 const layerStore = useLayerStore();
 const styleStore = useStyleStore();
+const framePreviewStore = useFramePreviewStore();
 
 const searchText = ref<string | undefined>();
 const filteredLegend = computed(() => {
@@ -19,7 +19,7 @@ const filteredLegend = computed(() => {
 });
 
 function getColormapPreviews(layer: Layer) {
-  const styleKey = `${layer.id}.${layer.copy_id}`;
+  const styleKey = styleStore.layerStyleKey(layer);
   const currentStyleSpec = styleStore.selectedLayerStyles[styleKey].style_spec;
   if (!currentStyleSpec) return [];
   const currentFrame = layerStore
@@ -58,7 +58,7 @@ function getColormapPreviews(layer: Layer) {
           new Set(colorByProp.value_set.filter((v) => v)),
         );
         const sortedValues = valueSet.sort((a: any, b: any) => a - b);
-        const markers = colormapMarkersSubsample(
+        const markers = styleStore.colormapMarkersSubsample(
           colormap,
           colorConfig.colormap,
           nColors,
@@ -117,6 +117,15 @@ function getColorPropsCoverage(layer: Layer) {
       <v-list v-if="filteredLegend?.length" density="compact">
         <v-list-item v-for="layer in filteredLegend" :key="layer.id">
           {{ layer.name }}
+          <v-icon
+            v-if="framePreviewStore.iconState(layer).visible"
+            v-tooltip="framePreviewStore.iconState(layer).tooltip"
+            icon="mdi-image-size-select-large"
+            size="small"
+            :color="framePreviewStore.iconState(layer).color"
+            class="preview-indicator ml-1"
+            :class="framePreviewStore.iconState(layer).class"
+          />
           <div
             v-for="colormap_preview in getColormapPreviews(layer)"
             :key="colormap_preview.name"
@@ -190,3 +199,22 @@ function getColorPropsCoverage(layer: Layer) {
     </v-card>
   </div>
 </template>
+
+<style scoped>
+.preview-indicator {
+  cursor: help;
+}
+.preview-indicator--generating {
+  filter: grayscale(1);
+  animation: preview-indicator-pulse 1.4s ease-in-out infinite;
+}
+@keyframes preview-indicator-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+</style>

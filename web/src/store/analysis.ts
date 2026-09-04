@@ -7,6 +7,7 @@ import {
 import type { Chart, AnalysisType, TaskResult } from "@/types";
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
+import { useFramePreviewStore } from "./framePreview";
 import {
   useProjectStore,
   useMapStore,
@@ -240,6 +241,10 @@ export const useAnalysisStore = defineStore("analysis", () => {
       ws.value = new WebSocket(url);
       ws.value.onmessage = (event: any) => {
         const data = JSON.parse(JSON.parse(event.data));
+        if (data.task_type === "frame_preview" && data.completed) {
+          // Regenerated previews are ready; reload and reattach them to layers.
+          useFramePreviewStore().onPreviewTaskComplete(data);
+        }
         if (currentResult.value && data.id === currentResult.value.id) {
           // only overwrite attributes expecting updates
           // overwriting the whole currentResult object will cause

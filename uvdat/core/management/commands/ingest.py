@@ -18,6 +18,7 @@ import djclick as click
 import pooch
 
 from uvdat.core.models import Chart, Dataset, FileItem, Project
+from uvdat.core.tasks.run_mode import TaskRunMode
 
 DATA_FOLDER = Path(os.environ.get("INGEST_BIND_MOUNT_POINT", "sample_data"))
 DOWNLOADS_FOLDER = DATA_FOLDER / "downloads"
@@ -258,7 +259,7 @@ def default_conversion_process(dataset: Dataset, options: DatasetItem):
         layer_options=options.get("layers"),
         network_options=options.get("network_options"),
         region_options=options.get("region_options"),
-        asynchronous=False,
+        run_mode=TaskRunMode.SYNC,
     )
 
 

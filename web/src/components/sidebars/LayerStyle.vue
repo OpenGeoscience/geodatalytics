@@ -27,12 +27,14 @@ import {
   usePanelStore,
   useLayerStore,
   useAppStore,
+  useFramePreviewStore,
 } from "@/store";
 const styleStore = useStyleStore();
 const projectStore = useProjectStore();
 const panelStore = usePanelStore();
 const layerStore = useLayerStore();
 const appStore = useAppStore();
+const framePreviewStore = useFramePreviewStore();
 
 const emit = defineEmits(["setLayerActive"]);
 const props = defineProps<{
@@ -72,9 +74,7 @@ const editMode = computed(() => {
   );
 });
 
-const styleKey = computed(() => {
-  return `${props.layer.id}.${props.layer.copy_id}`;
-});
+const styleKey = computed(() => styleStore.layerStyleKey(props.layer));
 
 const currentLayerStyle = computed(() => {
   return styleStore.selectedLayerStyles[styleKey.value];
@@ -82,6 +82,29 @@ const currentLayerStyle = computed(() => {
 
 const setCurrentLayerStyle = (style: LayerStyle) => {
   styleStore.selectedLayerStyles[styleKey.value] = style;
+};
+
+// After a style save, apply the API response. When previews were invalidated,
+// clear stale payloads/overlays; onPreviewTaskComplete reloads them when ready.
+const markStyleSavedAndInvalidatePreviews = (style: LayerStyle) => {
+  const previewsStillValid =
+    style.preview_status === "ready" && !!style.multiframe_previews?.length;
+  setCurrentLayerStyle(
+    previewsStillValid
+      ? cloneDeep(style)
+      : {
+          ...style,
+          preview_status: style.preview_status ?? "notready",
+          multiframe_previews: undefined,
+        },
+  );
+  if (previewsStillValid) {
+    // Previews were reused on the server (no frame_preview WebSocket), so clear
+    // any generating flags left over from live style edits.
+    framePreviewStore.markPreviewReady(style.id, props.layer.id);
+  } else {
+    framePreviewStore.clearPreviewsForStyleChange(props.layer, style.id);
+  }
 };
 
 const appliedStyleName = computed(() => {
@@ -154,7 +177,7 @@ async function init() {
   if (currentStyleSpec.value) setAvailableGroups();
 }
 
-function applyNoneStyle() {
+function applyNoneStyle(resetPreviews = false) {
   const styleSpec = styleStore.getDefaultStyleSpec(
     currentFrame.value?.raster,
     props.layer.id,
@@ -163,16 +186,32 @@ function applyNoneStyle() {
     name: "None",
     is_default: true,
     style_spec: cloneDeep(styleSpec),
+    preview_status: props.layer.preview_status,
+    ...(props.layer.preview_status === "ready" &&
+    props.layer.multiframe_previews
+      ? { multiframe_previews: props.layer.multiframe_previews }
+      : {}),
   });
   currentStyleSpec.value = styleSpec;
+  if (resetPreviews) {
+    framePreviewStore.prepareForStylePreviewReset(props.layer);
+    styleStore.updateLayerStyles(props.layer);
+  }
 }
 
-function applyStyleSelection(style: LayerStyle | undefined) {
+function applyStyleSelection(
+  style: LayerStyle | undefined,
+  resetPreviews = false,
+) {
   if (style?.id !== undefined && style.style_spec) {
     setCurrentLayerStyle(cloneDeep(style));
     currentStyleSpec.value = cloneDeep(style.style_spec);
+    if (resetPreviews) {
+      framePreviewStore.prepareForStylePreviewReset(props.layer);
+      styleStore.updateLayerStyles(props.layer);
+    }
   } else {
-    applyNoneStyle();
+    applyNoneStyle(resetPreviews);
   }
 }
 
@@ -207,7 +246,7 @@ function resetCurrentStyle() {
 
 function selectStyle(style: LayerStyle) {
   if (style?.id === undefined) {
-    applyNoneStyle();
+    applyNoneStyle(true);
     currentGroups.value = { color: undefined, size: undefined };
     return;
   }
@@ -217,7 +256,7 @@ function selectStyle(style: LayerStyle) {
   ) {
     return;
   }
-  applyStyleSelection(style);
+  applyStyleSelection(style, true);
   currentGroups.value = { color: undefined, size: undefined };
 }
 
@@ -390,13 +429,13 @@ function confirmDeleteColormap() {
       );
       // update other styles in case colormap changed to default
       layerStore.selectedLayers.forEach((layer) => {
-        const layerStyleKey = `${layer.id}.${layer.copy_id}`;
+        const key = styleStore.layerStyleKey(layer);
         getLayerStyles(layer.id).then((styles) => {
           const updated = styles.find(
-            (s) => s.id === styleStore.selectedLayerStyles[layerStyleKey].id,
+            (s) => s.id === styleStore.selectedLayerStyles[key].id,
           );
           if (updated) {
-            styleStore.selectedLayerStyles[layerStyleKey] = updated;
+            styleStore.selectedLayerStyles[key] = updated;
             if (layer.id === props.layer.id) {
               availableStyles.value = styles;
               currentStyleSpec.value = updated.style_spec;
@@ -542,9 +581,15 @@ function save() {
     name: newName.value || currentLayerStyle.value.name,
     is_default: currentLayerStyle.value.is_default,
     style_spec: currentStyleSpec.value,
+    raster_style_params: showRasterOptions.value
+      ? styleStore.getRasterTilesQuery(
+          currentStyleSpec.value,
+          styleStore.colormaps,
+        )
+      : null,
   }).then((style) => {
     if (style) {
-      setCurrentLayerStyle(style);
+      markStyleSavedAndInvalidatePreviews(style);
       newName.value = undefined;
       newNameMode.value = undefined;
       // update other styles in case default overriden
@@ -571,9 +616,15 @@ function saveAsNew() {
     layer: props.layer.id,
     project: projectStore.currentProject.id,
     style_spec: currentStyleSpec.value,
+    raster_style_params: showRasterOptions.value
+      ? styleStore.getRasterTilesQuery(
+          currentStyleSpec.value,
+          styleStore.colormaps,
+        )
+      : null,
   }).then((style: LayerStyle) => {
     if (style) {
-      setCurrentLayerStyle(style);
+      markStyleSavedAndInvalidatePreviews(style);
       newName.value = undefined;
       newNameMode.value = undefined;
       // update other styles in case default overriden
@@ -588,13 +639,17 @@ function saveAsNew() {
 
 function deleteStyle() {
   if (!editMode.value || !currentLayerStyle.value?.id) return;
-  deleteLayerStyle(currentLayerStyle.value.id).then(() => {
-    getLayerStyles(props.layer.id).then((styles) => {
-      availableStyles.value = styles;
-      applyStyleSelection(styles.find((style) => style.is_default));
-      refreshLayer();
-      showDeleteConfirmation.value = false;
-    });
+  deleteLayerStyle(currentLayerStyle.value.id).then(async () => {
+    const [styles] = await Promise.all([
+      getLayerStyles(props.layer.id),
+      layerStore.fetchAvailableLayer(props.layer.id),
+    ]);
+    availableStyles.value = styles;
+    applyStyleSelection(
+      styles.find((style) => style.is_default),
+      true,
+    );
+    showDeleteConfirmation.value = false;
   });
 }
 
@@ -625,19 +680,48 @@ watch(
 );
 
 const debouncedStyleSpecUpdated = debounce(() => {
-  if (currentStyleSpec.value) {
-    styleStore.selectedLayerStyles[styleKey.value] = {
-      ...currentLayerStyle.value,
-      style_spec: currentStyleSpec.value,
-    };
-    styleStore.updateLayerStyles(props.layer);
-    setAvailableGroups();
-    unsavedChanges.value = true;
+  if (!currentStyleSpec.value) return;
+
+  const prev = currentLayerStyle.value;
+  const hadPreviews =
+    prev?.preview_status === "ready" || !!prev?.multiframe_previews?.length;
+  let clearPreviews = false;
+  if (hadPreviews && prev?.style_spec && showRasterOptions.value) {
+    const prevQuery = JSON.stringify(
+      styleStore.getRasterTilesQuery(prev.style_spec, styleStore.colormaps),
+    );
+    const nextQuery = JSON.stringify(
+      styleStore.getRasterTilesQuery(
+        currentStyleSpec.value,
+        styleStore.colormaps,
+      ),
+    );
+    clearPreviews = prevQuery !== nextQuery;
   }
+
+  if (clearPreviews) {
+    framePreviewStore.clearPreviewsForStyleChange(props.layer, prev.id);
+  } else {
+    styleStore.patchSelectedLayerStyle(styleKey.value, {
+      style_spec: currentStyleSpec.value,
+    });
+  }
+  styleStore.updateLayerStyles(props.layer);
+  setAvailableGroups();
+  unsavedChanges.value = true;
 }, 100);
 watch(currentStyleSpec, debouncedStyleSpecUpdated, { deep: true });
 
 watch(() => props.activeLayer, init);
+
+watch(
+  () => props.activeLayer === props.layer,
+  (isEditing) => {
+    styleStore.setLayerStyleEditing(props.layer, isEditing);
+  },
+  { immediate: true },
+);
+
 onMounted(resetCurrentStyle);
 </script>
 

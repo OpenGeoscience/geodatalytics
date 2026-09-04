@@ -16,12 +16,14 @@ import type {
 } from "@/types";
 import { getProjectColormaps } from "@/api/rest";
 import chroma from "chroma-js";
+import { isPreviewMapLayerId } from "@/utils/framePreviewLayer";
 
 import {
   useMapStore,
   useLayerStore,
   useProjectStore,
   useNetworkStore,
+  useFramePreviewStore,
 } from ".";
 
 export interface MapLayerStyleRaw {
@@ -58,7 +60,7 @@ function getMidMarker(
   };
 }
 
-export function colormapMarkersSubsample(
+function colormapMarkersSubsample(
   colormap: Colormap,
   appliedColormap: AppliedColormap,
   n: number | undefined = undefined,
@@ -347,6 +349,10 @@ function getVectorSizePaintProperty(
   } else return baseSize;
 }
 
+export function layerStyleKey(layer: Layer) {
+  return `${layer.id}.${layer.copy_id}`;
+}
+
 function getVectorVisibilityPaintProperty(
   styleSpec: StyleSpec,
   groupName: string,
@@ -400,11 +406,51 @@ function getVectorVisibilityPaintProperty(
 export const useStyleStore = defineStore("style", () => {
   const selectedLayerStyles = ref<Record<string, LayerStyle>>({});
   const colormaps = ref<Colormap[]>([]);
+  const editingStyleLayerKeys = ref<Set<string>>(new Set());
 
   const mapStore = useMapStore();
   const projectStore = useProjectStore();
   const layerStore = useLayerStore();
   const networkStore = useNetworkStore();
+  const framePreviewStore = useFramePreviewStore();
+
+  function isLayerStyleEditing(layer: Layer) {
+    return editingStyleLayerKeys.value.has(layerStyleKey(layer));
+  }
+
+  function patchSelectedLayerStyle(
+    key: string,
+    patch: Partial<LayerStyle>,
+    base?: LayerStyle,
+  ) {
+    const current = selectedLayerStyles.value[key] ?? base;
+    if (!current) {
+      return;
+    }
+    selectedLayerStyles.value = {
+      ...selectedLayerStyles.value,
+      [key]: { ...current, ...patch },
+    };
+  }
+
+  function setLayerStyleEditing(layer: Layer, editing: boolean) {
+    const key = layerStyleKey(layer);
+    const next = new Set(editingStyleLayerKeys.value);
+    if (editing) {
+      next.add(key);
+      editingStyleLayerKeys.value = next;
+      framePreviewStore.dismissPreviewForLayer(layer);
+      return;
+    }
+    next.delete(key);
+    editingStyleLayerKeys.value = next;
+    updateLayerStyles(layer);
+    framePreviewStore.attachPreviewsForLayer(layer);
+  }
+
+  function clearStyleEditing() {
+    editingStyleLayerKeys.value = new Set();
+  }
 
   function getDefaultColor(layerId: number) {
     const color = chroma.hsl(
@@ -453,33 +499,53 @@ export const useStyleStore = defineStore("style", () => {
       (f) => f.index === layer.current_frame_index,
     );
     if (!currentFrame) return;
+
+    const styleKey = layerStyleKey(layer);
+    const currentStyleSpec: StyleSpec | undefined =
+      selectedLayerStyles.value[styleKey]?.style_spec;
+
+    const deferRasterTileUpdates =
+      framePreviewStore.shouldDeferRasterTileUpdates(layer);
+
     mapStore.getUserMapLayers().forEach((mapLayerId) => {
+      if (isPreviewMapLayerId(mapLayerId)) {
+        return;
+      }
       const { layerId, layerCopyId, frameId } =
         mapStore.parseLayerString(mapLayerId);
-      if (layerId === layer.id && layerCopyId === layer.copy_id) {
-        if (frameId === currentFrame.id) {
-          map.setLayoutProperty(
-            mapLayerId,
-            "visibility",
-            layer.visible ? "visible" : "none",
-          );
-          const styleKey = `${layer.id}.${layer.copy_id}`;
-          const currentStyleSpec: StyleSpec | undefined =
-            selectedLayerStyles.value[styleKey].style_spec;
-          if (currentStyleSpec) {
-            setMapLayerStyle(
-              mapLayerId,
-              currentStyleSpec,
-              currentFrame,
-              currentFrame.vector,
-            );
-          }
-        } else {
-          map.setLayoutProperty(mapLayerId, "visibility", "none");
-        }
+      if (layerId !== layer.id || layerCopyId !== layer.copy_id) {
+        return;
+      }
+
+      const frame = frames.find((f) => f.id === frameId);
+      if (!frame) {
+        return;
+      }
+
+      const isCurrent = frameId === currentFrame.id;
+      map.setLayoutProperty(
+        mapLayerId,
+        "visibility",
+        layer.visible && isCurrent ? "visible" : "none",
+      );
+
+      // While preview overlays are driving frame scrubbing, only toggle
+      // visibility — setTiles on already-attached frames would fetch tiles
+      // for every step (and for non-current frames) in the background.
+      if (currentStyleSpec && !deferRasterTileUpdates) {
+        // Restyle every loaded frame, not only the current one. Otherwise a
+        // previously visited frame keeps the old tile URL and flashes the
+        // previous style when scrubbed to after a style change.
+        setMapLayerStyle(mapLayerId, currentStyleSpec, frame, frame.vector);
       }
     });
     networkStore.styleVisibleNetworks();
+
+    const hasMultiframeRaster =
+      frames.length > 1 && frames.some((f) => f.raster);
+    if (hasMultiframeRaster && !isLayerStyleEditing(layer)) {
+      framePreviewStore.showPreviewThenTiles(layer);
+    }
   }
 
   type GeneratedLayerStyle = {
@@ -632,9 +698,14 @@ export const useStyleStore = defineStore("style", () => {
     if (result.tileURL) {
       const mapLayer = map.getLayer(mapLayerId) as MapLibreLayerWithMetadata;
       const source = map.getSource(mapLayer.source) as RasterTileSource;
-      source?.setTiles([result.tileURL]);
-      if (mapLayer.source) {
-        mapStore.rasterSourceTileURLs[mapLayer.source] = result.tileURL;
+      const previousURL = mapLayer.source
+        ? mapStore.rasterSourceTileURLs[mapLayer.source]
+        : undefined;
+      if (source && previousURL !== result.tileURL) {
+        source.setTiles([result.tileURL]);
+        if (mapLayer.source) {
+          mapStore.rasterSourceTileURLs[mapLayer.source] = result.tileURL;
+        }
       }
     }
   }
@@ -659,15 +730,21 @@ export const useStyleStore = defineStore("style", () => {
   return {
     colormaps,
     selectedLayerStyles,
+    editingStyleLayerKeys,
     fetchColormaps,
     getRasterTilesQuery,
     getRasterSourceFilterParams,
     buildRasterTileQueryParams,
     sourceFiltersToStyleFilters,
     colormapMarkersSubsample,
+    layerStyleKey,
     getDefaultColor,
     getDefaultStyleSpec,
     getVectorColorPaintProperty,
+    isLayerStyleEditing,
+    setLayerStyleEditing,
+    patchSelectedLayerStyle,
+    clearStyleEditing,
     updateLayerStyles,
     setMapLayerStyle,
     returnMapLayerStyle,

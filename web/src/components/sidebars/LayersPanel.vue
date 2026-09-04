@@ -8,10 +8,11 @@ import CompareLayerStyle from "./CompareLayerStyle.vue";
 import DetailView from "../DetailView.vue";
 import SliderNumericInput from "../SliderNumericInput.vue";
 
-import { useLayerStore, useMapStore } from "@/store";
+import { useLayerStore, useMapStore, useFramePreviewStore } from "@/store";
 import { useMapCompareStore } from "@/store/compare";
 const layerStore = useLayerStore();
 const mapStore = useMapStore();
+const framePreviewStore = useFramePreviewStore();
 const compareStore = useMapCompareStore();
 const isComparing = computed(() => compareStore.isComparing);
 const orientation = computed(() => compareStore.orientation);
@@ -60,12 +61,16 @@ function removeLayers(layers: Layer[]) {
 }
 
 const debouncedUpdateFrame = debounce((layer: Layer, value: number) => {
-  layerStore.selectedLayers = layerStore.selectedLayers.map((l: Layer) => {
-    if (l.id === layer.id && l.copy_id === layer.copy_id) {
-      l.current_frame_index = value;
-    }
-    return l;
-  });
+  const target = layerStore.selectedLayers.find(
+    (l: Layer) => l.id === layer.id && l.copy_id === layer.copy_id,
+  );
+  if (!target || target.current_frame_index === value) {
+    return;
+  }
+  target.current_frame_index = value;
+  // Update only this layer — avoid re-running updateLayerStyles (and setTiles)
+  // on every other selected multiframe layer on each scrub step.
+  layerStore.updateLayerFrame(target);
 }, 10);
 
 function getLayerMaxFrames(layer: Layer) {
@@ -191,6 +196,14 @@ function setLayerActive(layer: Layer, active: boolean) {
                 </template>
                 {{ element.name }}
                 <template #append>
+                  <v-icon
+                    v-tooltip="framePreviewStore.iconState(element).tooltip"
+                    icon="mdi-image-size-select-large"
+                    size="small"
+                    :color="framePreviewStore.iconState(element).color"
+                    class="preview-indicator mr-1"
+                    :class="framePreviewStore.iconState(element).class"
+                  />
                   <span
                     v-if="getLayerMaxFrames(element) > 1"
                     @click="element.hideFrameMenu = !element.hideFrameMenu"
@@ -293,5 +306,25 @@ function setLayerActive(layer: Layer, active: boolean) {
 }
 .v-list-item__prepend > .v-icon {
   opacity: 1;
+}
+.preview-indicator {
+  cursor: help;
+}
+.preview-indicator--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+.preview-indicator--generating {
+  filter: grayscale(1);
+  animation: preview-indicator-pulse 1.4s ease-in-out infinite;
+}
+@keyframes preview-indicator-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 </style>
