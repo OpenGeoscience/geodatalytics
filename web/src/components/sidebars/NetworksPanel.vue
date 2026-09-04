@@ -307,7 +307,7 @@ watch(
       class="toggle-btn"
       @click="toggleSelected"
     >
-      Toggle Selected
+      Toggle Node Active State
     </v-btn>
   </div>
 </template>

@@ -264,6 +264,7 @@ function setLayerActive(layer: Layer, active: boolean) {
   padding: 0px 4px !important;
   position: relative;
   min-height: 0 !important;
+  cursor: grab;
 }
 .layer.v-list-item--active {
   background-color: rgba(var(--v-theme-primary), 0.1);

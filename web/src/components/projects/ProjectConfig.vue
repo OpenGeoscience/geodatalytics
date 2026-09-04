@@ -242,7 +242,7 @@ watch(
 
 <template>
   <div>
-    <div class="project-row my-5">
+    <div class="project-row">
       <v-select
         v-model="projectStore.currentProject"
         placeholder="Select a Project"
@@ -297,70 +297,45 @@ watch(
         There are currently no projects that allow unauthenticated access.
       </v-card-text>
     </v-card>
-    <div v-if="projectStore.currentProject" class="project-row">
-      <span class="item-counts">
-        <v-icon v-tooltip="'Datasets'" icon="mdi-database-outline"></v-icon>
-        {{ projectStore.currentProject.item_counts.datasets || 0 }}
-        <v-icon
-          v-tooltip="'Regions'"
-          icon="mdi-border-none-variant"
-          class="ml-3"
-        ></v-icon>
-        {{ projectStore.currentProject.item_counts.regions || 0 }}
-        <v-icon v-tooltip="'Charts'" icon="mdi-poll" class="ml-3"></v-icon>
-        {{ projectStore.currentProject.item_counts.charts || 0 }}
-        <v-icon v-tooltip="'Analyses'" icon="mdi-earth" class="ml-3"></v-icon>
-        {{ projectStore.currentProject.item_counts.analyses || 0 }}
-      </span>
-      <v-menu
-        location="end"
-        open-on-hover
-        open-delay="150"
-        :close-on-content-click="false"
+    <div v-if="projectStore.currentProject" class="project-row text-body-small">
+      <v-btn
+        flat
+        variant="text"
+        prepend-icon="mdi-map-marker"
+        class="pa-0"
+        size="x-small"
+        color="primary"
+        @click="() => mapStore.resetMapPosition(projectStore.currentProject)"
       >
-        <template #activator="{ props }">
-          <v-icon
-            v-bind="props"
-            icon="mdi-map-marker-right"
-            size="small"
-            color="primary"
-            @click.stop
-          />
-        </template>
-        <v-card width="250">
-          <v-list selectable>
-            <v-list-item
-              @click="
-                () => mapStore.resetMapPosition(projectStore.currentProject)
-              "
-            >
-              Go to project default map position
-            </v-list-item>
-            <v-list-item
-              v-if="
-                ['owner', 'collaborator'].includes(
-                  projectStore.permissions[projectStore.currentProject?.id],
-                )
-              "
-              @click="() => saveProjectMapLocation(projectStore.currentProject)"
-            >
-              Set current map position as project default
-              <v-icon
-                v-if="saving === 'done'"
-                icon="mdi-check"
-                color="green"
-                style="float: right"
-              />
-              <v-progress-circular
-                v-else-if="saving"
-                size="15"
-                indeterminate
-                style="float: right"
-              />
-            </v-list-item>
-          </v-list>
-        </v-card>
-      </v-menu>
+        Go to default map position
+      </v-btn>
+      <v-btn
+        v-if="
+          ['owner', 'collaborator'].includes(
+            projectStore.permissions[projectStore.currentProject?.id],
+          )
+        "
+        variant="text"
+        color="primary"
+        size="x-small"
+        class="pa-0"
+        flat
+        @click="() => saveProjectMapLocation(projectStore.currentProject)"
+      >
+        Set default map position
+        <v-icon
+          v-if="saving === 'done'"
+          icon="mdi-check"
+          color="green"
+          class="ml-1"
+        />
+        <v-progress-circular
+          v-else-if="saving"
+          size="15"
+          indeterminate
+          class="ml-1"
+        />
+      </v-btn>
     </div>
     <v-card
       v-if="appStore.authenticated && projectStore.projectConfigMode"
@@ -600,14 +575,9 @@ watch(
 <style>
 .project-row {
   display: flex;
-  margin: 8px;
+  margin: 4px 8px;
   align-items: center;
   justify-content: space-between;
-}
-.item-counts {
-  display: flex;
-  align-items: baseline;
-  column-gap: 4px;
 }
 .tutorial-popup {
   position: absolute !important;
