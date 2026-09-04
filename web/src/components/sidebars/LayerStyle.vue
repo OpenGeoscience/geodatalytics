@@ -98,7 +98,11 @@ const markStyleSavedAndInvalidatePreviews = (style: LayerStyle) => {
           multiframe_previews: undefined,
         },
   );
-  if (!previewsStillValid) {
+  if (previewsStillValid) {
+    // Previews were reused on the server (no frame_preview WebSocket), so clear
+    // any generating flags left over from live style edits.
+    framePreviewStore.markPreviewReady(style.id, props.layer.id);
+  } else {
     framePreviewStore.clearPreviewsForStyleChange(props.layer, style.id);
   }
 };

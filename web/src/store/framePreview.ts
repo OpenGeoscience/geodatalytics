@@ -940,6 +940,7 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     dismissPreviewForLayer,
     prepareForStylePreviewReset,
     clearPreviewsForStyleChange,
+    markPreviewReady,
     onPreviewTaskComplete,
     attachPreviewsForLayer,
     cleanupLayer,
