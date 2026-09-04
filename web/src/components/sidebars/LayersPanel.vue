@@ -231,9 +231,9 @@ function setLayerActive(layer: Layer, active: boolean) {
                 class="frame-menu"
               >
                 <SliderNumericInput
-                  :model="element.current_frame_index + 1"
+                  :model="element.current_frame_index"
                   :max="getLayerMaxFrames(element)"
-                  @update="(v: number) => debouncedUpdateFrame(element, v - 1)"
+                  @update="(v: number) => debouncedUpdateFrame(element, v)"
                 />
                 <div
                   v-for="frame in getLayerCurrentFrames(element)"
