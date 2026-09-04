@@ -112,7 +112,7 @@ function getPreviousValuesForInput(key: string) {
       analysisStore.availableResults
         .toSorted(
           (a, b) =>
-            new Date(a.created).getTime() - new Date(b.created).getTime(),
+            new Date(b.created).getTime() - new Date(a.created).getTime(),
         )
         .map((result) => result.inputs[key].toLocaleLowerCase()),
     ),
