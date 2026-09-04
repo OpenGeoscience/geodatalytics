@@ -204,23 +204,6 @@ export const useProjectStore = defineStore("project", () => {
     const viewState = currentViewState.value;
     if (viewState && !currentViewStateLoaded.value && mapStore.map) {
       appStore.theme = viewState.theme;
-      analysisStore.currentAnalysisType =
-        analysisStore.availableAnalysisTypes?.find(
-          (a) => a.db_value === viewState.current_analysis_type,
-        );
-      analysisStore.initSelectedInputs();
-      if (analysisStore.currentAnalysisType && currentProject.value) {
-        await analysisStore.initResults(
-          analysisStore.currentAnalysisType.db_value,
-          currentProject.value.id,
-        );
-        analysisStore.currentResult = analysisStore.availableResults?.find(
-          (c) => c.id === viewState.current_result,
-        );
-        if (analysisStore.currentResult) {
-          analysisStore.currentAnalysisTab = "old";
-        }
-      }
       analysisStore.currentChart = analysisStore.availableCharts?.find(
         (c) => c.id === viewState.current_chart,
       );
@@ -270,6 +253,24 @@ export const useProjectStore = defineStore("project", () => {
         return layer;
       });
       styleStore.selectedLayerStyles = viewState.selected_layer_styles;
+
+      analysisStore.currentAnalysisType =
+        analysisStore.availableAnalysisTypes?.find(
+          (a) => a.db_value === viewState.current_analysis_type,
+        );
+      analysisStore.initSelectedInputs();
+      if (analysisStore.currentAnalysisType && currentProject.value) {
+        await analysisStore.initResults(
+          analysisStore.currentAnalysisType.db_value,
+          currentProject.value.id,
+        );
+        analysisStore.currentResult = analysisStore.availableResults?.find(
+          (c) => c.id === viewState.current_result,
+        );
+        if (analysisStore.currentResult) {
+          analysisStore.currentAnalysisTab = "old";
+        }
+      }
       currentViewStateLoaded.value = true;
     }
   }

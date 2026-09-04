@@ -37,6 +37,14 @@ class FloodSimulation(AnalysisType):
             "ground_water_percentile": "number",
             "annual_probability": "number",
         }
+        self.input_defaults = {
+            "initial_conditions_id": "001",
+            "time_period": "2031-2050",
+            "potential_evapotranspiration_percentile": 50,
+            "soil_moisture_percentile": 50,
+            "ground_water_percentile": 50,
+            "annual_probability": 0.01,
+        }
         self.output_types = {
             "flood": "Dataset",
             "precipitation_level_mm": "number",

@@ -186,6 +186,7 @@ export const useLayerStore = defineStore("layer", () => {
   async function addLayer(
     layer: Layer,
     copy_id: number | undefined = undefined,
+    frame: number | undefined = undefined,
   ) {
     const existing = mapStore.getLatestLayerInstance(layer);
     if (copy_id === undefined) {
@@ -197,7 +198,7 @@ export const useLayerStore = defineStore("layer", () => {
       name,
       copy_id,
       visible: true,
-      current_frame_index: 0,
+      current_frame_index: frame || 0,
     };
 
     framePreviewStore.prefetchLayerPreviews(

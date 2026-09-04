@@ -293,7 +293,11 @@ export const usePanelStore = defineStore("panel", () => {
     return false;
   }
 
-  async function setVisibility(showable: Showable, visible: boolean) {
+  async function setVisibility(
+    showable: Showable,
+    visible: boolean,
+    frame: number | undefined = undefined,
+  ) {
     if (showable.region) {
       mapStore.showRegion(visible ? showable.region : undefined);
     } else if (showable.chart) {
@@ -319,7 +323,7 @@ export const usePanelStore = defineStore("panel", () => {
         : layerStore.selectedLayers;
       layersList
         .filter((layer: Layer) => layer.dataset === id)
-        .forEach((layer: Layer) => setVisibility({ layer }, visible));
+        .forEach((layer: Layer) => setVisibility({ layer }, visible, frame));
     } else if (showable.layer) {
       let add = visible;
       layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
@@ -330,7 +334,7 @@ export const usePanelStore = defineStore("panel", () => {
         return layer;
       });
       if (add) {
-        layerStore.addLayer(showable.layer);
+        layerStore.addLayer(showable.layer, undefined, frame);
       }
     } else if (showable.network) {
       let network = showable.network;
@@ -350,7 +354,7 @@ export const usePanelStore = defineStore("panel", () => {
       const dataset = projectStore.availableDatasets?.find(
         (d) => d.id === showable.network?.dataset,
       );
-      return setVisibility({ dataset }, visible);
+      return setVisibility({ dataset }, visible, frame);
     } else if (showable.taskresult) {
       const taskType = analysisStore.availableAnalysisTypes?.find(
         (t) => t.db_value === showable.taskresult?.task_type,
@@ -360,7 +364,7 @@ export const usePanelStore = defineStore("panel", () => {
           ([outputKey, outputValue]) => {
             const type = taskType.output_types[outputKey].toLowerCase();
             if (showableTypes.includes(type)) {
-              setVisibility({ [type]: { id: outputValue } }, visible);
+              setVisibility({ [type]: { id: outputValue } }, visible, frame);
             }
           },
         );
@@ -371,17 +375,17 @@ export const usePanelStore = defineStore("panel", () => {
               inputKey
             ].find((o: any) => o.id === inputValue);
             if (showableTypes.includes(type)) {
-              setVisibility({ [type]: value }, visible);
+              setVisibility({ [type]: value }, visible, frame);
             }
           },
         );
       }
     } else if (showable.rasterdata && showable.rasterdata.dataset) {
       const dataset = await getDataset(showable.rasterdata.dataset);
-      setVisibility({ dataset }, visible);
+      setVisibility({ dataset }, visible, frame);
     } else if (showable.vectordata && showable.vectordata.dataset) {
       const dataset = await getDataset(showable.vectordata.dataset);
-      setVisibility({ dataset }, visible);
+      setVisibility({ dataset }, visible, frame);
     }
   }
 
