@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.15' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
@@ -1248,14 +1248,18 @@ wheels = [
 
 [[package]]
 name = "django-large-image"
-version = "0.10.4.dev5+g5a56f8085"
-source = { git = "https://github.com/girder/django-large-image.git?branch=force-gdal-vsis3#5a56f8085106267573f3264788db49481fff7261" }
+version = "0.10.4"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "djangorestframework" },
     { name = "drf-spectacular" },
     { name = "filelock" },
     { name = "large-image" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0f/26/600f731500233fe41115fa5c2c2076279737f3a84d0b21a5987d076f76cd/django_large_image-0.10.4.tar.gz", hash = "sha256:0cb04b0ae14a0a38660a5b4c06f5b2d4b35e54f1b61fc7c697265869c49dee8a", size = 942882, upload-time = "2026-09-04T17:22:54.427Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/e6/16f5405223c6823d54975aadd010ed3abc6a300e9a1f3ae9fe5d557fefcf/django_large_image-0.10.4-py3-none-any.whl", hash = "sha256:339647a26c2c3e79b19a12e9487f89c628c8ea62d74dde0b1f9dcb152b71cf2c", size = 958057, upload-time = "2026-09-04T17:22:51.909Z" },
 ]
 
 [[package]]
@@ -1943,7 +1947,7 @@ requires-dist = [
     { name = "django-extensions", specifier = "==4.1" },
     { name = "django-filter", specifier = "==25.2" },
     { name = "django-guardian", specifier = "==3.4.0" },
-    { name = "django-large-image", git = "https://github.com/girder/django-large-image.git?branch=force-gdal-vsis3" },
+    { name = "django-large-image", specifier = ">=0.10.4" },
     { name = "django-minio-storage", marker = "extra == 'development'", specifier = "==0.5.9" },
     { name = "django-oauth-toolkit", specifier = "==3.4.1" },
     { name = "django-resonant-settings", extras = ["allauth", "celery"], specifier = "==0.51.1" },
