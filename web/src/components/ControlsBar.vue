@@ -567,6 +567,25 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
             <v-window-item value="url">
               <div>Supply a tile URL</div>
               <div>(e.g. https://a.tile.openstreetmap.org/{z}/{x}/{y}.png)</div>
+              <v-expansion-panels>
+                <v-expansion-panel elevation="0">
+                  <v-expansion-panel-title class="pa-0">
+                    Advanced: Authenticated Tile URL
+                  </v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <div>
+                      If your basemap requires authentication, you may append a
+                      public api key to the tile URL. Ensure that the public key
+                      is enabled for the following domain:
+                      "geodatalytics.kitware.com".
+                    </div>
+                    <div>
+                      (e.g.
+                      https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png?key=my_public_key)
+                    </div>
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
               <v-text-field
                 v-model="newBasemapTileURL"
                 label="Tile URL"

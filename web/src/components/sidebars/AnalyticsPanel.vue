@@ -93,9 +93,17 @@ function getInputSelectionRules(key: string) {
         ? !options.length || options.map((opt: any) => opt.id).includes(v)
           ? true
           : "Must select from options"
-        : "Input required.";
+        : analysisStore.currentAnalysisType?.optional_inputs?.includes(key)
+          ? true
+          : "Input required.";
     },
   ];
+}
+
+function getInputOptionalLabel(key: string) {
+  return analysisStore.currentAnalysisType?.optional_inputs?.includes(key)
+    ? " (optional)"
+    : "";
 }
 
 function run() {
@@ -169,8 +177,11 @@ async function fillInputsAndOutputs() {
             const fullValue = analysisStore.currentAnalysisType?.input_options[
               key
             ]?.find((o: any) => o.id == value);
-            const type =
-              analysisStore.currentAnalysisType?.input_types[key].toLowerCase();
+            const type = key.endsWith("_frame")
+              ? "number"
+              : analysisStore.currentAnalysisType?.input_types[
+                  key
+                ].toLowerCase();
             return [key, await getFullObject(type, fullValue || value)];
           },
         ),
@@ -320,6 +331,7 @@ watch(
               >
                 <div v-if="analysisStore.inputIsNumeric(key)">
                   {{ key.replaceAll("_", " ") }}
+                  {{ getInputOptionalLabel(key) }}
                   <div class="px-2 mb-2">
                     <SliderNumericInput
                       :model="analysisStore.selectedInputs[key]"
@@ -348,7 +360,7 @@ watch(
                     !analysisStore.currentAnalysisType.input_options[key].length
                   "
                   v-model="analysisStore.selectedInputs[key]"
-                  :label="key.replaceAll('_', ' ')"
+                  :label="key.replaceAll('_', ' ') + getInputOptionalLabel(key)"
                   :rules="getInputSelectionRules(key)"
                   density="compact"
                   hide-details="auto"
@@ -357,16 +369,21 @@ watch(
                 <v-combobox
                   v-else-if="value"
                   :model-value="analysisStore.selectedInputs[key]"
-                  :label="key.replaceAll('_', ' ')"
+                  :label="key.replaceAll('_', ' ') + getInputOptionalLabel(key)"
                   :items="value"
                   :rules="getInputSelectionRules(key)"
+                  :clearable="
+                    analysisStore.currentAnalysisType.optional_inputs?.includes(
+                      key,
+                    )
+                  "
                   item-value="id"
                   item-title="name"
                   density="compact"
                   hide-details="auto"
                   class="my-1"
                   @update:model-value="
-                    (v) => (analysisStore.selectedInputs[key] = v.id)
+                    (v) => (analysisStore.selectedInputs[key] = v?.id)
                   "
                 >
                   <template #item="{ props, item }">
@@ -413,6 +430,38 @@ watch(
                     </div>
                   </template>
                 </v-combobox>
+                <div
+                  v-if="
+                    analysisStore.currentAnalysisType.input_types[key] ===
+                    'RasterData'
+                  "
+                >
+                  <div
+                    v-for="selectedValue in analysisStore.currentAnalysisType.input_options[
+                      key
+                    ].filter(
+                      (option: any) =>
+                        option.id === analysisStore.selectedInputs[key],
+                    )"
+                    :key="selectedValue.id"
+                  >
+                    <div v-if="selectedValue.metadata?.frames?.length">
+                      {{ key }} frame
+                      <SliderNumericInput
+                        :model="
+                          analysisStore.selectedInputs[`${key}_frame`] || 0
+                        "
+                        :min="0"
+                        :max="selectedValue.metadata.frames.length - 1"
+                        :step="1"
+                        @update="
+                          (v) =>
+                            (analysisStore.selectedInputs[`${key}_frame`] = v)
+                        "
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div
                   v-if="
                     analysisStore.currentAnalysisType.input_types[key] ===
@@ -498,6 +547,9 @@ watch(
                                 panelStore.setVisibility(
                                   { [value.type]: value },
                                   !value.visible,
+                                  fullInputs
+                                    ? fullInputs[`${key}_frame`]?.name
+                                    : undefined,
                                 )
                             "
                           >
@@ -573,6 +625,9 @@ watch(
                                     panelStore.setVisibility(
                                       { [value.type]: value },
                                       !value.visible,
+                                      fullOutputs
+                                        ? fullOutputs[`${key}_frame`]?.name
+                                        : undefined,
                                     )
                                 "
                               >

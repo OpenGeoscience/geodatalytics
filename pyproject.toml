@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "geodatalytics"
-version = "1.48.1"
+version = "1.53.1"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
@@ -22,7 +22,7 @@ dependencies = [
   "django-environ==0.14.0",
   "django-extensions==4.1",
   "django-filter==25.2",
-  "django-guardian==3.3.3",
+  "django-guardian==3.4.0",
   # TODO: remove this once we have a new version of django-large-image
   "django-large-image",
   "django-oauth-toolkit==3.4.1",
@@ -51,7 +51,7 @@ dependencies = [
   # Production-only
   "django-s3-file-field[s3]==1.1.0",
   "django-storages[s3]==1.14.6",
-  "sentry-sdk[celery,django,pure_eval]==2.68.0",
+  "sentry-sdk[celery,django,pure_eval]==2.68.1",
   "uvicorn==0.52.4",
   "websockets==16.1.1",
 ]
@@ -65,7 +65,7 @@ development = [
   "django-minio-storage==0.5.9",
   "django-resonant-utils[minio_storage]==0.19.0",
   "django-s3-file-field[minio]==1.1.0",
-  "ipython==9.16.1",
+  "ipython==9.17.0",
   "watchdog==6.0.0",
   "werkzeug==3.1.8",
 ]
@@ -76,7 +76,7 @@ tasks = [
   "pyvips==3.1.1.8.18.1",
   "uvdat-flood-sim[large-image-writer]==1.0.5",
   "xdg-base-dirs==6.0.2",
-  "huggingface-hub==1.28.0",
+  "huggingface-hub==1.29.0",
 ]
 
 [dependency-groups]
