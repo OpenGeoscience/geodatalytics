@@ -79,9 +79,7 @@ def previews_current_for_fingerprint(layer: Layer, fingerprint: str) -> bool:
 
 
 def layer_default_fingerprint(layer: Layer) -> str:
-    """Fingerprint for layer-level default previews (default style params, else ``{}``)."""
-    if layer.default_style_id is not None:
-        return style_fingerprint(layer.default_style)
+    """Fingerprint for layer-level default previews with no styling applied."""
     return params_fingerprint({})
 
 
