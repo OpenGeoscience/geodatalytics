@@ -169,14 +169,8 @@ def _omit_null_field(data: dict, field: str) -> None:
 
 
 class LayerStyleSerializer(serializers.ModelSerializer):
-    is_default = serializers.SerializerMethodField("get_is_default")
     # Client-computed django-large-image style JSON; write-only (used for previews).
     raster_style_params = serializers.JSONField(required=False, allow_null=True, write_only=True)
-
-    def get_is_default(self, obj):
-        if obj.layer.default_style is None:
-            return False
-        return obj.layer.default_style.id == obj.id
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -222,9 +216,18 @@ class LayerStyleWithPreviewsSerializer(LayerStyleSerializer):
 
 
 class LayerSerializer(serializers.ModelSerializer):
-    default_style = LayerStyleSerializer()
+    default_style = serializers.SerializerMethodField('get_project_default_style')
     multiframe_previews = serializers.SerializerMethodField()
     preview_status = serializers.SerializerMethodField()
+
+    def get_project_default_style(self, obj):
+        request = self.context.get('request')
+        if request is not None:
+            project_id = request.query_params.get('project')
+            if project_id is not None:
+                style = obj.styles.filter(project__id=project_id, is_default=True).first()
+                return LayerStyleSerializer(style).data
+        return None
 
     def get_preview_status(self, obj):
         return get_layer_preview_status(obj)
