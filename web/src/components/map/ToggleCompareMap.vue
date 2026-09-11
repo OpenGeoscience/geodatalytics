@@ -12,6 +12,7 @@ import { useTheme } from "vuetify";
 import { Protocol } from "pmtiles";
 import { storeToRefs } from "pinia";
 import MapTooltip from "./MapTooltip.vue";
+import { debounce } from "lodash";
 
 const ATTRIBUTION = [
   "<a target='_blank' href='https://maplibre.org/'>© MapLibre</a>",
@@ -62,11 +63,19 @@ function setAttributionControlStyle() {
   });
 }
 
+function mapPositionUpdate() {
+  const map = mapStore.getMap();
+  mapStore.currentMapBounds = map.getBounds();
+}
+
+const debouncedMapPositionUpdate = debounce(mapPositionUpdate, 500);
+
 const handleMapReady = async (newMap: Map, mapId: "A" | "B") => {
   if (mapStore.availableBasemaps.length === 0) {
     await mapStore.fetchAvailableBasemaps();
   }
   newMap.addControl(attributionControl);
+  newMap.on("move", debouncedMapPositionUpdate);
   newMap.on("error", (response) => {
     // AbortErrors are raised when updating style of raster layers; ignore these
     if (response.error.message !== "AbortError") console.error(response.error);

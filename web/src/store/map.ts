@@ -140,6 +140,7 @@ function parseLayerString(layerId: string): LayerDescription {
 export const useMapStore = defineStore("map", () => {
   const map = shallowRef<Map>();
   const compareMap = shallowRef<Map>();
+  const currentMapBounds = ref();
   const availableBasemaps = ref<Basemap[]>([]);
   const currentBasemap = ref<Basemap>();
   const tooltipOverlay = ref<Popup>();
@@ -695,6 +696,7 @@ export const useMapStore = defineStore("map", () => {
     // Data
     map,
     compareMap,
+    currentMapBounds,
     availableBasemaps,
     currentBasemap,
     tooltipOverlay,

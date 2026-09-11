@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import * as turf from "@turf/turf";
 import { ref, watch, computed } from "vue";
 import {
   runAnalysis,
@@ -41,7 +40,6 @@ const filteredAnalysisTypes = computed(() => {
     );
   });
 });
-const filteredInputOptions = ref<Record<string, any>>({});
 const newestFirstResults = computed(() => {
   return analysisStore.availableResults.toSorted((a, b) => {
     const aCreated = new Date(a.created);
@@ -137,25 +135,6 @@ function run() {
       });
     }
   });
-}
-
-function filterInputOptions(key: string) {
-  if (!analysisStore.currentAnalysisType) return;
-  const type = analysisStore.currentAnalysisType.input_types[key];
-  if (type.toLocaleLowerCase() === "region") {
-    const map = mapStore.getMap();
-    const bounds = map.getBounds();
-    const turfBounds = turf.bboxPolygon([
-      bounds.getWest(),
-      bounds.getSouth(),
-      bounds.getEast(),
-      bounds.getNorth(),
-    ]);
-    filteredInputOptions.value[key] =
-      analysisStore.currentAnalysisType.input_options[key].filter((opt: any) =>
-        turf.booleanIntersects(turfBounds, turf.multiPolygon(opt.boundary)),
-      );
-  }
 }
 
 function inputOptionHover(key: string, option: any) {
@@ -287,7 +266,6 @@ watch(
     if (analysisStore.currentAnalysisTab === "old") {
       analysisStore.fetchResults();
     }
-    filteredInputOptions.value = {};
   },
 );
 
@@ -414,7 +392,7 @@ watch(
                   v-else-if="value"
                   :model-value="analysisStore.selectedInputs[key]"
                   :label="key.replaceAll('_', ' ') + getInputOptionalLabel(key)"
-                  :items="filteredInputOptions[key] || value"
+                  :items="analysisStore.filteredInputOptions[key] || value"
                   :rules="getInputSelectionRules(key)"
                   :clearable="
                     analysisStore.currentAnalysisType.optional_inputs?.includes(
@@ -450,9 +428,22 @@ watch(
                       "
                     >
                       <v-icon
-                        v-tooltip="'Filter options by current viewport'"
-                        icon="mdi-filter-outline"
-                        @click="filterInputOptions(key)"
+                        v-tooltip="
+                          'Filter options by current viewport ' +
+                          (analysisStore.inputOptionFiltering[key]
+                            ? '(enabled)'
+                            : '(disabled)')
+                        "
+                        :icon="
+                          analysisStore.inputOptionFiltering[key]
+                            ? 'mdi-filter-outline'
+                            : 'mdi-filter-off-outline'
+                        "
+                        @click="
+                          () =>
+                            (analysisStore.inputOptionFiltering[key] =
+                              !analysisStore.inputOptionFiltering[key])
+                        "
                       ></v-icon>
                       <v-icon
                         v-if="
