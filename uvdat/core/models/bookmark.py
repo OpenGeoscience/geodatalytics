@@ -13,7 +13,7 @@ from .querysets import ProjectQuerySet
 from .task_result import TaskResult
 
 
-class ViewState(models.Model):
+class Bookmark(models.Model):
     name = models.CharField(max_length=255)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="views", null=True)
     thumbnail = S3FileField()

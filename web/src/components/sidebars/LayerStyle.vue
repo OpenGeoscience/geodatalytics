@@ -216,7 +216,7 @@ function applyStyleSelection(
 }
 
 function resetCurrentStyle() {
-  if (projectStore.currentViewState && !projectStore.currentViewStateLoaded) {
+  if (projectStore.currentBookmark && !projectStore.currentBookmarkLoaded) {
     // If styles are being applied from a view, don't overwrite them
     return;
   }
@@ -740,7 +740,8 @@ onMounted(resetCurrentStyle);
           appliedStyleName ? 'Style: ' + appliedStyleName : 'Configure styling'
         "
         v-bind="activatorProps"
-        icon="mdi-cog"
+        icon="mdi-palette"
+        style="opacity: 1"
       />
     </template>
     <v-card
@@ -800,7 +801,7 @@ onMounted(resetCurrentStyle);
                 icon="mdi-pencil"
               />
             </template>
-            <v-list v-if="currentLayerStyle.id">
+            <v-list v-if="currentLayerStyle.id" density="compact">
               <v-list-item
                 @click="
                   showEditOptions = false;
@@ -866,6 +867,7 @@ onMounted(resetCurrentStyle);
         </table>
 
         <v-tabs
+          v-if="showVectorOptions"
           v-model="tab"
           align-tabs="center"
           fixed-tabs
@@ -942,6 +944,7 @@ onMounted(resetCurrentStyle);
                           hide-details
                         ></v-select>
                         <v-icon
+                          v-tooltip="'Toggle Visibility For Band'"
                           :icon="
                             group.visible
                               ? 'mdi-eye-outline'
@@ -1047,6 +1050,7 @@ onMounted(resetCurrentStyle);
                                       projectStore.currentProject?.id &&
                                     editMode
                                   "
+                                  v-tooltip="'Edit Colormap'"
                                   icon="mdi-pencil"
                                   class="ml-2"
                                   @click="openColormapEditor(group.name, item)"
@@ -1057,7 +1061,8 @@ onMounted(resetCurrentStyle);
                                       projectStore.currentProject?.id &&
                                     editMode
                                   "
-                                  icon="mdi-trash-can"
+                                  v-tooltip="'Delete Colormap'"
+                                  icon="mdi-delete"
                                   class="ml-2"
                                   @click="delColormap = item"
                                 />
@@ -1320,6 +1325,7 @@ onMounted(resetCurrentStyle);
                           hide-details
                         ></v-select>
                         <v-icon
+                          v-tooltip="'Toggle Visibility For Feature Type'"
                           :icon="
                             group.visible
                               ? 'mdi-eye-outline'
@@ -1495,6 +1501,7 @@ onMounted(resetCurrentStyle);
                                         projectStore.currentProject?.id &&
                                       editMode
                                     "
+                                    v-tooltip="'Edit Colormap'"
                                     icon="mdi-pencil"
                                     class="ml-2"
                                     @click="
@@ -1507,7 +1514,8 @@ onMounted(resetCurrentStyle);
                                         projectStore.currentProject?.id &&
                                       editMode
                                     "
-                                    icon="mdi-trash-can"
+                                    v-tooltip="'Delete Colormap'"
+                                    icon="mdi-delete"
                                     class="ml-2"
                                     @click="delColormap = item"
                                   />
@@ -1724,13 +1732,6 @@ onMounted(resetCurrentStyle);
             </div>
           </v-window-item>
           <v-window-item value="size" class="pa-2">
-            <div v-if="showRasterOptions">
-              <v-label class="secondary-text px-3">Raster Options</v-label>
-              <v-divider class="mt-1 mb-2" />
-              <v-label class="secondary-text px-3"
-                >Size options do not apply to raster data.</v-label
-              >
-            </div>
             <div v-if="showVectorOptions">
               <v-label class="secondary-text px-3">Vector Options</v-label>
               <v-divider class="mt-1 mb-2" />
@@ -1979,13 +1980,6 @@ onMounted(resetCurrentStyle);
             </div>
           </v-window-item>
           <v-window-item value="filters" class="pa-2">
-            <div v-if="showRasterOptions">
-              <v-label class="secondary-text px-3">Raster Options</v-label>
-              <v-divider class="mt-1 mb-2" />
-              <v-label class="secondary-text px-3"
-                >Filter options do not apply to raster data.</v-label
-              >
-            </div>
             <div v-if="showVectorOptions">
               <v-card-subtitle>Vector Options</v-card-subtitle>
               <v-divider class="mt-1 mb-2" />
@@ -2059,16 +2053,23 @@ onMounted(resetCurrentStyle);
                   <div>
                     <v-icon
                       v-if="focusedFilterId !== filter.id"
+                      v-tooltip="'Edit Filter'"
                       class="ml-2"
+                      icon="mdi-pencil-outline"
                       @click="focusFilter(filter.id)"
-                      >mdi-pencil-outline</v-icon
-                    >
-                    <v-icon class="ml-2" @click="filter.apply = !filter.apply">
-                      {{ filter.apply ? "mdi-eye" : "mdi-eye-off" }}
-                    </v-icon>
-                    <v-icon class="ml-2" @click="removeFilter(filter.id)"
-                      >mdi-delete-outline</v-icon
-                    >
+                    ></v-icon>
+                    <v-icon
+                      v-tooltip="'Toggle Filter'"
+                      class="ml-2"
+                      :icon="filter.apply ? 'mdi-eye' : 'mdi-eye-off'"
+                      @click="filter.apply = !filter.apply"
+                    ></v-icon>
+                    <v-icon
+                      v-tooltip="'Remove Filter'"
+                      class="ml-2"
+                      icon="mdi-delete"
+                      @click="removeFilter(filter.id)"
+                    ></v-icon>
                   </div>
                 </div>
                 <table

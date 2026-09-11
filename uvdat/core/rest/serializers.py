@@ -13,6 +13,7 @@ from uvdat.core.frame_previews.preview_regeneration import (
 )
 from uvdat.core.models import (
     Basemap,
+    Bookmark,
     Chart,
     Colormap,
     Dataset,
@@ -29,7 +30,6 @@ from uvdat.core.models import (
     Region,
     TaskResult,
     VectorData,
-    ViewState,
 )
 
 
@@ -74,7 +74,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField("get_owner")
     collaborators = serializers.SerializerMethodField("get_collaborators")
     followers = serializers.SerializerMethodField("get_followers")
-    item_counts = serializers.SerializerMethodField("get_item_counts")
 
     def get_center(self, obj):
         # Web client expects Lon, Lat
@@ -90,13 +89,6 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_followers(self, obj: Project):
         return [UserSerializer(user).data for user in obj.followers()]
-
-    def get_item_counts(self, obj):
-        return {
-            "datasets": obj.datasets.count(),
-            "charts": obj.charts.count(),
-            "analyses": obj.task_results.count(),
-        }
 
     def to_internal_value(self, data):
         center = data.get("default_map_center")
@@ -367,7 +359,7 @@ class TaskResultSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ViewStateSerializer(serializers.ModelSerializer):
+class BookmarkSerializer(serializers.ModelSerializer):
     map_center = serializers.SerializerMethodField("get_center")
 
     def get_center(self, obj):
@@ -384,5 +376,5 @@ class ViewStateSerializer(serializers.ModelSerializer):
         return data
 
     class Meta:
-        model = ViewState
+        model = Bookmark
         fields = "__all__"

@@ -44,7 +44,7 @@ const projectStore = useProjectStore();
             color="primary"
             @click="
               tutorialStore.showWelcomeMessage = false;
-              projectStore.loadViewStateFromURL();
+              projectStore.loadBookmarkFromURL();
             "
           >
             Explore without tutorial
@@ -77,7 +77,7 @@ const projectStore = useProjectStore();
         color="primary"
         @click="
           tutorialStore.showTutorialStep = 0;
-          projectStore.loadViewStateFromURL();
+          projectStore.loadBookmarkFromURL();
         "
       >
         Exit Tutorial

@@ -16,11 +16,9 @@ const props = defineProps<{
 const currentMode = ref();
 const currentTick = ref(0);
 const ticker = ref();
-const seconds = computed(() => {
-  const nNodes = props.network.nodes.length;
-  const ordersOfMagnitude = nNodes.toString().length;
-  return Math.max(ordersOfMagnitude, 4);
-});
+const tickerClock = ref(0);
+const animationInterval = ref(1); // seconds
+const tickerInterval = 0.5; // seconds
 
 const nodeChanges = computed(() => {
   const changes = props.nodeRecoveries || props.nodeFailures || {};
@@ -45,24 +43,30 @@ function play() {
   pause();
   currentMode.value = "play";
   ticker.value = setInterval(() => {
-    if (nodeChanges.value && currentTick.value < numTicks.value) {
-      currentTick.value += 1;
-    } else {
-      pause();
+    tickerClock.value += tickerInterval;
+    if (tickerClock.value % animationInterval.value === 0) {
+      if (nodeChanges.value && currentTick.value < numTicks.value) {
+        currentTick.value += 1;
+      } else {
+        pause();
+      }
     }
-  }, seconds.value * 1000);
+  }, tickerInterval * 1000);
 }
 
 function rewind() {
   pause();
   currentMode.value = "rewind";
   ticker.value = setInterval(() => {
-    if (currentTick.value > 0) {
-      currentTick.value -= 1;
-    } else {
-      pause();
+    tickerClock.value += tickerInterval;
+    if (tickerClock.value % animationInterval.value === 0) {
+      if (currentTick.value > 0) {
+        currentTick.value -= 1;
+      } else {
+        pause();
+      }
     }
-  }, seconds.value * 1000);
+  }, tickerInterval * 1000);
 }
 
 watch(currentTick, async () => {
@@ -101,11 +105,9 @@ watch(currentTick, async () => {
       />
       <v-slider
         v-model="currentTick"
-        show-ticks="always"
         color="primary"
         class="ml-5"
-        tick-size="6"
-        thumb-size="15"
+        thumb-size="18"
         track-size="8"
         min="0"
         step="1"
@@ -124,6 +126,33 @@ watch(currentTick, async () => {
         @click="rewind"
       />
     </div>
+    <v-expansion-panels
+      flat
+      bg-color="transparent"
+      elevation="0"
+      class="animation-row"
+    >
+      <v-expansion-panel>
+        <v-expansion-panel-title class="pa-1">
+          Animation Interval: {{ animationInterval }} second{{
+            animationInterval !== 1 ? "s" : ""
+          }}
+        </v-expansion-panel-title>
+        <v-expansion-panel-text>
+          <v-slider
+            v-model="animationInterval"
+            color="primary"
+            class="ml-5"
+            thumb-size="18"
+            track-size="8"
+            :min="tickerInterval"
+            :step="tickerInterval"
+            :max="5"
+            hide-details
+          />
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
   </div>
 </template>
 
@@ -133,5 +162,9 @@ watch(currentTick, async () => {
   align-items: center;
   width: calc(100% - 10px);
   justify-content: space-around;
+}
+.animation-row .v-expansion-panel-title {
+  min-height: 0 !important;
+  padding: 12px 0px !important;
 }
 </style>

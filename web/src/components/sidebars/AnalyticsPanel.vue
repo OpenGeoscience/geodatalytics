@@ -78,6 +78,7 @@ const networkInput = computed(() => {
 });
 const additionalAnimationLayers = ref();
 const inputForm = ref();
+const subscribed = ref(false);
 const runAllowed = computed(() => {
   if (!projectStore.currentProject || !appStore.authenticated) return false;
   return ["owner", "collaborator"].includes(
@@ -179,6 +180,10 @@ async function getFullObject(type: string, value: any) {
 }
 
 async function fillInputsAndOutputs() {
+  if (subscribed.value) {
+    analysisStore.fetchResults();
+    subscribed.value = false;
+  }
   if (!analysisStore.currentResult?.inputs) {
     fullInputs.value = undefined;
     additionalAnimationLayers.value = undefined;
@@ -236,9 +241,8 @@ async function fillInputsAndOutputs() {
 
 async function subscribe() {
   if (appStore.authenticated && analysisStore.currentResult) {
-    analysisStore.currentResult.subscribers = (
-      await subscribeToTaskResult(analysisStore.currentResult.id)
-    ).subscribers;
+    await subscribeToTaskResult(analysisStore.currentResult.id);
+    subscribed.value = true;
   }
 }
 
@@ -595,7 +599,7 @@ watch(
                   </div>
                   <div v-if="fullOutputs">
                     <v-card-subtitle>Outputs</v-card-subtitle>
-                    <v-table class="bg-transparent">
+                    <v-table class="bg-transparent overflow-visible">
                       <tbody>
                         <tr
                           v-for="[key, value] in Object.entries(fullOutputs)"
@@ -661,10 +665,11 @@ watch(
                   >
                     <div
                       v-if="
-                        appStore.currentUser?.id &&
-                        analysisStore.currentResult?.subscribers.includes(
-                          appStore.currentUser.id,
-                        )
+                        subscribed ||
+                        (appStore.currentUser?.id &&
+                          analysisStore.currentResult?.subscribers.includes(
+                            appStore.currentUser.id,
+                          ))
                       "
                     >
                       <v-icon icon="mdi-check" color="success" />
@@ -731,5 +736,8 @@ watch(
   min-width: 100px;
   overflow-x: hidden;
   text-overflow: ellipsis;
+}
+.overflow-visible > .v-table__wrapper {
+  overflow: visible !important;
 }
 </style>

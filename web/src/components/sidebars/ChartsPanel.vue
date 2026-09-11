@@ -218,11 +218,6 @@ const downloadReady = computed(() => {
         >
           {{ chart.name }}
           <template #append>
-            <v-icon
-              v-tooltip="chart.description"
-              icon="mdi-information-outline"
-              size="small"
-            ></v-icon>
             <DetailView :details="{ ...chart, type: 'chart' }" />
           </template>
         </v-list-item>

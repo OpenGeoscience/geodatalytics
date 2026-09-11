@@ -228,6 +228,7 @@ watch(
             >
               <template #item.active="{ item }">
                 <v-icon
+                  v-tooltip="item.active ? 'Active' : 'Inactive'"
                   :icon="item.active ? 'mdi-circle-outline' : 'mdi-close'"
                   :color="item.active ? 'green' : 'red'"
                 />
@@ -259,6 +260,7 @@ watch(
             >
               <template #item.active="{ item }">
                 <v-icon
+                  v-tooltip="item.active ? 'Active' : 'Inactive'"
                   :icon="item.active ? 'mdi-circle-outline' : 'mdi-close'"
                   :color="item.active ? 'green' : 'red'"
                 />
@@ -307,7 +309,7 @@ watch(
       class="toggle-btn"
       @click="toggleSelected"
     >
-      Toggle Selected
+      Toggle Node Active State
     </v-btn>
   </div>
 </template>

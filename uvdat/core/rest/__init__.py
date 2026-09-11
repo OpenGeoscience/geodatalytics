@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .analytics import AnalyticsViewSet
 from .basemap import BasemapViewSet
+from .bookmark import BookmarkViewSet
 from .chart import ChartViewSet
 from .colormap import ColormapViewSet
 from .data import RasterDataViewSet, VectorDataViewSet
@@ -12,11 +13,11 @@ from .networks import NetworkViewSet
 from .project import ProjectViewSet
 from .regions import RegionViewSet
 from .user import UserViewSet
-from .view_state import ViewStateViewSet
 
 __all__ = [
     "AnalyticsViewSet",
     "BasemapViewSet",
+    "BookmarkViewSet",
     "ChartViewSet",
     "ColormapViewSet",
     "DatasetViewSet",
@@ -30,5 +31,4 @@ __all__ = [
     "RegionViewSet",
     "UserViewSet",
     "VectorDataViewSet",
-    "ViewStateViewSet",
 ]

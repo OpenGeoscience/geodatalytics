@@ -440,12 +440,20 @@ watch(open, () => {
                   {{ layer.name || "Layer " + (index + 1) }}
 
                   <div>
-                    <v-icon class="ml-2" @click="focusedLayerId = layer.id"
-                      >mdi-pencil-outline</v-icon
+                    <v-icon
+                      v-tooltip="'Edit layer'"
+                      class="ml-2"
+                      @click="focusedLayerId = layer.id"
                     >
-                    <v-icon class="ml-2" @click="removeLayer(layer.id)"
-                      >mdi-delete-outline</v-icon
+                      mdi-pencil-outline
+                    </v-icon>
+                    <v-icon
+                      v-tooltip="'Remove layer'"
+                      class="ml-2"
+                      @click="removeLayer(layer.id)"
                     >
+                      mdi-delete-outline
+                    </v-icon>
                   </div>
                 </div>
               </v-card>

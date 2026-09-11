@@ -20,12 +20,12 @@ import {
 import { useMapCompareStore } from "@/store/compare";
 import {
   createBasemap,
-  createViewState,
-  deleteViewState,
+  createBookmark,
+  deleteBookmark,
   uploadFile,
 } from "@/api/rest";
 import { storeToRefs } from "pinia";
-import type { ViewState } from "@/types";
+import type { Bookmark } from "@/types";
 
 const appStore = useAppStore();
 const layerStore = useLayerStore();
@@ -55,20 +55,20 @@ const newBasemapValid = computed(
     !jsonErrors.value.length,
 );
 
-const showViewStateCreation = ref(false);
-const viewStateToDelete = ref();
-const newViewStateName = ref("");
-const newViewStateThumbnail = ref();
-const newViewStateThumbnailURL = computed(() => {
-  if (!newViewStateThumbnail.value) return null;
-  return URL.createObjectURL(newViewStateThumbnail.value);
+const showBookmarkCreation = ref(false);
+const bookmarkToDelete = ref();
+const newBookmarkName = ref("");
+const newBookmarkThumbnail = ref();
+const newBookmarkThumbnailURL = computed(() => {
+  if (!newBookmarkThumbnail.value) return null;
+  return URL.createObjectURL(newBookmarkThumbnail.value);
 });
-const newViewStateValid = computed(() => {
+const newBookmarkValid = computed(() => {
   return (
-    newViewStateName.value.length &&
-    !projectStore.availableViewStates
+    newBookmarkName.value.length &&
+    !projectStore.availableBookmarks
       .map((v) => v.name)
-      .includes(newViewStateName.value)
+      .includes(newBookmarkName.value)
   );
 });
 const editMode = computed(() => {
@@ -251,51 +251,52 @@ function animateCameraFlash() {
   }, 200);
 }
 
-function showViewStateDialog() {
+function showBookmarkDialog() {
   takeScreenshot(true).then((blob) => {
-    newViewStateThumbnail.value = blob;
+    newBookmarkThumbnail.value = blob;
   });
-  showViewStateCreation.value = true;
+  showBookmarkCreation.value = true;
 }
 
-function cancelCreateViewState() {
-  newViewStateName.value = "";
-  newViewStateThumbnail.value = undefined;
-  showViewStateCreation.value = false;
+function cancelCreateBookmark() {
+  newBookmarkName.value = "";
+  newBookmarkThumbnail.value = undefined;
+  showBookmarkCreation.value = false;
 }
 
-function submitNewViewState() {
+function submitNewBookmark() {
   if (!appStore.authenticated) return;
-  if (newViewStateValid.value && newViewStateThumbnail.value) {
+  if (newBookmarkValid.value && newBookmarkThumbnail.value) {
     const thumbnailFile = new File(
-      [newViewStateThumbnail.value],
+      [newBookmarkThumbnail.value],
       "thumbnail.png",
       { type: "image/png" },
     );
     uploadFile(thumbnailFile).then((thumbnailURL) => {
-      const viewState = projectStore.getCurrentViewState();
-      if (viewState) {
-        viewState.name = newViewStateName.value;
-        viewState.thumbnail = thumbnailURL;
-        createViewState(viewState).then((createdViewState) => {
-          cancelCreateViewState();
-          projectStore.fetchProjectViewStates();
-          projectStore.navigateToViewState(createdViewState);
+      const bookmark = projectStore.getCurrentBookmark();
+      if (bookmark) {
+        bookmark.name = newBookmarkName.value;
+        bookmark.thumbnail = thumbnailURL;
+        createBookmark(bookmark).then((createdBookmark) => {
+          cancelCreateBookmark();
+          projectStore.fetchProjectBookmarks();
+          projectStore.navigateToBookmark(createdBookmark);
         });
       }
     });
   }
 }
 
-function submitDeleteViewState() {
-  deleteViewState(viewStateToDelete.value).then(() => {
-    viewStateToDelete.value = undefined;
-    projectStore.fetchProjectViewStates();
+function submitDeleteBookmark() {
+  deleteBookmark(bookmarkToDelete.value).then(() => {
+    bookmarkToDelete.value = undefined;
+    projectStore.fetchProjectBookmarks();
+    projectStore.navigateNoBookmark();
   });
 }
 
-function copyViewStateLink(viewState: ViewState) {
-  const url = `${window.location.origin}/view/${viewState.id}`;
+function copyBookmarkLink(bookmark: Bookmark) {
+  const url = `${window.location.origin}/bookmark/${bookmark.id}`;
   navigator.clipboard.writeText(url);
 }
 
@@ -303,6 +304,13 @@ function showTutorial() {
   panelStore.resetPanels();
   tutorialStore.showTutorialStep = 1;
   tutorialStore.showWelcomeMessage = false;
+}
+
+function togglePanelVisibility(id: string) {
+  panelStore.panelArrangement = panelStore.panelArrangement.map((p) => {
+    if (p.id == id) p.visible = !p.visible;
+    return p;
+  });
 }
 
 watch(basemapList, createBasemapPreviews);
@@ -320,10 +328,95 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         : 'controls-bar'
     "
   >
-    <v-btn color="primary" class="control-btn" variant="flat">
+    <v-btn
+      v-if="projectStore.currentProject"
+      class="control-btn"
+      variant="flat"
+    >
+      <v-icon
+        :icon="
+          projectStore.currentBookmark ? 'mdi-bookmark' : 'mdi-bookmark-outline'
+        "
+      ></v-icon>
+      <v-menu
+        activator="parent"
+        open-on-hover
+        open-delay="100"
+        :close-on-content-click="false"
+        width="450"
+      >
+        <v-card class="control-menu">
+          <div class="control-menu-title">Project Bookmarks</div>
+          <v-card-text class="pa-3">
+            <div v-if="isComparing">
+              While using map comparison mode, saving a new bookmark is not
+              supported.
+            </div>
+            <v-btn
+              v-else-if="editMode"
+              class="control-menu-row"
+              @click="showBookmarkDialog"
+            >
+              <div>Save current view as bookmark</div>
+            </v-btn>
+            <v-list
+              v-if="projectStore.availableBookmarks.length"
+              density="compact"
+              bg-color="transparent"
+            >
+              <v-list-item
+                v-for="bookmark in projectStore.availableBookmarks"
+                :key="bookmark.id"
+                class="control-menu-row pa-1"
+                @click="projectStore.navigateToBookmark(bookmark)"
+              >
+                <template #prepend>
+                  <img :src="bookmark.thumbnail" height="70px" />
+                </template>
+                <template #title>
+                  <div style="width: 150px; text-wrap: wrap">
+                    {{ bookmark.name }}
+                  </div>
+                </template>
+                <template #append>
+                  <v-btn
+                    v-if="editMode"
+                    v-tooltip="'Delete this bookmark'"
+                    icon="mdi-delete"
+                    flat
+                    variant="text"
+                    color="secondary-text"
+                    @click.stop.prevent="bookmarkToDelete = bookmark"
+                  ></v-btn>
+                  <v-btn
+                    v-tooltip="'Copy shareable link'"
+                    icon="mdi-share"
+                    flat
+                    variant="text"
+                    color="secondary-text"
+                    @click.stop.prevent="copyBookmarkLink(bookmark)"
+                  ></v-btn>
+                </template>
+              </v-list-item>
+            </v-list>
+            <div v-else>No saved bookmarks exist for this project.</div>
+          </v-card-text>
+        </v-card>
+      </v-menu>
+    </v-btn>
+    <v-btn class="control-btn" variant="flat">
       <v-icon>mdi-map-outline</v-icon>
-      <v-menu activator="parent" :close-on-content-click="false" open-on-hover>
-        <v-card style="max-height: 400px; overflow-y: auto">
+      <v-menu
+        activator="parent"
+        open-on-hover
+        open-delay="100"
+        :close-on-content-click="false"
+      >
+        <v-card
+          class="control-menu"
+          style="max-height: 400px; overflow-y: auto"
+        >
+          <div class="control-menu-title">Base Map Options</div>
           <v-list
             ref="basemapList"
             :selected="[mapStore.currentBasemap]"
@@ -334,7 +427,6 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
               (selected) => (mapStore.currentBasemap = selected[0])
             "
           >
-            <v-list-subheader>Base Map Options</v-list-subheader>
             <v-list-item
               v-if="appStore.authenticated"
               key="new"
@@ -376,20 +468,41 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         </v-card>
       </v-menu>
     </v-btn>
-    <v-btn class="control-btn" variant="flat" @click="fitMap">
-      <v-progress-circular v-if="loadingBounds" indeterminate />
-      <v-icon
-        v-else
-        v-tooltip="'Fit Map to Visible Layers'"
-        icon="mdi-fit-to-page-outline"
-      ></v-icon>
+    <v-btn class="control-btn" variant="flat">
+      <v-icon icon="mdi-window-restore"></v-icon>
+      <v-menu
+        activator="parent"
+        open-on-hover
+        open-delay="100"
+        :close-on-content-click="false"
+      >
+        <v-card class="control-menu">
+          <div class="control-menu-title">Panel Visibility</div>
+          <v-card-text class="pa-3">
+            <div
+              v-for="item in panelStore.panelArrangement.filter(
+                (p) => p.closeable,
+              )"
+              :key="item.id"
+              class="control-menyu-row"
+              @click="togglePanelVisibility(item.id)"
+            >
+              <v-checkbox-btn
+                :model-value="item.visible"
+                :label="item.label"
+              ></v-checkbox-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-menu>
     </v-btn>
     <v-btn v-if="!isComparing" class="control-btn" variant="flat">
       <v-icon icon="mdi-camera"></v-icon>
       <v-menu
         v-model="copyMenuShown"
         activator="parent"
-        :open-on-hover="true"
+        open-on-hover
+        open-delay="100"
         :close-on-content-click="false"
       >
         <v-card class="control-menu">
@@ -401,6 +514,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
                 label="Map Only"
                 density="compact"
                 hide-details
+                color="secondary-text"
               />
             </div>
             <v-btn class="control-menu-row" @click="copyScreenshot">
@@ -413,116 +527,59 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         </v-card>
       </v-menu>
     </v-btn>
-    <v-btn
-      v-if="projectStore.currentProject"
-      class="control-btn"
-      variant="flat"
-    >
-      <v-icon icon="mdi-view-array" class="pb-1 pr-2"></v-icon>
+    <v-btn class="control-btn" variant="flat" @click="fitMap">
+      <v-progress-circular v-if="loadingBounds" indeterminate />
       <v-icon
-        icon="mdi-share"
-        style="position: absolute; left: 15px; top: 8px; max-width: 10px"
+        v-else
+        v-tooltip:bottom="'Fit Map to Visible Layers'"
+        icon="mdi-fit-to-page-outline"
       ></v-icon>
-      <v-menu
-        activator="parent"
-        :open-on-hover="true"
-        :close-on-content-click="false"
-        width="450"
-      >
-        <v-card class="control-menu">
-          <div class="control-menu-title">Saved View States</div>
-          <v-card-text class="pa-3">
-            <div v-if="isComparing">
-              While using map comparison mode, saving a new view state is not
-              supported.
-            </div>
-            <v-btn
-              v-else-if="editMode"
-              class="control-menu-row"
-              @click="showViewStateDialog"
-            >
-              <div>Save current view state</div>
-            </v-btn>
-            <v-list
-              v-if="projectStore.availableViewStates.length"
-              density="compact"
-              bg-color="transparent"
-            >
-              <v-list-item
-                v-for="viewState in projectStore.availableViewStates"
-                :key="viewState.id"
-                class="control-menu-row pa-1"
-                @click="projectStore.navigateToViewState(viewState)"
-              >
-                <template #prepend>
-                  <img :src="viewState.thumbnail" height="70px" />
-                </template>
-                <template #title>
-                  <div style="width: 150px; text-wrap: wrap">
-                    {{ viewState.name }}
-                  </div>
-                </template>
-                <template #append>
-                  <v-btn
-                    v-if="editMode"
-                    v-tooltip="'Delete this view state'"
-                    icon="mdi-delete"
-                    flat
-                    variant="text"
-                    @click.stop.prevent="viewStateToDelete = viewState"
-                  ></v-btn>
-                  <v-btn
-                    v-tooltip="'Copy shareable link'"
-                    icon="mdi-share"
-                    flat
-                    variant="text"
-                    @click.stop.prevent="copyViewStateLink(viewState)"
-                  ></v-btn>
-                </template>
-              </v-list-item>
-            </v-list>
-            <div v-else>No saved view states exist for this project.</div>
-          </v-card-text>
-        </v-card>
-      </v-menu>
     </v-btn>
     <v-btn class="control-btn" variant="flat">
-      <v-icon icon="mdi-information-outline"></v-icon>
-      <v-menu
-        activator="parent"
-        :open-on-hover="true"
-        :close-on-content-click="false"
+      <v-icon
+        v-tooltip:bottom="'Toggle Light/Dark Mode'"
+        icon="mdi-theme-light-dark"
+        @click="appStore.theme = appStore.theme === 'dark' ? 'light' : 'dark'"
       >
-        <v-card class="control-menu">
-          <div class="control-menu-title">Input Controls</div>
-          <v-card-text class="pa-3">
-            <div style="text-align: right; width: 100%">
-              <v-icon icon="mdi-keyboard"></v-icon>,
-              <v-icon icon="mdi-mouse"></v-icon>
-            </div>
-            <div class="control-menu-row">
-              <div>Zoom</div>
-              <div>+/-, scroll</div>
-            </div>
-            <div class="control-menu-row">
-              <div>Pan</div>
-              <div>arrows, drag</div>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-menu>
+      </v-icon>
     </v-btn>
     <v-btn class="control-btn" variant="flat">
       <v-icon icon="mdi-help-circle-outline"></v-icon>
       <v-menu
         activator="parent"
-        :open-on-hover="true"
+        open-on-hover
+        open-delay="0"
         :close-on-content-click="false"
       >
         <v-card class="control-menu">
           <div class="control-menu-title">Help</div>
           <v-card-text class="pa-3">
             <v-btn block @click="showTutorial"> Show Tutorial </v-btn>
+            <table class="map-controls-table">
+              <thead>
+                <tr>
+                  <td>Map Controls</td>
+                  <td>
+                    <v-icon icon="mdi-keyboard" color="secondary-text"></v-icon>
+                  </td>
+                  <td>
+                    <v-icon icon="mdi-mouse" color="secondary-text"></v-icon>
+                  </td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Zoom</td>
+                  <td>+/-</td>
+                  <td>scroll</td>
+                </tr>
+                <tr>
+                  <td>Pan</td>
+                  <td>arrows</td>
+                  <td>drag</td>
+                </tr>
+              </tbody>
+            </table>
           </v-card-text>
         </v-card>
       </v-menu>
@@ -638,48 +695,48 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-if="editMode" :model-value="showViewStateCreation" width="500">
+    <v-dialog v-if="editMode" :model-value="showBookmarkCreation" width="500">
       <v-card>
         <v-card-title class="pa-3">
-          New View State
+          New Bookmark
           <v-btn
             class="close-button transparent"
             variant="flat"
             icon
-            @click="cancelCreateViewState"
+            @click="cancelCreateBookmark"
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
         <v-card-text>
-          <span v-if="newViewStateName.length && !newViewStateValid">
+          <span v-if="newBookmarkName.length && !newBookmarkValid">
             Name must not match an existing view in this project.
           </span>
           <v-text-field
-            v-model="newViewStateName"
+            v-model="newBookmarkName"
             label="Name"
             autofocus
             hide-details
             class="mb-4"
-            @keydown.enter="submitNewViewState"
+            @keydown.enter="submitNewBookmark"
           ></v-text-field>
-          <div v-if="newViewStateThumbnailURL">
+          <div v-if="newBookmarkThumbnailURL">
             This thumbnail will be saved as a visual reference, but loading the
-            view state later may result in slight differences (e.g. newly
-            created objects appearing in lists)
+            bookmark later may result in slight differences (e.g. newly created
+            objects appearing in lists)
           </div>
           <v-img
-            v-if="newViewStateThumbnailURL"
-            :src="newViewStateThumbnailURL"
+            v-if="newBookmarkThumbnailURL"
+            :src="newBookmarkThumbnailURL"
           ></v-img>
           <div v-else>Loading thumbnail...</div>
         </v-card-text>
         <v-card-actions style="text-align: right">
-          <v-btn variant="tonal" @click="cancelCreateViewState"> Cancel </v-btn>
+          <v-btn variant="tonal" @click="cancelCreateBookmark"> Cancel </v-btn>
           <v-btn
             color="primary"
-            :disabled="!newViewStateValid || !newViewStateThumbnail"
-            @click="submitNewViewState"
+            :disabled="!newBookmarkValid || !newBookmarkThumbnail"
+            @click="submitNewBookmark"
           >
             Create
           </v-btn>
@@ -688,31 +745,31 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
     </v-dialog>
     <v-dialog
       v-if="editMode"
-      :model-value="viewStateToDelete !== undefined"
+      :model-value="bookmarkToDelete !== undefined"
       width="500"
     >
       <v-card>
         <v-card-title>
-          Delete View State
+          Delete Bookmark
           <v-btn
             class="close-button transparent"
             variant="flat"
             icon
-            @click="viewStateToDelete = undefined"
+            @click="bookmarkToDelete = undefined"
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-text v-if="viewStateToDelete">
-          Are you sure you want to delete view state "{{
-            viewStateToDelete.name
+        <v-card-text v-if="bookmarkToDelete">
+          Are you sure you want to delete bookmark "{{
+            bookmarkToDelete.name
           }}"?
         </v-card-text>
         <v-card-actions style="text-align: right">
-          <v-btn variant="tonal" @click="viewStateToDelete = undefined">
+          <v-btn variant="tonal" @click="bookmarkToDelete = undefined">
             Cancel
           </v-btn>
-          <v-btn color="error" variant="tonal" @click="submitDeleteViewState()">
+          <v-btn color="error" variant="tonal" @click="submitDeleteBookmark()">
             <v-icon color="error" class="mr-1">mdi-delete</v-icon>
             Delete
           </v-btn>
@@ -724,12 +781,11 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
 
 <style>
 .controls-bar {
-  padding: 3px 8px;
+  padding: 6px 8px;
   position: absolute;
   top: 10px;
   left: 250px;
-  opacity: 80%;
-  background-color: rgb(var(--v-theme-surface));
+  background-color: rgb(var(--v-theme-surface-bright));
   display: flex;
   border-radius: 8px;
   z-index: 3;
@@ -746,12 +802,18 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
 .control-btn {
   min-width: 0 !important;
   width: 40px;
+  background-color: rgb(var(--v-theme-surface-bright));
+  color: rgb(var(--v-theme-secondary-text));
 }
 
 .control-menu {
   min-width: 200px;
   border-radius: 10px;
-  background-color: rgb(var(--v-theme-surface-variant)) !important;
+  background-color: rgb(var(--v-theme-surface)) !important;
+}
+
+.control-menu .v-btn:not(.v-btn--flat) {
+  background-color: rgb(var(--v-theme-surface-bright));
 }
 
 .control-menu-title {
@@ -764,6 +826,20 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
   display: flex;
   justify-content: space-between;
   margin-bottom: 5px;
+}
+
+.map-controls-table {
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.map-controls-table thead {
+  border-bottom: 1px solid rgb(var(--v-theme-on-surface));
+}
+
+.map-controls-table td {
+  padding: 4px 8px;
+  text-align: center;
 }
 
 .basemap-list .v-list-item {

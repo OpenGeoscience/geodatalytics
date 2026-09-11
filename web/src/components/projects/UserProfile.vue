@@ -21,11 +21,16 @@ const initials = computed(() => {
 </script>
 
 <template>
-  <v-list-item v-if="props.user" :subtitle="props.user.username">
+  <v-list-item
+    v-if="props.user"
+    :subtitle="props.user.username"
+    prepend-gap="0"
+  >
     <template #title>
       <span style="text-transform: capitalize">{{ nameLabel }}</span>
     </template>
     <template #prepend>
+      <slot name="prepend"></slot>
       <v-btn
         flat
         icon
@@ -42,9 +47,6 @@ const initials = computed(() => {
         </span>
         <v-icon v-else icon="mdi-account"></v-icon>
       </v-btn>
-    </template>
-    <template #append>
-      <slot name="append"></slot>
     </template>
   </v-list-item>
 </template>

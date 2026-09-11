@@ -4,6 +4,7 @@ from django.contrib import admin
 
 from uvdat.core.models import (
     Basemap,
+    Bookmark,
     Chart,
     ColorConfig,
     Colormap,
@@ -26,7 +27,6 @@ from uvdat.core.models import (
     TaskResult,
     VectorData,
     VectorFeature,
-    ViewState,
 )
 
 
@@ -158,6 +158,6 @@ class TaskResultAdmin(admin.ModelAdmin):
     list_display = ["id", "creator", "task_type", "inputs"]
 
 
-@admin.register(ViewState)
-class ViewStateAdmin(admin.ModelAdmin):
+@admin.register(Bookmark)
+class BookmarkAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "project"]
