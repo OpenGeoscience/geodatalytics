@@ -1,3 +1,4 @@
+import * as turf from "@turf/turf";
 import {
   createRegion,
   getProjectAnalysisTypes,
@@ -33,6 +34,8 @@ export const useAnalysisStore = defineStore("analysis", () => {
   const availableResults = ref<TaskResult[]>([]);
   const currentResult = ref<TaskResult>();
   const selectedInputs = ref<Record<string, any>>({});
+  const inputOptionFiltering = ref<Record<string, boolean>>({});
+  const filteredInputOptions = ref<Record<string, any>>({});
   const terradraw = ref<TerraDraw | undefined>(undefined);
   const drawingRegion = ref<boolean>(false);
   const drawingRegionForInput = ref<undefined | string>();
@@ -143,6 +146,43 @@ export const useAnalysisStore = defineStore("analysis", () => {
           }
         }
       });
+    }
+  }
+
+  function initInputOptionFiltering() {
+    inputOptionFiltering.value = currentAnalysisType.value
+      ? Object.fromEntries(
+          Object.entries(currentAnalysisType.value.input_types).map(
+            ([key, inputType]) => [key, inputType === "Region"],
+          ),
+        )
+      : {};
+    filteredInputOptions.value = {};
+  }
+
+  function filterInputOptions() {
+    if (!currentAnalysisType.value) return;
+    for (const key in inputOptionFiltering.value) {
+      if (inputOptionFiltering.value[key]) {
+        const type = currentAnalysisType.value.input_types[key];
+        if (type.toLocaleLowerCase() === "region") {
+          const turfBounds = turf.bboxPolygon([
+            mapStore.currentMapBounds.getWest(),
+            mapStore.currentMapBounds.getSouth(),
+            mapStore.currentMapBounds.getEast(),
+            mapStore.currentMapBounds.getNorth(),
+          ]);
+          filteredInputOptions.value[key] =
+            currentAnalysisType.value.input_options[key].filter((opt: any) =>
+              turf.booleanIntersects(
+                turfBounds,
+                turf.multiPolygon(opt.boundary),
+              ),
+            );
+        }
+      } else {
+        filteredInputOptions.value[key] = undefined;
+      }
     }
   }
 
@@ -274,9 +314,12 @@ export const useAnalysisStore = defineStore("analysis", () => {
   watch(currentAnalysisType, () => {
     fetchResults();
     initSelectedInputs();
+    initInputOptionFiltering();
   });
 
   watch(() => projectStore.currentProject, createWebSocket);
+  watch(() => mapStore.currentMapBounds, filterInputOptions);
+  watch(inputOptionFiltering, filterInputOptions, { deep: true });
 
   return {
     loadingCharts,
@@ -289,6 +332,10 @@ export const useAnalysisStore = defineStore("analysis", () => {
     availableResults,
     currentResult,
     selectedInputs,
+    inputOptionFiltering,
+    filteredInputOptions,
+    initInputOptionFiltering,
+    filterInputOptions,
     initCharts,
     initAnalysisTypes,
     initResults,
