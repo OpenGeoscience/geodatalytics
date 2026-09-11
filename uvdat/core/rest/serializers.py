@@ -13,6 +13,7 @@ from uvdat.core.frame_previews.preview_regeneration import (
 )
 from uvdat.core.models import (
     Basemap,
+    Bookmark,
     Chart,
     Colormap,
     Dataset,
@@ -29,7 +30,6 @@ from uvdat.core.models import (
     Region,
     TaskResult,
     VectorData,
-    ViewState,
 )
 
 
@@ -359,7 +359,7 @@ class TaskResultSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ViewStateSerializer(serializers.ModelSerializer):
+class BookmarkSerializer(serializers.ModelSerializer):
     map_center = serializers.SerializerMethodField("get_center")
 
     def get_center(self, obj):
@@ -376,5 +376,5 @@ class ViewStateSerializer(serializers.ModelSerializer):
         return data
 
     class Meta:
-        model = ViewState
+        model = Bookmark
         fields = "__all__"

@@ -12,6 +12,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 from uvdat.core.rest import (
     AnalyticsViewSet,
     BasemapViewSet,
+    BookmarkViewSet,
     ChartViewSet,
     ColormapViewSet,
     DatasetViewSet,
@@ -25,7 +26,6 @@ from uvdat.core.rest import (
     RegionViewSet,
     UserViewSet,
     VectorDataViewSet,
-    ViewStateViewSet,
 )
 
 router = routers.SimpleRouter()
@@ -51,7 +51,7 @@ router.register(r"regions", RegionViewSet, basename="regions")
 router.register(r"networks", NetworkViewSet, basename="networks")
 router.register(r"basemaps", BasemapViewSet, basename="basemaps")
 router.register(r"analytics", AnalyticsViewSet, basename="analytics")
-router.register(r"view-states", ViewStateViewSet, basename="view-states")
+router.register(r"bookmarks", BookmarkViewSet, basename="bookmarks")
 
 
 urlpatterns = [

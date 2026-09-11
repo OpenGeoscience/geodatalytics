@@ -20,12 +20,12 @@ import {
 import { useMapCompareStore } from "@/store/compare";
 import {
   createBasemap,
-  createViewState,
-  deleteViewState,
+  createBookmark,
+  deleteBookmark,
   uploadFile,
 } from "@/api/rest";
 import { storeToRefs } from "pinia";
-import type { ViewState } from "@/types";
+import type { Bookmark } from "@/types";
 
 const appStore = useAppStore();
 const layerStore = useLayerStore();
@@ -55,20 +55,20 @@ const newBasemapValid = computed(
     !jsonErrors.value.length,
 );
 
-const showViewStateCreation = ref(false);
-const viewStateToDelete = ref();
-const newViewStateName = ref("");
-const newViewStateThumbnail = ref();
-const newViewStateThumbnailURL = computed(() => {
-  if (!newViewStateThumbnail.value) return null;
-  return URL.createObjectURL(newViewStateThumbnail.value);
+const showBookmarkCreation = ref(false);
+const bookmarkToDelete = ref();
+const newBookmarkName = ref("");
+const newBookmarkThumbnail = ref();
+const newBookmarkThumbnailURL = computed(() => {
+  if (!newBookmarkThumbnail.value) return null;
+  return URL.createObjectURL(newBookmarkThumbnail.value);
 });
-const newViewStateValid = computed(() => {
+const newBookmarkValid = computed(() => {
   return (
-    newViewStateName.value.length &&
-    !projectStore.availableViewStates
+    newBookmarkName.value.length &&
+    !projectStore.availableBookmarks
       .map((v) => v.name)
-      .includes(newViewStateName.value)
+      .includes(newBookmarkName.value)
   );
 });
 const editMode = computed(() => {
@@ -251,51 +251,52 @@ function animateCameraFlash() {
   }, 200);
 }
 
-function showViewStateDialog() {
+function showBookmarkDialog() {
   takeScreenshot(true).then((blob) => {
-    newViewStateThumbnail.value = blob;
+    newBookmarkThumbnail.value = blob;
   });
-  showViewStateCreation.value = true;
+  showBookmarkCreation.value = true;
 }
 
-function cancelCreateViewState() {
-  newViewStateName.value = "";
-  newViewStateThumbnail.value = undefined;
-  showViewStateCreation.value = false;
+function cancelCreateBookmark() {
+  newBookmarkName.value = "";
+  newBookmarkThumbnail.value = undefined;
+  showBookmarkCreation.value = false;
 }
 
-function submitNewViewState() {
+function submitNewBookmark() {
   if (!appStore.authenticated) return;
-  if (newViewStateValid.value && newViewStateThumbnail.value) {
+  if (newBookmarkValid.value && newBookmarkThumbnail.value) {
     const thumbnailFile = new File(
-      [newViewStateThumbnail.value],
+      [newBookmarkThumbnail.value],
       "thumbnail.png",
       { type: "image/png" },
     );
     uploadFile(thumbnailFile).then((thumbnailURL) => {
-      const viewState = projectStore.getCurrentViewState();
-      if (viewState) {
-        viewState.name = newViewStateName.value;
-        viewState.thumbnail = thumbnailURL;
-        createViewState(viewState).then((createdViewState) => {
-          cancelCreateViewState();
-          projectStore.fetchProjectViewStates();
-          projectStore.navigateToViewState(createdViewState);
+      const bookmark = projectStore.getCurrentBookmark();
+      if (bookmark) {
+        bookmark.name = newBookmarkName.value;
+        bookmark.thumbnail = thumbnailURL;
+        createBookmark(bookmark).then((createdBookmark) => {
+          cancelCreateBookmark();
+          projectStore.fetchProjectBookmarks();
+          projectStore.navigateToBookmark(createdBookmark);
         });
       }
     });
   }
 }
 
-function submitDeleteViewState() {
-  deleteViewState(viewStateToDelete.value).then(() => {
-    viewStateToDelete.value = undefined;
-    projectStore.fetchProjectViewStates();
+function submitDeleteBookmark() {
+  deleteBookmark(bookmarkToDelete.value).then(() => {
+    bookmarkToDelete.value = undefined;
+    projectStore.fetchProjectBookmarks();
+    projectStore.navigateNoBookmark();
   });
 }
 
-function copyViewStateLink(viewState: ViewState) {
-  const url = `${window.location.origin}/view/${viewState.id}`;
+function copyBookmarkLink(bookmark: Bookmark) {
+  const url = `${window.location.origin}/bookmark/${bookmark.id}`;
   navigator.clipboard.writeText(url);
 }
 
@@ -327,6 +328,82 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         : 'controls-bar'
     "
   >
+    <v-btn
+      v-if="projectStore.currentProject"
+      class="control-btn"
+      variant="flat"
+    >
+      <v-icon
+        :icon="
+          projectStore.currentBookmark ? 'mdi-bookmark' : 'mdi-bookmark-outline'
+        "
+      ></v-icon>
+      <v-menu
+        activator="parent"
+        open-on-hover
+        open-delay="100"
+        :close-on-content-click="false"
+        width="450"
+      >
+        <v-card class="control-menu">
+          <div class="control-menu-title">Project Bookmarks</div>
+          <v-card-text class="pa-3">
+            <div v-if="isComparing">
+              While using map comparison mode, saving a new bookmark is not
+              supported.
+            </div>
+            <v-btn
+              v-else-if="editMode"
+              class="control-menu-row"
+              @click="showBookmarkDialog"
+            >
+              <div>Save current view as bookmark</div>
+            </v-btn>
+            <v-list
+              v-if="projectStore.availableBookmarks.length"
+              density="compact"
+              bg-color="transparent"
+            >
+              <v-list-item
+                v-for="bookmark in projectStore.availableBookmarks"
+                :key="bookmark.id"
+                class="control-menu-row pa-1"
+                @click="projectStore.navigateToBookmark(bookmark)"
+              >
+                <template #prepend>
+                  <img :src="bookmark.thumbnail" height="70px" />
+                </template>
+                <template #title>
+                  <div style="width: 150px; text-wrap: wrap">
+                    {{ bookmark.name }}
+                  </div>
+                </template>
+                <template #append>
+                  <v-btn
+                    v-if="editMode"
+                    v-tooltip="'Delete this bookmark'"
+                    icon="mdi-delete"
+                    flat
+                    variant="text"
+                    color="secondary-text"
+                    @click.stop.prevent="bookmarkToDelete = bookmark"
+                  ></v-btn>
+                  <v-btn
+                    v-tooltip="'Copy shareable link'"
+                    icon="mdi-share"
+                    flat
+                    variant="text"
+                    color="secondary-text"
+                    @click.stop.prevent="copyBookmarkLink(bookmark)"
+                  ></v-btn>
+                </template>
+              </v-list-item>
+            </v-list>
+            <div v-else>No saved bookmarks exist for this project.</div>
+          </v-card-text>
+        </v-card>
+      </v-menu>
+    </v-btn>
     <v-btn class="control-btn" variant="flat">
       <v-icon>mdi-map-outline</v-icon>
       <v-menu
@@ -446,82 +523,6 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
             <v-btn class="control-menu-row" @click="saveScreenshot">
               Save image
             </v-btn>
-          </v-card-text>
-        </v-card>
-      </v-menu>
-    </v-btn>
-    <v-btn
-      v-if="projectStore.currentProject"
-      class="control-btn"
-      variant="flat"
-    >
-      <v-icon icon="mdi-view-array" class="pb-1 pr-2"></v-icon>
-      <v-icon
-        icon="mdi-share"
-        style="position: absolute; left: 15px; top: 8px; max-width: 10px"
-      ></v-icon>
-      <v-menu
-        activator="parent"
-        open-on-hover
-        open-delay="100"
-        :close-on-content-click="false"
-        width="450"
-      >
-        <v-card class="control-menu">
-          <div class="control-menu-title">Saved View States</div>
-          <v-card-text class="pa-3">
-            <div v-if="isComparing">
-              While using map comparison mode, saving a new view state is not
-              supported.
-            </div>
-            <v-btn
-              v-else-if="editMode"
-              class="control-menu-row"
-              @click="showViewStateDialog"
-            >
-              <div>Save current view state</div>
-            </v-btn>
-            <v-list
-              v-if="projectStore.availableViewStates.length"
-              density="compact"
-              bg-color="transparent"
-            >
-              <v-list-item
-                v-for="viewState in projectStore.availableViewStates"
-                :key="viewState.id"
-                class="control-menu-row pa-1"
-                @click="projectStore.navigateToViewState(viewState)"
-              >
-                <template #prepend>
-                  <img :src="viewState.thumbnail" height="70px" />
-                </template>
-                <template #title>
-                  <div style="width: 150px; text-wrap: wrap">
-                    {{ viewState.name }}
-                  </div>
-                </template>
-                <template #append>
-                  <v-btn
-                    v-if="editMode"
-                    v-tooltip="'Delete this view state'"
-                    icon="mdi-delete"
-                    flat
-                    variant="text"
-                    color="secondary-text"
-                    @click.stop.prevent="viewStateToDelete = viewState"
-                  ></v-btn>
-                  <v-btn
-                    v-tooltip="'Copy shareable link'"
-                    icon="mdi-share"
-                    flat
-                    variant="text"
-                    color="secondary-text"
-                    @click.stop.prevent="copyViewStateLink(viewState)"
-                  ></v-btn>
-                </template>
-              </v-list-item>
-            </v-list>
-            <div v-else>No saved view states exist for this project.</div>
           </v-card-text>
         </v-card>
       </v-menu>
@@ -694,48 +695,48 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-if="editMode" :model-value="showViewStateCreation" width="500">
+    <v-dialog v-if="editMode" :model-value="showBookmarkCreation" width="500">
       <v-card>
         <v-card-title class="pa-3">
-          New View State
+          New Bookmark
           <v-btn
             class="close-button transparent"
             variant="flat"
             icon
-            @click="cancelCreateViewState"
+            @click="cancelCreateBookmark"
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
         <v-card-text>
-          <span v-if="newViewStateName.length && !newViewStateValid">
+          <span v-if="newBookmarkName.length && !newBookmarkValid">
             Name must not match an existing view in this project.
           </span>
           <v-text-field
-            v-model="newViewStateName"
+            v-model="newBookmarkName"
             label="Name"
             autofocus
             hide-details
             class="mb-4"
-            @keydown.enter="submitNewViewState"
+            @keydown.enter="submitNewBookmark"
           ></v-text-field>
-          <div v-if="newViewStateThumbnailURL">
+          <div v-if="newBookmarkThumbnailURL">
             This thumbnail will be saved as a visual reference, but loading the
-            view state later may result in slight differences (e.g. newly
-            created objects appearing in lists)
+            bookmark later may result in slight differences (e.g. newly created
+            objects appearing in lists)
           </div>
           <v-img
-            v-if="newViewStateThumbnailURL"
-            :src="newViewStateThumbnailURL"
+            v-if="newBookmarkThumbnailURL"
+            :src="newBookmarkThumbnailURL"
           ></v-img>
           <div v-else>Loading thumbnail...</div>
         </v-card-text>
         <v-card-actions style="text-align: right">
-          <v-btn variant="tonal" @click="cancelCreateViewState"> Cancel </v-btn>
+          <v-btn variant="tonal" @click="cancelCreateBookmark"> Cancel </v-btn>
           <v-btn
             color="primary"
-            :disabled="!newViewStateValid || !newViewStateThumbnail"
-            @click="submitNewViewState"
+            :disabled="!newBookmarkValid || !newBookmarkThumbnail"
+            @click="submitNewBookmark"
           >
             Create
           </v-btn>
@@ -744,31 +745,31 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
     </v-dialog>
     <v-dialog
       v-if="editMode"
-      :model-value="viewStateToDelete !== undefined"
+      :model-value="bookmarkToDelete !== undefined"
       width="500"
     >
       <v-card>
         <v-card-title>
-          Delete View State
+          Delete Bookmark
           <v-btn
             class="close-button transparent"
             variant="flat"
             icon
-            @click="viewStateToDelete = undefined"
+            @click="bookmarkToDelete = undefined"
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-text v-if="viewStateToDelete">
-          Are you sure you want to delete view state "{{
-            viewStateToDelete.name
+        <v-card-text v-if="bookmarkToDelete">
+          Are you sure you want to delete bookmark "{{
+            bookmarkToDelete.name
           }}"?
         </v-card-text>
         <v-card-actions style="text-align: right">
-          <v-btn variant="tonal" @click="viewStateToDelete = undefined">
+          <v-btn variant="tonal" @click="bookmarkToDelete = undefined">
             Cancel
           </v-btn>
-          <v-btn color="error" variant="tonal" @click="submitDeleteViewState()">
+          <v-btn color="error" variant="tonal" @click="submitDeleteBookmark()">
             <v-icon color="error" class="mr-1">mdi-delete</v-icon>
             Delete
           </v-btn>

@@ -687,7 +687,7 @@ export const useMapStore = defineStore("map", () => {
   watch(map, () => {
     // Once map is initialized, attempt to load URL view
     if (map.value) {
-      projectStore.loadViewStateFromURL();
+      projectStore.loadBookmarkFromURL();
     }
   });
 

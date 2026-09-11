@@ -216,7 +216,7 @@ function applyStyleSelection(
 }
 
 function resetCurrentStyle() {
-  if (projectStore.currentViewState && !projectStore.currentViewStateLoaded) {
+  if (projectStore.currentBookmark && !projectStore.currentBookmarkLoaded) {
     // If styles are being applied from a view, don't overwrite them
     return;
   }

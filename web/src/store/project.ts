@@ -3,11 +3,11 @@ import {
   getProjectDatasets,
   getDatasetTags,
   getDatasets,
-  getViewState,
-  getProjectViewStates,
+  getBookmark,
+  getProjectBookmarks,
   getLayer,
 } from "@/api/rest";
-import type { Dataset, Project, ViewState } from "@/types";
+import type { Dataset, Project, Bookmark } from "@/types";
 import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -46,9 +46,9 @@ export const useProjectStore = defineStore("project", () => {
   const allDatasets = ref<Dataset[]>();
   const availableDatasets = ref<Dataset[]>();
   const availableDatasetTags = ref<string[]>([]);
-  const availableViewStates = ref<ViewState[]>([]);
-  const currentViewState = ref<ViewState>();
-  const currentViewStateLoaded = ref<boolean>(false);
+  const availableBookmarks = ref<Bookmark[]>([]);
+  const currentBookmark = ref<Bookmark>();
+  const currentBookmarkLoaded = ref<boolean>(false);
 
   const permissions = computed(() => {
     const ret = Object.fromEntries(
@@ -91,20 +91,20 @@ export const useProjectStore = defineStore("project", () => {
     availableDatasetTags.value = await getDatasetTags();
   }
 
-  async function fetchProjectViewStates() {
+  async function fetchProjectBookmarks() {
     if (!currentProject.value) {
       return;
     }
-    availableViewStates.value = await getProjectViewStates(
+    availableBookmarks.value = await getProjectBookmarks(
       currentProject.value.id,
     );
   }
 
-  function getCurrentViewState(): ViewState | undefined {
+  function getCurrentBookmark(): Bookmark | undefined {
     if (!currentProject.value) return undefined;
     const mapPosition = mapStore.getCurrentMapPosition();
     // use proportions instead of coordinates
-    // so that the view state looks good with other window sizes
+    // so that the bookmark looks good with other window sizes
     const panelArrangement = panelStore.panelArrangement.map((panelConfig) => {
       const copyConfig = { ...panelConfig };
       delete copyConfig.element;
@@ -125,7 +125,7 @@ export const useProjectStore = defineStore("project", () => {
         layer.current_frame_index,
       ]),
     );
-    const viewState: ViewState = {
+    const bookmark: Bookmark = {
       project: currentProject.value.id,
       current_analysis_type: analysisStore.currentAnalysisType?.db_value,
       current_result: analysisStore.currentResult?.id,
@@ -147,33 +147,37 @@ export const useProjectStore = defineStore("project", () => {
       map_center: mapPosition.center,
       map_zoom: Math.round(mapPosition.zoom),
     };
-    return viewState;
+    return bookmark;
   }
 
-  function navigateToViewState(viewState: ViewState) {
-    currentViewStateLoaded.value = false;
-    router.push(`/view/${viewState.id}`);
+  function navigateNoBookmark() {
+    router.push("/");
   }
 
-  watch(() => route?.fullPath, loadViewStateFromURL);
-  async function loadViewStateFromURL() {
+  function navigateToBookmark(bookmark: Bookmark) {
+    currentBookmarkLoaded.value = false;
+    router.push(`/bookmark/${bookmark.id}`);
+  }
+
+  watch(() => route?.fullPath, loadBookmarkFromURL);
+  async function loadBookmarkFromURL() {
     if (
       !appStore.authenticated &&
       (tutorialStore.showWelcomeMessage || tutorialStore.showTutorialStep > 1)
     ) {
-      // Don't load view state until after exiting tutorial
+      // Don't load bookmark until after exiting tutorial
       return;
     }
-    if (!route.path.includes("/view/")) {
-      currentViewState.value = undefined;
+    if (!route.path.includes("/bookmark/")) {
+      currentBookmark.value = undefined;
       return;
     }
-    const viewStateId = parseInt(route.path.split("/view/")[1]);
-    const viewState = await getViewState(viewStateId);
-    if (viewState) {
-      currentViewState.value = viewState;
+    const bookmarkId = parseInt(route.path.split("/bookmark/")[1]);
+    const bookmark = await getBookmark(bookmarkId);
+    if (bookmark) {
+      currentBookmark.value = bookmark;
       // Set some state attrs that don't require the project to be loaded first
-      panelStore.panelArrangement = viewState.panel_arrangement.map(
+      panelStore.panelArrangement = bookmark.panel_arrangement.map(
         (panelConfig) => {
           if (panelConfig.position) {
             panelConfig.position = {
@@ -185,45 +189,45 @@ export const useProjectStore = defineStore("project", () => {
         },
       );
       appStore.openSidebars = [];
-      if (viewState.left_sidebar_open) appStore.openSidebars.push("left");
-      if (viewState.right_sidebar_open) appStore.openSidebars.push("right");
+      if (bookmark.left_sidebar_open) appStore.openSidebars.push("left");
+      if (bookmark.right_sidebar_open) appStore.openSidebars.push("right");
 
       const selectedProject = availableProjects.value.find(
-        (p) => p.id === viewState.project,
+        (p) => p.id === bookmark.project,
       );
       if (currentProject.value?.id !== selectedProject?.id) {
         currentProject.value = selectedProject;
         // Remaining state attrs that depend on project loading will be set by the currentProject watcher
       } else {
         if (mapStore.map) mapStore.clearMapLayers();
-        finishLoadingViewState();
+        finishLoadingBookmark();
       }
     }
   }
-  async function finishLoadingViewState() {
-    const viewState = currentViewState.value;
-    if (viewState && !currentViewStateLoaded.value && mapStore.map) {
-      appStore.theme = viewState.theme;
+  async function finishLoadingBookmark() {
+    const bookmark = currentBookmark.value;
+    if (bookmark && !currentBookmarkLoaded.value && mapStore.map) {
+      appStore.theme = bookmark.theme;
       analysisStore.currentChart = analysisStore.availableCharts?.find(
-        (c) => c.id === viewState.current_chart,
+        (c) => c.id === bookmark.current_chart,
       );
       networkStore.currentNetwork = networkStore.availableNetworks.find(
-        (n) => n.id === viewState.current_network,
+        (n) => n.id === bookmark.current_network,
       );
 
       // @ts-ignore "Type instantiation is excessively deep and possibly infinite"
       mapStore.currentBasemap = mapStore.availableBasemaps?.find(
-        (b) => b.id === viewState.current_basemap,
+        (b) => b.id === bookmark.current_basemap,
       );
       mapStore.setMapPosition(
-        viewState.map_center as [number, number],
-        viewState.map_zoom,
+        bookmark.map_center as [number, number],
+        bookmark.map_zoom,
       );
 
       // Add layers with copy ids from selected_layer_styles
       layerStore.selectedLayers = [];
       await Promise.all(
-        Object.keys(viewState.selected_layer_styles).map(async (styleKey) => {
+        Object.keys(bookmark.selected_layer_styles).map(async (styleKey) => {
           // Parse the style key to get layer id and copy_id
           const [layerIdStr, copyIdStr] = styleKey.split(".");
           const layerId = parseInt(layerIdStr);
@@ -238,25 +242,25 @@ export const useProjectStore = defineStore("project", () => {
           const key1 = styleStore.layerStyleKey(layer1);
           const key2 = styleStore.layerStyleKey(layer2);
           return (
-            viewState.selected_layer_order.indexOf(key1) -
-            viewState.selected_layer_order.indexOf(key2)
+            bookmark.selected_layer_order.indexOf(key1) -
+            bookmark.selected_layer_order.indexOf(key2)
           );
         },
       );
       // Ensure correct current frames
       layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
         const styleKey = styleStore.layerStyleKey(layer);
-        if (viewState.selected_layer_current_frames[styleKey]) {
+        if (bookmark.selected_layer_current_frames[styleKey]) {
           layer.current_frame_index =
-            viewState.selected_layer_current_frames[styleKey];
+            bookmark.selected_layer_current_frames[styleKey];
         }
         return layer;
       });
-      styleStore.selectedLayerStyles = viewState.selected_layer_styles;
+      styleStore.selectedLayerStyles = bookmark.selected_layer_styles;
 
       analysisStore.currentAnalysisType =
         analysisStore.availableAnalysisTypes?.find(
-          (a) => a.db_value === viewState.current_analysis_type,
+          (a) => a.db_value === bookmark.current_analysis_type,
         );
       analysisStore.initSelectedInputs();
       if (analysisStore.currentAnalysisType && currentProject.value) {
@@ -265,23 +269,23 @@ export const useProjectStore = defineStore("project", () => {
           currentProject.value.id,
         );
         analysisStore.currentResult = analysisStore.availableResults?.find(
-          (c) => c.id === viewState.current_result,
+          (c) => c.id === bookmark.current_result,
         );
         if (analysisStore.currentResult) {
           analysisStore.currentAnalysisTab = "old";
         }
       }
-      currentViewStateLoaded.value = true;
+      currentBookmarkLoaded.value = true;
     }
   }
 
   watch(currentProject, async () => {
     clearProjectState();
 
-    if (currentViewState.value) {
+    if (currentBookmark.value) {
       mapStore.setMapPosition(
-        currentViewState.value.map_center as [number, number],
-        currentViewState.value.map_zoom,
+        currentBookmark.value.map_center as [number, number],
+        currentBookmark.value.map_zoom,
         true,
       );
     } else {
@@ -293,11 +297,11 @@ export const useProjectStore = defineStore("project", () => {
 
     if (currentProject.value) {
       await fetchProjectDatasets();
-      await fetchProjectViewStates();
+      await fetchProjectBookmarks();
       await analysisStore.initCharts(currentProject.value.id);
       await analysisStore.initAnalysisTypes(currentProject.value.id);
       await networkStore.initNetworks(currentProject.value.id);
-      finishLoadingViewState();
+      finishLoadingBookmark();
     }
   });
 
@@ -314,7 +318,7 @@ export const useProjectStore = defineStore("project", () => {
 
   function clearProjectState() {
     availableDatasets.value = undefined;
-    availableViewStates.value = [];
+    availableBookmarks.value = [];
 
     layerStore.selectedLayers = [];
     styleStore.selectedLayerStyles = {};
@@ -353,16 +357,17 @@ export const useProjectStore = defineStore("project", () => {
     allDatasets,
     availableDatasets,
     availableDatasetTags,
-    availableViewStates,
-    currentViewState,
-    currentViewStateLoaded,
+    availableBookmarks,
+    currentBookmark,
+    currentBookmarkLoaded,
     permissions,
     fetchProjectDatasets,
     fetchAvailableDatasetTags,
-    fetchProjectViewStates,
-    getCurrentViewState,
-    navigateToViewState,
-    loadViewStateFromURL,
+    fetchProjectBookmarks,
+    getCurrentBookmark,
+    navigateNoBookmark,
+    navigateToBookmark,
+    loadBookmarkFromURL,
     clearState,
     clearProjectState,
     refreshAllDatasets,

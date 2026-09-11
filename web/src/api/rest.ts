@@ -21,7 +21,7 @@ import type {
   TaskResult,
   Colormap,
   Basemap,
-  ViewState,
+  Bookmark,
   Region,
 } from "@/types";
 
@@ -304,27 +304,26 @@ export async function deleteColormap(colormapId: number): Promise<Colormap> {
   return (await apiClient.delete(`colormaps/${colormapId}/`)).data;
 }
 
-export async function getViewState(viewStateId: number): Promise<ViewState> {
+export async function getBookmark(bookmarkId: number): Promise<Bookmark> {
   return (
-    await apiClient.get(`view-states/${viewStateId}`, {
-      errorMsg: "Could not load view state. Ensure that ID in URL is correct.",
+    await apiClient.get(`bookmarks/${bookmarkId}`, {
+      errorMsg: "Could not load bookmark. Ensure that ID in URL is correct.",
     })
   ).data;
 }
 
-export async function getProjectViewStates(
+export async function getProjectBookmarks(
   projectId: number,
-): Promise<ViewState[]> {
-  return (await apiClient.get(`view-states/?project=${projectId}`)).data
-    .results;
+): Promise<Bookmark[]> {
+  return (await apiClient.get(`bookmarks/?project=${projectId}`)).data.results;
 }
 
-export async function createViewState(viewState: ViewState): Promise<any> {
-  return (await apiClient.post("view-states/", viewState)).data;
+export async function createBookmark(bookmark: Bookmark): Promise<any> {
+  return (await apiClient.post("bookmarks/", bookmark)).data;
 }
 
-export async function deleteViewState(viewState: ViewState): Promise<any> {
-  return (await apiClient.delete(`view-states/${viewState.id}/`)).data;
+export async function deleteBookmark(bookmark: Bookmark): Promise<any> {
+  return (await apiClient.delete(`bookmarks/${bookmark.id}/`)).data;
 }
 
 export async function getRegion(regionId: number): Promise<Region> {

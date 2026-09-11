@@ -488,7 +488,7 @@ export interface FileItem {
   metadata: Record<string, any>;
 }
 
-export interface ViewState {
+export interface Bookmark {
   id?: number;
   name?: string;
   project: number;
