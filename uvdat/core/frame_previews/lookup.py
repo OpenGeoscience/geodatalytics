@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from uvdat.core.frame_previews.fingerprint import params_fingerprint, style_fingerprint
+from uvdat.core.frame_previews.fingerprint import params_fingerprint
 from uvdat.core.frame_previews.types import FramePreviewData
 from uvdat.core.models.frame_preview import PreviewStatus, RasterFramePreview
 

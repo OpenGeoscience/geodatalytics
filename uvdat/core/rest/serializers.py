@@ -185,7 +185,8 @@ class LayerStyleSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         style_spec = self.initial_data.pop("style_spec", None)
-        instance.save_style_configs(style_spec)
+        if style_spec is not None:
+            instance.save_style_configs(style_spec)
         return super().update(instance, validated_data)
 
     class Meta:
@@ -216,17 +217,18 @@ class LayerStyleWithPreviewsSerializer(LayerStyleSerializer):
 
 
 class LayerSerializer(serializers.ModelSerializer):
-    default_style = serializers.SerializerMethodField('get_project_default_style')
+    default_style = serializers.SerializerMethodField("get_project_default_style")
     multiframe_previews = serializers.SerializerMethodField()
     preview_status = serializers.SerializerMethodField()
 
     def get_project_default_style(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request is not None:
-            project_id = request.query_params.get('project')
+            project_id = request.query_params.get("project")
             if project_id is not None:
                 style = obj.styles.filter(project__id=project_id, is_default=True).first()
-                return LayerStyleSerializer(style).data
+                if style is not None:
+                    return LayerStyleSerializer(style).data
         return None
 
     def get_preview_status(self, obj):
