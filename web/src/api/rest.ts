@@ -125,8 +125,13 @@ export async function spawnDatasetConversion(
     .data;
 }
 
-export async function getDatasetLayers(datasetId: number, projectId: number): Promise<Layer[]> {
-  return (await apiClient.get(`datasets/${datasetId}/layers/?project=${projectId}`)).data;
+export async function getDatasetLayers(
+  datasetId: number,
+  projectId: number,
+): Promise<Layer[]> {
+  return (
+    await apiClient.get(`datasets/${datasetId}/layers/?project=${projectId}`)
+  ).data;
 }
 
 export async function getLayer(layerId: number): Promise<Layer> {
