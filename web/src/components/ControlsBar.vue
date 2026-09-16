@@ -289,9 +289,13 @@ function submitNewBookmark() {
 
 function submitDeleteBookmark() {
   deleteBookmark(bookmarkToDelete.value).then(() => {
+    const deletedId = bookmarkToDelete.value.id;
     bookmarkToDelete.value = undefined;
     projectStore.fetchProjectBookmarks();
-    projectStore.navigateNoBookmark();
+    if (projectStore.currentBookmark?.id === deletedId) {
+      projectStore.currentBookmark = undefined;
+      projectStore.navigateNoBookmark();
+    }
   });
 }
 
