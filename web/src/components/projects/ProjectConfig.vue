@@ -146,8 +146,8 @@ function selectProject(project: Project) {
   }
 }
 
-function loadSelectedProject() {
-  projectStore.loadProjects();
+async function loadSelectedProject() {
+  await projectStore.loadProjects();
   projectStore.currentProject = projectStore.availableProjects.find(
     (p) => p.id === selectedProject.value?.id,
   );
