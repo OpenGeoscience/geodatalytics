@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: postgis/postgis:18-3.6
+    # assumes `amd64` architecture
+    # if on `arm64` (aka Apple M processors)
+    # add `POSTGIS_IMAGE=imresamu/postgis:18-3.6.1-bookworm` to `.env` file
+    image: ${POSTGIS_IMAGE:-postgis/postgis:18-3.6}
     shm_size: 128mb
     environment:
       POSTGRES_DB: django
