@@ -18,6 +18,8 @@ module "django" {
 
   ec2_worker_instance_quantity = 1
   ec2_worker_ssh_public_key    = file("${path.module}/ssh-key.pub")
+  # Increase EC2 worker size; default is t3.small with 2GB memory, t3.large has 8GB
+  ec2_worker_instance_type = "t3.large"
 
   additional_django_vars = {
     DJANGO_UVDAT_WEB_URL           = "https://www.geodatalytics.kitware.com/"
