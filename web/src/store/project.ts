@@ -321,6 +321,7 @@ export const useProjectStore = defineStore("project", () => {
     availableBookmarks.value = [];
 
     layerStore.selectedLayers = [];
+    layerStore.availableLayers = [];
     styleStore.selectedLayerStyles = {};
     styleStore.clearStyleEditing();
     useFramePreviewStore().clearAll();

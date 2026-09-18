@@ -15,9 +15,6 @@ class Layer(models.Model):
     name = models.CharField(max_length=255, default="Layer")
     dataset = models.ForeignKey(Dataset, related_name="layers", on_delete=models.CASCADE)
     metadata = models.JSONField(blank=True, null=True)
-    default_style = models.ForeignKey(
-        "LayerStyle", null=True, related_name="default_layer", on_delete=models.SET_NULL
-    )
 
     project_filter_path = "dataset__project"
     objects = ProjectQuerySet.as_manager()

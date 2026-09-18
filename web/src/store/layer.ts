@@ -81,7 +81,11 @@ export const useLayerStore = defineStore("layer", () => {
   async function fetchAvailableLayersForDataset(datasetId: number) {
     // fetch all layers on a dataset and update availableLayers
     // such that any existing layers are overwritten and new ones are added
-    const datasetLayers = await getDatasetLayers(datasetId);
+    if (!projectStore.currentProject) return;
+    const datasetLayers = await getDatasetLayers(
+      datasetId,
+      projectStore.currentProject.id,
+    );
     const datasetLayerIds = new Set(datasetLayers.map((l: Layer) => l.id));
     const existingLayerIds = new Set(
       availableLayers.value.map((l: Layer) => l.id),

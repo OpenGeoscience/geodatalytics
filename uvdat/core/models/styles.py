@@ -22,6 +22,7 @@ class LayerStyle(models.Model):
     name = models.CharField(max_length=255, default="Layer Style")
     layer = models.ForeignKey(Layer, related_name="styles", on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name="styles", on_delete=models.CASCADE)
+    is_default = models.BooleanField(default=False)
     default_frame = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     opacity = models.DecimalField(
         default=1,

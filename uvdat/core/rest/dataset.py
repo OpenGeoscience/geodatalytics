@@ -45,7 +45,7 @@ class DatasetViewSet(ModelViewSet):
     def layers(self, request, **kwargs):
         dataset: Dataset = self.get_object()
         layers = list(layer_queryset_with_previews().filter(dataset=dataset))
-        serializer = LayerSerializer(layers, many=True)
+        serializer = LayerSerializer(layers, many=True, context={"request": request})
         return Response(serializer.data, status=200)
 
     @action(detail=True, methods=["get"])

@@ -208,3 +208,105 @@ def test_rest_style_create_and_update(client, expected_status, layer, project, u
         assert serialized_result.pop("id") is not None
         assert serialized_result.pop("is_default") is not None
         assert serialized_result == style
+
+
+@pytest.mark.django_db
+def test_layer_default_style_project_scope(
+    authenticated_api_client,
+    user,
+    project_factory,
+    layer,
+    layer_style_factory,
+):
+    def assert_default_style_is(expected, proj_id=None):
+        url = f"/api/v1/datasets/{layer.dataset.id}/layers/"
+        if proj_id is not None:
+            url += f"?project={proj_id}"
+        resp = authenticated_api_client.get(url)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        default_style = data[0].get("default_style")
+        if expected is None:
+            assert default_style is None
+        else:
+            assert default_style is not None
+            assert default_style.get("id") == expected.get("id")
+
+    def create_style(name, proj_id, is_default):
+        resp = authenticated_api_client.post(
+            "/api/v1/layer-styles/",
+            {
+                "name": name,
+                "layer": layer.id,
+                "project": proj_id,
+                "is_default": is_default,
+                "style_spec": SIMPLE_SPEC,
+            },
+        )
+        return resp.json()
+
+    # None when no project specified in request
+    assert_default_style_is(None)
+
+    # Create two separate projects
+    proj_1 = project_factory()
+    proj_1.set_owner(user)
+    proj_1.datasets.add(layer.dataset)
+    proj_2 = project_factory()
+    proj_2.set_owner(user)
+    proj_2.datasets.add(layer.dataset)
+
+    # None for projects with no styles created yet
+    assert_default_style_is(None, proj_1.id)
+    assert_default_style_is(None, proj_2.id)
+
+    # Create a style on project 1 with is_default=False
+    style_1 = create_style("Style 1", proj_1.id, False)  # noqa: FBT003
+    # Both projects still have None default styles
+    assert_default_style_is(None, proj_1.id)
+    assert_default_style_is(None, proj_2.id)
+
+    # Set is_default to True on style 1
+    style_1 = authenticated_api_client.patch(
+        f"/api/v1/layer-styles/{style_1.get('id')}/", {"is_default": True}
+    ).json()
+    # Project 1 has default style 1 and project 2 still has None
+    assert_default_style_is(style_1, proj_1.id)
+    assert_default_style_is(None, proj_2.id)
+
+    # Create a style on project 2 with is_default=True
+    style_2 = create_style("Style 2", proj_2.id, True)  # noqa: FBT003
+    # Project 1 has Style 1 and Project 2 has Style 2
+    assert_default_style_is(style_1, proj_1.id)
+    assert_default_style_is(style_2, proj_2.id)
+
+    # Create another style on project 2 with is_default=True
+    style_3 = create_style("Style 3", proj_2.id, True)  # noqa: FBT003
+    # Project 1 has Style 1 and Project 2 has Style 3
+    assert_default_style_is(style_1, proj_1.id)
+    assert_default_style_is(style_3, proj_2.id)
+    # Style 2 now has is_default=False
+    style_2 = authenticated_api_client.get(f"/api/v1/layer-styles/{style_2.get('id')}/").json()
+    assert not style_2.get("is_default")
+
+    # Set is_default back to True on style 2
+    style_2 = authenticated_api_client.patch(
+        f"/api/v1/layer-styles/{style_2.get('id')}/", {"is_default": True}
+    ).json()
+    # Project 1 has Style 1 and Project 2 has Style 2
+    assert_default_style_is(style_1, proj_1.id)
+    assert_default_style_is(style_2, proj_2.id)
+    # Style 3 now has is_default=False
+    style_3 = authenticated_api_client.get(f"/api/v1/layer-styles/{style_3.get('id')}/").json()
+    assert not style_3.get("is_default")
+
+    # Delete style 2
+    resp = authenticated_api_client.delete(f"/api/v1/layer-styles/{style_2.get('id')}/")
+    assert resp.status_code == 204
+    # Style 3 now has is_default=True
+    style_3 = authenticated_api_client.get(f"/api/v1/layer-styles/{style_3.get('id')}/").json()
+    assert style_3.get("is_default")
+    # Project 1 has Style 1 and Project 2 has Style 3
+    assert_default_style_is(style_1, proj_1.id)
+    assert_default_style_is(style_3, proj_2.id)

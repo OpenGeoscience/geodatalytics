@@ -145,6 +145,7 @@ class LayerStyleFactory(factory.django.DjangoModelFactory):
     project = factory.SubFactory(ProjectFactory)
     default_frame = factory.fuzzy.FuzzyInteger(1, 10)
     opacity = factory.fuzzy.FuzzyFloat(0.0, 1.0)
+    is_default = False
 
 
 class NetworkFactory(factory.django.DjangoModelFactory):

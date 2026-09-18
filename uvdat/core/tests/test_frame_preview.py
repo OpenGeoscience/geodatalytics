@@ -619,10 +619,8 @@ def test_layer_api_includes_multiframe_previews(
     project,
     user,
 ):
-    layer_style = layer_style_factory()
+    layer_style = layer_style_factory(is_default=True)
     layer = layer_style.layer
-    layer.default_style = layer_style
-    layer.save(update_fields=["default_style"])
     project.set_collaborators([user])
     project.datasets.set([layer.dataset])
     frame_0 = layer_frame_factory(layer=layer, index=0)
@@ -664,7 +662,6 @@ def test_layer_api_includes_multiframe_previews(
             "bounds": {},
         },
     ]
-    assert "multiframe_previews" not in data.get("default_style", {})
 
 
 @pytest.mark.django_db
