@@ -109,12 +109,9 @@ function getInputOptionalLabel(key: string) {
 function getPreviousValuesForInput(key: string) {
   return [
     ...new Set(
-      analysisStore.availableResults
-        .toSorted(
-          (a, b) =>
-            new Date(b.created).getTime() - new Date(a.created).getTime(),
-        )
-        .map((result) => result.inputs[key].toLocaleLowerCase()),
+      newestFirstResults.value.map((result) =>
+        result.inputs[key].toLocaleLowerCase(),
+      ),
     ),
   ];
 }
@@ -140,9 +137,18 @@ function run() {
   });
 }
 
-function inputOptionHover(type: string, option: any) {
+function inputOptionHover(key: string, option: any) {
+  if (!analysisStore.currentAnalysisType) return;
+  const type = analysisStore.currentAnalysisType.input_types[key];
   if (type.toLocaleLowerCase() === "region") {
-    mapStore.showRegion(option);
+    const options = analysisStore.currentAnalysisType.input_options[key];
+    const selectedId = analysisStore.selectedInputs[key];
+    const selected = options.find((opt: any) => opt.id === selectedId);
+    if (option === undefined && selected !== undefined) {
+      mapStore.showRegion(selected);
+    } else {
+      mapStore.showRegion(option);
+    }
   }
 }
 
@@ -386,7 +392,7 @@ watch(
                   v-else-if="value"
                   :model-value="analysisStore.selectedInputs[key]"
                   :label="key.replaceAll('_', ' ') + getInputOptionalLabel(key)"
-                  :items="value"
+                  :items="analysisStore.filteredInputOptions[key] || value"
                   :rules="getInputSelectionRules(key)"
                   :clearable="
                     analysisStore.currentAnalysisType.optional_inputs?.includes(
@@ -399,7 +405,10 @@ watch(
                   hide-details="auto"
                   class="my-1"
                   @update:model-value="
-                    (v) => (analysisStore.selectedInputs[key] = v?.id)
+                    (v) => {
+                      analysisStore.selectedInputs[key] = v?.id;
+                      inputOptionHover(key, undefined);
+                    }
                   "
                 >
                   <template #item="{ props, item }">
@@ -407,18 +416,8 @@ watch(
                       v-tooltip="`${(item as any).name}`"
                       v-bind="props"
                       style="max-width: 400px"
-                      @mouseover="
-                        inputOptionHover(
-                          analysisStore.currentAnalysisType.input_types[key],
-                          item,
-                        )
-                      "
-                      @mouseleave="
-                        inputOptionHover(
-                          analysisStore.currentAnalysisType.input_types[key],
-                          undefined,
-                        )
-                      "
+                      @mouseover="inputOptionHover(key, item)"
+                      @mouseleave="inputOptionHover(key, undefined)"
                     />
                   </template>
                   <template #append>
@@ -428,6 +427,24 @@ watch(
                         'Region'
                       "
                     >
+                      <v-icon
+                        v-tooltip="
+                          'Filter options by current viewport ' +
+                          (analysisStore.inputOptionFiltering[key]
+                            ? '(enabled)'
+                            : '(disabled)')
+                        "
+                        :icon="
+                          analysisStore.inputOptionFiltering[key]
+                            ? 'mdi-filter-outline'
+                            : 'mdi-filter-off-outline'
+                        "
+                        @click="
+                          () =>
+                            (analysisStore.inputOptionFiltering[key] =
+                              !analysisStore.inputOptionFiltering[key])
+                        "
+                      ></v-icon>
                       <v-icon
                         v-if="
                           analysisStore.drawingRegion ||

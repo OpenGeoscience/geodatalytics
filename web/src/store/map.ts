@@ -18,6 +18,7 @@ import type {
   Source,
   LayerSpecification,
   GeoJSONSource,
+  LngLatBounds,
 } from "maplibre-gl";
 import { Map, Popup } from "maplibre-gl";
 import { getBasemaps } from "@/api/rest";
@@ -42,7 +43,7 @@ import { THEMES } from "@/themes";
 function getLayerIsVisible(layer: MapLibreLayerWithMetadata) {
   // Since visibility must be 'visible' for a feature click to even be registered,
   // we know that if it's not multiFrame, then it is indeed visible
-  if (!layer.metadata.multiFrame) {
+  if (!layer.metadata?.multiFrame) {
     return true;
   }
 
@@ -140,6 +141,7 @@ function parseLayerString(layerId: string): LayerDescription {
 export const useMapStore = defineStore("map", () => {
   const map = shallowRef<Map>();
   const compareMap = shallowRef<Map>();
+  const currentMapBounds = ref<LngLatBounds | undefined>();
   const availableBasemaps = ref<Basemap[]>([]);
   const currentBasemap = ref<Basemap>();
   const tooltipOverlay = ref<Popup>();
@@ -695,6 +697,7 @@ export const useMapStore = defineStore("map", () => {
     // Data
     map,
     compareMap,
+    currentMapBounds,
     availableBasemaps,
     currentBasemap,
     tooltipOverlay,
