@@ -174,6 +174,7 @@ export const useAnalysisStore = defineStore("analysis", () => {
           ]);
           filteredInputOptions.value[key] =
             currentAnalysisType.value.input_options[key].filter((opt: any) =>
+              opt.id === selectedInputs.value[key] ||
               turf.booleanIntersects(
                 turfBounds,
                 turf.multiPolygon(opt.boundary),
