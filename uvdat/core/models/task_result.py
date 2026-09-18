@@ -115,18 +115,6 @@ def result_post_save(sender, instance, **kwargs):
     if channel_layer is None:
         return
 
-    # This WebSocket push streams live TaskResult updates to browser clients
-    # subscribed to a channel group. It is best-effort: a failed notification
-    # must never abort the surrounding TaskResult.save(). Failures are logged at
-    # WARNING so a genuinely broken channel layer in production is still visible.
-    try:
-        async_to_sync(channel_layer.group_send)(
-            group_name, {"type": "send_notification", "message": json.dumps(payload)}
-        )
-    except Exception:  # noqa: BLE001 - notification failures must never propagate
-        logger.warning(
-            "Failed to send TaskResult notification for %s to group %r",
-            instance,
-            group_name,
-            exc_info=True,
-        )
+    async_to_sync(channel_layer.group_send)(
+        group_name, {"type": "send_notification", "message": json.dumps(payload)}
+    )
