@@ -122,6 +122,7 @@ explicit = true
 gdal = { index = "large_image_wheels" }
 pylibtiff = { index = "large_image_wheels" }
 pyvips = { index = "large_image_wheels" }
+django-large-image = { git = "https://github.com/girder/django-large-image", branch = "vsi-not-presigned" }
 
 [tool.hatch.build]
 only-include = [

@@ -86,6 +86,8 @@ class RasterDataViewSet(GenericViewSet, mixins.RetrieveModelMixin, LargeImageVSI
     queryset = RasterData.objects.select_related("dataset").all()
     serializer_class = RasterDataSerializer
     FILE_FIELD_NAME = "cloud_optimized_geotiff"
+    # Prefer /vsis3/bucket/key over presigned HTTP URLs for GDAL VSI access.
+    USE_PRESIGNED_URLS = False
 
     @action(detail=True, methods=["get"])
     def pixel(self, request, **kwargs):
