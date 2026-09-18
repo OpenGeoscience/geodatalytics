@@ -75,7 +75,7 @@ const handleMapReady = async (newMap: Map, mapId: "A" | "B") => {
     await mapStore.fetchAvailableBasemaps();
   }
   newMap.addControl(attributionControl);
-  newMap.on("move", debouncedMapPositionUpdate);
+  newMap.on("moveend", debouncedMapPositionUpdate);
   newMap.on("error", (response) => {
     // AbortErrors are raised when updating style of raster layers; ignore these
     if (response.error.message !== "AbortError") console.error(response.error);
