@@ -109,6 +109,7 @@ function panelUpdated() {
               v-tooltip="'Add Dataset'"
               icon="mdi-plus"
               color="primary"
+              class="pointer"
               @mousedown="projectStore.projectConfigMode = 'existing'"
             />
             <v-menu
@@ -178,6 +179,7 @@ function panelUpdated() {
             <v-icon
               v-tooltip="panel.collapsed ? 'Expand' : 'Collapse'"
               :icon="panel.collapsed ? 'mdi-chevron-down' : 'mdi-chevron-up'"
+              class="pointer"
               @mousedown="togglePanelCollapsed"
             ></v-icon>
             <v-icon
@@ -194,6 +196,7 @@ function panelUpdated() {
               v-if="panel.closeable"
               v-tooltip="'Close Panel'"
               icon="mdi-close"
+              class="pointer"
               @mousedown="closePanel"
             ></v-icon>
           </div>
@@ -257,6 +260,9 @@ function panelUpdated() {
 .panel-content {
   overflow: auto;
   height: calc(100% - 12px);
+}
+.pointer {
+  cursor: pointer;
 }
 .draggable {
   cursor: move;

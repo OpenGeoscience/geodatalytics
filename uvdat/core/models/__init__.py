@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .basemap import Basemap
+from .bookmark import Bookmark
 from .chart import Chart
 from .colormap import Colormap
 from .data import RasterData, VectorData, VectorFeature
@@ -20,10 +21,10 @@ from .styles import (
     SizeRangeConfig,
 )
 from .task_result import TaskResult
-from .view_state import ViewState
 
 __all__ = [
     "Basemap",
+    "Bookmark",
     "Chart",
     "ColorConfig",
     "Colormap",
@@ -47,5 +48,4 @@ __all__ = [
     "TaskResult",
     "VectorData",
     "VectorFeature",
-    "ViewState",
 ]

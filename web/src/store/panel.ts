@@ -50,7 +50,7 @@ function defaultPanelArrangement(): FloatingPanelConfig[] {
       id: "datasets",
       label: "Datasets",
       visible: true,
-      closeable: false,
+      closeable: true,
       dock: "left",
       order: 1,
     },
@@ -58,7 +58,7 @@ function defaultPanelArrangement(): FloatingPanelConfig[] {
       id: "layers",
       label: "Selected Layers",
       visible: true,
-      closeable: false,
+      closeable: true,
       dock: "left",
       order: 2,
     },
@@ -134,8 +134,8 @@ export const usePanelStore = defineStore("panel", () => {
   }
 
   function dragPanel(event: MouseEvent) {
-    let offsetX = -5;
-    const offsetY = 30;
+    let offsetX = -30;
+    const offsetY = 35;
     const minHeight = 175;
     const minWidth = 150;
 

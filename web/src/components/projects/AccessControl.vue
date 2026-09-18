@@ -104,9 +104,10 @@ onMounted(() => {
         />
       </v-list-subheader>
       <user-profile :user="project.owner">
-        <template #append>
+        <template #prepend>
           <v-icon
             v-if="editMode"
+            v-tooltip="'Transfer ownership'"
             icon="mdi-pencil"
             @click="
               showUserSelectDialog = true;
@@ -127,10 +128,11 @@ onMounted(() => {
         :key="collaborator.id"
         :user="collaborator"
       >
-        <template #append>
+        <template #prepend>
           <v-icon
             v-if="editMode"
-            icon="mdi-trash-can"
+            v-tooltip="'Remove user from project'"
+            icon="mdi-delete"
             @click="userToRemove = collaborator"
           />
         </template>
@@ -152,10 +154,11 @@ onMounted(() => {
         :key="follower.id"
         :user="follower"
       >
-        <template #append>
+        <template #prepend>
           <v-icon
             v-if="editMode"
-            icon="mdi-trash-can"
+            v-tooltip="'Remove user from project'"
+            icon="mdi-delete"
             @click="userToRemove = follower"
           />
         </template>
