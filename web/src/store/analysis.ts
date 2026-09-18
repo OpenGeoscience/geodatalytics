@@ -161,7 +161,7 @@ export const useAnalysisStore = defineStore("analysis", () => {
   }
 
   function filterInputOptions() {
-    if (!currentAnalysisType.value) return;
+    if (!currentAnalysisType.value || !mapStore.currentMapBounds) return;
     for (const key in inputOptionFiltering.value) {
       if (inputOptionFiltering.value[key]) {
         const type = currentAnalysisType.value.input_types[key];
@@ -173,12 +173,13 @@ export const useAnalysisStore = defineStore("analysis", () => {
             mapStore.currentMapBounds.getNorth(),
           ]);
           filteredInputOptions.value[key] =
-            currentAnalysisType.value.input_options[key].filter((opt: any) =>
-              opt.id === selectedInputs.value[key] ||
-              turf.booleanIntersects(
-                turfBounds,
-                turf.multiPolygon(opt.boundary),
-              ),
+            currentAnalysisType.value.input_options[key].filter(
+              (opt: any) =>
+                opt.id === selectedInputs.value[key] ||
+                turf.booleanIntersects(
+                  turfBounds,
+                  turf.multiPolygon(opt.boundary),
+                ),
             );
         }
       } else {
