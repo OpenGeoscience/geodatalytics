@@ -203,7 +203,7 @@ def combine_frames_to_multiframe(frame_paths, output_path):
         'The generated output JSON will use frame_property: "frame".'
     ),
 )
-def download_stac_sentinel(  # noqa: C901, PLR0912, PLR0913, PLR0915
+def download_stac_sentinel(  # noqa: C901, PLR0912, PLR0913, PLR0915, PLR0917
     lat, lon, start_date, end_date, max_results, output_name, cloud_cover, size_km, single_file
 ):
     """Download clipped Sentinel-2 L1C visual images from AWS via STAC API."""
