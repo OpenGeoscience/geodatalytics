@@ -285,12 +285,9 @@ export const useNetworkStore = defineStore("network", () => {
     const map = mapStore.getMap();
     mapStore.getUserMapLayers().forEach((mapLayerId) => {
       const layerInfo = mapStore.parseLayerString(mapLayerId);
-      if (
-        !(
-          layerInfo.type === "vector" &&
-          layerInfo.typeId === network.vector_data
-        )
-      ) {
+      if (!(
+        layerInfo.type === "vector" && layerInfo.typeId === network.vector_data
+      )) {
         // No-op for map layers that do not correspond to the Network's VectorData object
         return;
       }
