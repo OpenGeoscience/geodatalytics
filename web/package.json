@@ -20,6 +20,7 @@
     "@resonant/oauth-client": "1.1.1",
     "@sentry/vue": "10.75.0",
     "@turf/turf": "7.4.0",
+    "@vue/devtools-api": "8.2.1",
     "axios": "1.20.0",
     "chroma-js": "3.2.0",
     "dayjs": "1.11.23",
