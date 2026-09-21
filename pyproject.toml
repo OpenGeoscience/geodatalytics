@@ -257,6 +257,9 @@ filterwarnings = [
   "error",
   # pytest often causes unclosed socket warnings
   'ignore:unclosed <socket\.socket:ResourceWarning',
+  # rasterio still uses "*" for Affine multiplication, which affine 3.0.1 pending-deprecates
+  # https://github.com/rasterio/rasterio/issues/3628
+  'ignore:Use `@` matmul instead of `\*` mul operator:PendingDeprecationWarning:rasterio.*',
 ]
 
 [tool.semantic_release]
