@@ -1425,15 +1425,15 @@ wheels = [
 
 [[package]]
 name = "django-resonant-settings"
-version = "0.52.0"
+version = "0.52.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "django-environ" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/64/10/de28c06ae230ffa16cd3d04d57e30c3eddedc06527fbe0c9b8bff2f72d1f/django_resonant_settings-0.52.0.tar.gz", hash = "sha256:803b109e4ec95e493d272d2cc2d8f50bf3fbf3dd4abea105abfeecf1bb44ea74", size = 20337, upload-time = "2026-09-18T18:06:59.914Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/98/e5c903e4f9a69aad83af0d8e46003244111b348b4e16990b3e20ca20eb92/django_resonant_settings-0.52.1.tar.gz", hash = "sha256:fae265a1925778f244c9cadc5d41854d690a73e02c171999d218168d5fb860bb", size = 20326, upload-time = "2026-09-21T14:52:13.994Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/ea/0ed35c11153b373b92466f39cfcace218223a33843eff6b77b60b67fe18d/django_resonant_settings-0.52.0-py3-none-any.whl", hash = "sha256:dc45d2960d04648fa30fc7ed17979d873109ff3fcf4d986123f7ed92a4d4651a", size = 27056, upload-time = "2026-09-18T18:06:59.071Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/cf/1f9154ae81732f733171aa2f425106d3b418768296c16fc8e60668de5fdf/django_resonant_settings-0.52.1-py3-none-any.whl", hash = "sha256:22241d9a9f35ceb04e2ba72fbcffdf7e22872610ec5d5d7ae3e47af77996860d", size = 27054, upload-time = "2026-09-21T14:52:12.718Z" },
 ]
 
 [package.optional-dependencies]
@@ -2099,7 +2099,7 @@ requires-dist = [
     { name = "django-large-image", specifier = "==0.10.4" },
     { name = "django-minio-storage", marker = "extra == 'development'", specifier = "==0.5.9" },
     { name = "django-oauth-toolkit", specifier = "==3.4.1" },
-    { name = "django-resonant-settings", extras = ["allauth", "celery"], specifier = "==0.52.0" },
+    { name = "django-resonant-settings", extras = ["allauth", "celery"], specifier = "==0.52.1" },
     { name = "django-resonant-utils", extras = ["allauth", "s3-storage"], specifier = "==0.20.0" },
     { name = "django-resonant-utils", extras = ["minio-storage"], marker = "extra == 'development'", specifier = "==0.20.0" },
     { name = "django-s3-file-field", extras = ["minio"], marker = "extra == 'development'", specifier = "==1.1.0" },
