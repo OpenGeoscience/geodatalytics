@@ -310,7 +310,11 @@ onMounted(init);
             hide-details
             @update:model-value="drawMarkers"
           />
-          <v-icon @click="removeMarker(index)">mdi-close</v-icon>
+          <v-icon
+            v-tooltip="'Remove marker'"
+            icon="mdi-close"
+            @click="removeMarker(index)"
+          ></v-icon>
           <v-icon
             v-if="markerHasDuplicateValue(marker)"
             v-tooltip="'Duplicate values found; colormap is invalid'"
@@ -332,7 +336,7 @@ onMounted(init);
     <v-card-actions>
       <v-btn class="secondary-button" @click="emit('close')">
         <v-icon color="primary" class="mr-1">mdi-close-circle</v-icon>
-        close
+        Close
       </v-btn>
       <v-btn
         class="primary-button"

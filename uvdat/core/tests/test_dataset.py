@@ -6,6 +6,8 @@ from django.core.files.base import File
 import pytest
 from pytest_lazy_fixtures import lf
 
+from uvdat.core.tasks.run_mode import TaskRunMode
+
 if TYPE_CHECKING:
     from uvdat.core.models.project import Dataset
 
@@ -121,6 +123,7 @@ def test_rest_convert_dataset(
             "layer_options": [{"name": "Multiframe Vector Test", "frame_property": "frame"}],
             "network_options": None,
             "region_options": None,
+            "run_mode": TaskRunMode.ASYNC,
         },
         "status": "Initializing task...",
         "outputs": None,

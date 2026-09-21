@@ -353,7 +353,7 @@ def _resolve_preview_style_inputs(
 
 
 @shared_task
-def generate_frame_previews(  # noqa: PLR0913
+def generate_frame_previews(  # noqa: PLR0913, PLR0917
     layer_id: int,
     fingerprint: str,
     base_style_query: dict[str, Any] | None = None,

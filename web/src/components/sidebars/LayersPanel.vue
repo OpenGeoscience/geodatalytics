@@ -106,6 +106,7 @@ function setLayerActive(layer: Layer, active: boolean) {
     <v-card class="panel-content-inner">
       <div v-if="filteredLayers?.length" class="layers-header">
         <v-icon
+          v-tooltip="'Remove All'"
           color="primary"
           icon="mdi-close"
           size="small"
@@ -114,6 +115,7 @@ function setLayerActive(layer: Layer, active: boolean) {
         />
         <v-checkbox-btn
           v-if="!isComparing"
+          v-tooltip="'Toggle Visibility For All'"
           :model-value="allFilteredLayersVisible"
           style="display: inline"
           @click="
@@ -153,6 +155,7 @@ function setLayerActive(layer: Layer, active: boolean) {
               <v-list-item class="layer" :active="activeLayer == element">
                 <template #prepend>
                   <v-icon
+                    v-tooltip="'Remove Layer'"
                     color="primary"
                     icon="mdi-close"
                     size="small"
@@ -161,6 +164,7 @@ function setLayerActive(layer: Layer, active: boolean) {
                   />
                   <v-checkbox-btn
                     v-if="!isComparing"
+                    v-tooltip="'Toggle Visibility'"
                     :model-value="element.visible"
                     style="display: inline"
                     @click="
@@ -208,8 +212,11 @@ function setLayerActive(layer: Layer, active: boolean) {
                     v-if="getLayerMaxFrames(element) > 1"
                     @click="element.hideFrameMenu = !element.hideFrameMenu"
                   >
-                    <v-icon icon="mdi-dots-horizontal" />
                     <v-icon
+                      v-tooltip="
+                        (element.hideFrameMenu ? 'Show' : 'Hide') +
+                        ' Frame Slider'
+                      "
                       :icon="
                         element.hideFrameMenu ? 'mdi-menu-down' : 'mdi-menu-up'
                       "
@@ -277,6 +284,7 @@ function setLayerActive(layer: Layer, active: boolean) {
   padding: 0px 4px !important;
   position: relative;
   min-height: 0 !important;
+  cursor: grab;
 }
 .layer.v-list-item--active {
   background-color: rgba(var(--v-theme-primary), 0.1);

@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling==1.32.0"]
+requires = ["hatchling==1.32.3"]
 build-backend = "hatchling.build"
 
 [project]
 name = "geodatalytics"
-version = "1.56.3"
+version = "1.57.4"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
@@ -14,32 +14,32 @@ dependencies = [
   "celery==5.6.3",
   "channels-redis==4.3.0",
   "channels[daphne]==4.3.2",
-  "django[argon2]==6.0.7",
-  "django-allauth==65.19.1",
+  "django[argon2]==6.1.1",
+  "django-allauth==65.19.4",
   "django-auth-style==0.15.0",
   "django-click==2.5.0",
   "django-cors-headers==4.9.0",
   "django-environ==0.14.0",
   "django-extensions==4.1",
-  "django-filter==25.2",
-  "django-guardian==3.4.0",
-  "django-large-image>=0.10.4",
+  "django-filter==26.1",
+  "django-guardian==3.5.0",
+  "django-large-image==0.10.4",
   "django-oauth-toolkit==3.4.1",
-  "django-resonant-settings[allauth,celery]==0.51.1",
-  "django-resonant-utils[allauth,s3_storage]==0.19.0",
-  "django-stubs-ext==6.0.3",
-  "djangorestframework==3.18.0",
+  "django-resonant-settings[allauth,celery]==0.52.1",
+  "django-resonant-utils[allauth,s3_storage]==0.20.0",
+  "django-stubs-ext==6.1.1",
+  "djangorestframework==3.18.1",
   "drf-yasg==1.21.15",
   # Needed for GeoDjango and "large-image[gdal]"
   'gdal==3.12.3.1',
   "geopandas==1.1.4",
   "large-image-converter==1.35.4",
   "large-image[gdal]==1.35.4",
-  "matplotlib==3.11.1", # for raster colormaps
+  "matplotlib==3.11.2", # for raster colormaps
   "networkx==3.6.1",
-  "numpy==2.5.2",
+  "numpy==2.5.3",
   "pooch[progress]==1.9.0",
-  "psycopg[binary,pool]==3.3.4",
+  "psycopg[binary,pool]==3.3.5",
   # Needed by "large-image-converter"
   "pylibtiff==0.7.0.4.7.1",
   "pyshp==3.1.6",
@@ -50,9 +50,9 @@ dependencies = [
   # Production-only
   "django-s3-file-field[s3]==1.1.0",
   "django-storages[s3]==1.14.6",
-  "sentry-sdk[celery,django,pure_eval]==2.68.1",
-  "uvicorn==0.52.4",
-  "websockets==16.1.1",
+  "sentry-sdk[celery,django,pure_eval]==2.69.2",
+  "uvicorn==0.53.0",
+  "websockets==17.1",
 ]
 
 [project.optional-dependencies]
@@ -60,22 +60,22 @@ development = [
   # Runtime dependencies, only needed with "development" settings
   "daphne==4.2.3",
   "django-browser-reload==1.21.0",
-  "django-debug-toolbar==6.3.0",
+  "django-debug-toolbar==8.0.0",
   "django-minio-storage==0.5.9",
-  "django-resonant-utils[minio_storage]==0.19.0",
+  "django-resonant-utils[minio_storage]==0.20.0",
   "django-s3-file-field[minio]==1.1.0",
-  "ipython==9.17.0",
+  "ipython==9.17.1",
   "watchdog==6.0.0",
   "werkzeug==3.1.8",
 ]
 tasks = [
-  "geoai-py==0.42.0",
+  "geoai-py==0.43.0",
   "osmnx==2.1.1",
   # Needed by "uvdat-flood-sim[large-image-writer]"
   "pyvips==3.1.1.8.18.1",
   "uvdat-flood-sim[large-image-writer]==1.0.5",
   "xdg-base-dirs==6.0.2",
-  "huggingface-hub==1.29.0",
+  "huggingface-hub==1.32.0",
 ]
 
 [dependency-groups]
@@ -84,27 +84,27 @@ dev = [
   # The "dev" dependency group is installed by default,
   # so use this to install "development" extras by default too
   "geodatalytics[development]",
-  "pre-commit==4.6.0",
-  "tox==4.53.1",
-  "tox-uv==1.35.2",
+  "pre-commit==4.6.2",
+  "tox==4.61.5",
+  "tox-uv==1.36.0",
 ]
 lint = [
-  "ruff==0.15.12",
+  "ruff==0.16.8",
 ]
 type = [
-  "mypy==1.20.2",
+  "mypy==2.3.1",
   "celery-types==0.26.0",
-  "django-stubs[compatible-mypy]==6.0.3",
-  "djangorestframework-stubs[compatible-mypy]==3.16.9",
-  "pandas-stubs==3.0.0.260204",
-  "types-channels==4.3.0.20260508",
+  "django-stubs[compatible-mypy]==6.1.1",
+  "djangorestframework-stubs[compatible-mypy]==3.18.1",
+  "pandas-stubs==3.0.5.260914",
+  "types-channels==4.3.0.20260518",
 ]
 test = [
   "django-s3-file-field-client==1.1.0",
   "factory-boy==3.3.3",
-  "pytest==9.0.3",
-  "pytest-django==4.12.0",
-  "pytest-lazy-fixtures>=1.4.0",
+  "pytest==9.1.1",
+  "pytest-django==4.14.0",
+  "pytest-lazy-fixtures==1.4.1",
   "pytest-mock==3.15.1",
   # Enable with "pytest --random-order ..."
   "pytest-random-order==1.2.0",
@@ -156,6 +156,7 @@ ignore = [
 
   # Overly burdensome
   "ANN", # flake8-annotations
+  "CPY001", # missing-copyright-notice
   "D1", # undocumented-*
   "EM", # flake8-errmsg
   "ERA001", # commented-out-code
@@ -189,6 +190,7 @@ ignore = [
   "DJ008", # django-model-without-dunder-str
   "INP001", # implicit-namespace-package
   "PLR0913", # too-many-arguments
+  "PLR0917", # too-many-positional-arguments
   "S", # flake8-bandit
   "SLF001", # private-member-access
 ]
@@ -226,10 +228,10 @@ files = [
 ]
 check_untyped_defs = true
 ignore_missing_imports = true
-show_error_codes = true
 warn_redundant_casts = true
 warn_unused_configs = true
 warn_unused_ignores = true
+enable_error_code = ["exhaustive-match"]
 plugins = [
   "mypy_django_plugin.main",
   "mypy_drf_plugin.main",
@@ -239,14 +241,12 @@ plugins = [
 django_settings_module = "uvdat.settings.testing"
 
 [tool.pytest.ini_options]
+strict = true
 addopts = [
   # Test utilities should be imported absolutely from the pythonpath,
   # so use the Pytest-recommended "importlib" mode
   "--import-mode=importlib",
-  "--strict-config",
-  "--strict-markers",
   "--showlocals",
-  "--verbose",
   # Specifying as "--ds" will override any value in the environment
   "--ds=uvdat.settings.testing",
 ]
@@ -257,6 +257,9 @@ filterwarnings = [
   "error",
   # pytest often causes unclosed socket warnings
   'ignore:unclosed <socket\.socket:ResourceWarning',
+  # rasterio still uses "*" for Affine multiplication, which affine 3.0.1 pending-deprecates
+  # https://github.com/rasterio/rasterio/issues/3628
+  'ignore:Use `@` matmul instead of `\*` mul operator:PendingDeprecationWarning:rasterio.*',
 ]
 
 [tool.semantic_release]

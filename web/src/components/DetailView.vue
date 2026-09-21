@@ -189,6 +189,7 @@ watch([showModal, currentDetails], fetchRelated);
           >
             <v-icon
               v-if="stackPoppable"
+              v-tooltip="'Back'"
               icon="mdi-arrow-left"
               @click="popStack"
             />

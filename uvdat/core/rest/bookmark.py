@@ -5,22 +5,22 @@ import jsonschema
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from uvdat.core.models import Project, ViewState
-from uvdat.core.rest.serializers import ViewStateSerializer
+from uvdat.core.models import Bookmark, Project
+from uvdat.core.rest.serializers import BookmarkSerializer
 
 
-class ViewStateViewSet(ModelViewSet):
-    queryset = ViewState.objects.all()
-    serializer_class = ViewStateSerializer
+class BookmarkViewSet(ModelViewSet):
+    queryset = Bookmark.objects.all()
+    serializer_class = BookmarkSerializer
 
     def create(self, request, **kwargs):
         project = Project.objects.get(id=request.data.get("project"))
         if not project.user_can_edit(request.user):
             return Response(
-                "You do not have permission to create view states in this project.",
+                "You do not have permission to create bookmarks in this project.",
                 status=403,
             )
-        serializer = ViewStateSerializer(data=request.data)
+        serializer = BookmarkSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
             try:
