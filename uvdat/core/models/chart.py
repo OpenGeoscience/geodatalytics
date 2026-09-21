@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from django.db import models
+import typing
 
-from uvdat.core.models.task_result import suppress_task_notifications
+from django.db import models
 
 from .project import Project
 from .querysets import ProjectQuerySet
+
+if typing.TYPE_CHECKING:
+    from uvdat.core.tasks.run_mode import TaskRunMode
 
 
 class Chart(models.Model):
@@ -27,28 +30,29 @@ class Chart(models.Model):
         self,
         *,
         conversion_options=None,
-        asynchronous=True,
+        run_mode: TaskRunMode | str = "async",
     ):
         # Prevent circular import
+        from uvdat.core.models.task_result import TaskResult  # noqa: PLC0415
         from uvdat.core.tasks.chart import convert_chart  # noqa: PLC0415
+        from uvdat.core.tasks.run_mode import TaskRunMode  # noqa: PLC0415
 
         convert_chart_signature = convert_chart.s(self.id, conversion_options)
-        if asynchronous:
-            # Prevent circular import
-            from uvdat.core.models.task_result import TaskResult  # noqa: PLC0415
+        run_mode = TaskRunMode(run_mode)
 
+        if run_mode is TaskRunMode.ASYNC:
             result = TaskResult.objects.create(
                 name=f"Conversion of Chart {self.name}",
                 task_type="conversion",
                 inputs={
                     "chart_id": self.id,
                     "conversion_options": conversion_options,
+                    "run_mode": str(run_mode),
                 },
                 status="Initializing task...",
             )
             convert_chart_signature.delay(result_id=result.id)
             return result
-        else:
-            with suppress_task_notifications():
-                convert_chart_signature.apply()
-            return None
+
+        convert_chart_signature.apply()
+        return None
