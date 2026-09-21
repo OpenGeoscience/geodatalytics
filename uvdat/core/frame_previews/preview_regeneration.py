@@ -12,14 +12,13 @@ from uvdat.core.frame_previews.lookup import (
 )
 from uvdat.core.models import Layer, LayerStyle, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
-from uvdat.core.models.task_result import suppress_task_notifications
 
 if TYPE_CHECKING:
     from uvdat.core.tasks.run_mode import TaskRunMode
 
 
 def _coerce_run_mode(run_mode: TaskRunMode | str) -> TaskRunMode:
-    # Lazy: this module is imported by tasks.dataset during package init.
+    # Lazy: avoid importing tasks during models/package init cycles.
     from uvdat.core.tasks.run_mode import TaskRunMode as _TaskRunMode  # noqa: PLC0415
 
     return _TaskRunMode(run_mode)
@@ -101,10 +100,11 @@ def _dispatch_frame_preview_task(
     # Lazy: preview_regeneration <- tasks.frame_preview <- tasks.__init__ <- tasks.dataset
     # <- preview_regeneration when dataset imports this module at top level.
     from uvdat.core.tasks.frame_preview import generate_frame_previews  # noqa: PLC0415
+    from uvdat.core.tasks.run_mode import TaskRunMode  # noqa: PLC0415
 
     layer_id = result.inputs["layer_id"]
     result_id = result.id
-    if _coerce_run_mode(run_mode) == "async":
+    if _coerce_run_mode(run_mode) is TaskRunMode.ASYNC:
         generate_frame_previews.delay(
             layer_id,
             fingerprint,
@@ -114,11 +114,10 @@ def _dispatch_frame_preview_task(
         )
         return
 
-    with suppress_task_notifications():
-        generate_frame_previews.apply(
-            args=(layer_id, fingerprint, params, result_id),
-            kwargs=task_kwargs,
-        )
+    generate_frame_previews.apply(
+        args=(layer_id, fingerprint, params, result_id),
+        kwargs=task_kwargs,
+    )
 
 
 def invalidate_and_enqueue_layer_previews(
@@ -153,6 +152,7 @@ def invalidate_and_enqueue_layer_previews(
         "layer_name": layer.name,
         "dataset_id": layer.dataset_id,
         "fingerprint": fingerprint,
+        "run_mode": str(run_mode),
     }
     task_kwargs: dict[str, Any] = {}
     if layer_style is not None:
