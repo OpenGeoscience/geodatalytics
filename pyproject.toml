@@ -190,6 +190,7 @@ ignore = [
   "DJ008", # django-model-without-dunder-str
   "INP001", # implicit-namespace-package
   "PLR0913", # too-many-arguments
+  "PLR0917", # too-many-positional-arguments
   "S", # flake8-bandit
   "SLF001", # private-member-access
 ]
@@ -227,10 +228,10 @@ files = [
 ]
 check_untyped_defs = true
 ignore_missing_imports = true
-show_error_codes = true
 warn_redundant_casts = true
 warn_unused_configs = true
 warn_unused_ignores = true
+enable_error_code = ["exhaustive-match"]
 plugins = [
   "mypy_django_plugin.main",
   "mypy_drf_plugin.main",
@@ -240,12 +241,11 @@ plugins = [
 django_settings_module = "uvdat.settings.testing"
 
 [tool.pytest.ini_options]
+strict = true
 addopts = [
   # Test utilities should be imported absolutely from the pythonpath,
   # so use the Pytest-recommended "importlib" mode
   "--import-mode=importlib",
-  "--strict-config",
-  "--strict-markers",
   "--showlocals",
   # Specifying as "--ds" will override any value in the environment
   "--ds=uvdat.settings.testing",
