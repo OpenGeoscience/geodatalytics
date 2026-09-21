@@ -8,7 +8,7 @@ import { defineConfig } from "vite";
 import process from "node:process";
 import { fileURLToPath, URL } from "node:url";
 
-import packageJson from "./package.json";
+import packageJson from "./package.json" with { type: "json" };
 
 // Build sanity check, to ensure environment is defined;
 // this will not load from .env files (unless we used a different Vite syntax),
