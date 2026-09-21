@@ -61,7 +61,11 @@ os.environ.setdefault("AWS_S3_ENDPOINT", MINIO_STORAGE_ENDPOINT)
 os.environ.setdefault("AWS_VIRTUAL_HOSTING", "FALSE")
 os.environ.setdefault("AWS_HTTPS", "YES" if MINIO_STORAGE_USE_HTTPS else "NO")
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+MAILERS: dict[str, dict[str, Any]] = {
+    "default": {
+        "BACKEND": "django.core.mail.backends.console.EmailBackend",
+    },
+}
 
 OAUTH2_PROVIDER["ALLOWED_REDIRECT_URI_SCHEMES"] = ["http", "https"]
 # In development, always present the approval dialog
