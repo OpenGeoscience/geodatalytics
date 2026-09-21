@@ -123,7 +123,7 @@ def result_post_save(sender, instance, **kwargs):
         async_to_sync(channel_layer.group_send)(
             group_name, {"type": "send_notification", "message": json.dumps(payload)}
         )
-    except Exception:  # noqa: BLE001 - notification failures must never propagate
+    except Exception:  # notification failures must never propagate
         logger.warning(
             "Failed to send TaskResult notification for %s to group %r",
             instance,

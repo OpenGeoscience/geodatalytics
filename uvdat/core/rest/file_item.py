@@ -27,7 +27,10 @@ class FileItemViewSet(ModelViewSet):
         return qs.filter(project=int(project_id))
 
     def perform_create(self, serializer):
-        file_key = self.request.data.get("file")
+        data = self.request.data
+        if not isinstance(data, dict):
+            raise ValidationError("Expected a JSON object")
+        file_key = data.get("file")
         try:
             file_key_data = signing.loads(file_key)
             file_key = file_key_data.get("object_key")

@@ -61,7 +61,7 @@ class AnalysisTask(celery.Task):
         )
         task_result.write_error(err_msg)
 
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):  # noqa: PLR0913
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):  # noqa: PLR0913, PLR0917
         # Avoid circular import
         from . import analysis_types  # noqa: PLC0415
 
