@@ -98,7 +98,8 @@ class LayerStyleViewSet(ModelViewSet):
                     .exclude(id=instance.id)
                     .first()
                 )
-                new_default.is_default = True
-                new_default.save()
+                if new_default is not None:
+                    new_default.is_default = True
+                    new_default.save()
             self.perform_destroy(instance)
         return Response(status=204)

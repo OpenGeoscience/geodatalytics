@@ -211,7 +211,7 @@ def test_rest_style_create_and_update(client, expected_status, layer, project, u
 
 
 @pytest.mark.django_db
-def test_layer_default_style_project_scope(
+def test_layer_default_style_project_scope(  # noqa: PLR0915
     authenticated_api_client,
     user,
     project_factory,
@@ -310,3 +310,10 @@ def test_layer_default_style_project_scope(
     # Project 1 has Style 1 and Project 2 has Style 3
     assert_default_style_is(style_1, proj_1.id)
     assert_default_style_is(style_3, proj_2.id)
+
+    # Delete style 3
+    resp = authenticated_api_client.delete(f"/api/v1/layer-styles/{style_3.get('id')}/")
+    assert resp.status_code == 204
+    # Project 1 has default style 1 and project 2 has None
+    assert_default_style_is(style_1, proj_1.id)
+    assert_default_style_is(None, proj_2.id)
