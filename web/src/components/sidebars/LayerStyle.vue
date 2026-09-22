@@ -167,7 +167,10 @@ const isActiveLayer = computed(() => props.activeLayer === props.layer);
 async function init() {
   if (!isActiveLayer.value) return;
 
-  const styles = await getLayerStyles(props.layer.id);
+  const styles = await getLayerStyles(
+    props.layer.id,
+    projectStore.currentProject?.id,
+  );
   // This layer may no longer be active after the async request.
   if (!isActiveLayer.value) return;
 
@@ -430,19 +433,21 @@ function confirmDeleteColormap() {
       // update other styles in case colormap changed to default
       layerStore.selectedLayers.forEach((layer) => {
         const key = styleStore.layerStyleKey(layer);
-        getLayerStyles(layer.id).then((styles) => {
-          const updated = styles.find(
-            (s) => s.id === styleStore.selectedLayerStyles[key].id,
-          );
-          if (updated) {
-            styleStore.selectedLayerStyles[key] = updated;
-            if (layer.id === props.layer.id) {
-              availableStyles.value = styles;
-              currentStyleSpec.value = updated.style_spec;
+        getLayerStyles(layer.id, projectStore.currentProject?.id).then(
+          (styles) => {
+            const updated = styles.find(
+              (s) => s.id === styleStore.selectedLayerStyles[key].id,
+            );
+            if (updated) {
+              styleStore.selectedLayerStyles[key] = updated;
+              if (layer.id === props.layer.id) {
+                availableStyles.value = styles;
+                currentStyleSpec.value = updated.style_spec;
+              }
+              styleStore.updateLayerStyles(layer);
             }
-            styleStore.updateLayerStyles(layer);
-          }
-        });
+          },
+        );
       });
     });
   }
@@ -593,7 +598,7 @@ function save() {
       newName.value = undefined;
       newNameMode.value = undefined;
       // update other styles in case default overriden
-      getLayerStyles(props.layer.id).then(
+      getLayerStyles(props.layer.id, projectStore.currentProject?.id).then(
         (styles) => (availableStyles.value = styles),
       );
       refreshLayer();
@@ -628,7 +633,7 @@ function saveAsNew() {
       newName.value = undefined;
       newNameMode.value = undefined;
       // update other styles in case default overriden
-      getLayerStyles(props.layer.id).then(
+      getLayerStyles(props.layer.id, projectStore.currentProject?.id).then(
         (styles) => (availableStyles.value = styles),
       );
       refreshLayer();
@@ -641,7 +646,7 @@ function deleteStyle() {
   if (!editMode.value || !currentLayerStyle.value?.id) return;
   deleteLayerStyle(currentLayerStyle.value.id).then(async () => {
     const [styles] = await Promise.all([
-      getLayerStyles(props.layer.id),
+      getLayerStyles(props.layer.id, projectStore.currentProject?.id),
       layerStore.fetchAvailableLayer(props.layer.id),
     ]);
     availableStyles.value = styles;

@@ -10,6 +10,7 @@ import {
   usePanelStore,
   useLayerStore,
   useMapStore,
+  useProjectStore,
 } from "@/store";
 import { cloneDeep } from "lodash";
 import { useMapCompareStore } from "@/store/compare";
@@ -18,6 +19,7 @@ const panelStore = usePanelStore();
 const mapStore = useMapStore();
 const layerStore = useLayerStore();
 const compareStore = useMapCompareStore();
+const projectStore = useProjectStore();
 
 const emit = defineEmits(["setLayerActive"]);
 const props = defineProps<{
@@ -96,7 +98,7 @@ async function init() {
     if (foundLayerIds.length) {
       mapLayerIds.value = foundLayerIds;
     }
-    getLayerStyles(props.layer.id).then(
+    getLayerStyles(props.layer.id, projectStore.currentProject?.id).then(
       (styles) => (availableStyles.value = styles),
     );
   }
