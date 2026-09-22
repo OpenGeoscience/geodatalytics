@@ -10,7 +10,7 @@ from uvdat.core.frame_previews.lookup import (
     preview_status_for_fingerprint,
     previews_current_for_fingerprint,
 )
-from uvdat.core.models import Layer, LayerStyle, RasterFramePreview, TaskResult
+from uvdat.core.models import Layer, LayerStyle, Project, RasterFramePreview, TaskResult
 from uvdat.core.models.frame_preview import PreviewStatus
 from uvdat.core.models.task_result import suppress_task_notifications
 
@@ -213,13 +213,13 @@ def get_layer_style_preview_status(layer_style: LayerStyle) -> str | None:
     return preview_status_for_style(layer_style)
 
 
-def preview_status_for_layer(layer: Layer) -> str | None:
+def preview_status_for_layer(layer: Layer, project: Project | None) -> str | None:
     if not layer.is_multiframe_raster():
         return None
-    return preview_status_for_fingerprint(layer, layer_default_fingerprint(layer))
+    return preview_status_for_fingerprint(layer, layer_default_fingerprint(layer, project))
 
 
-def get_layer_preview_status(layer: Layer) -> str | None:
+def get_layer_preview_status(layer: Layer, project: Project | None) -> str | None:
     if "preview_status" in layer.__dict__:
         return layer.preview_status
-    return preview_status_for_layer(layer)
+    return preview_status_for_layer(layer, project)

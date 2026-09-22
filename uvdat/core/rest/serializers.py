@@ -232,12 +232,24 @@ class LayerSerializer(serializers.ModelSerializer):
         return None
 
     def get_preview_status(self, obj):
-        return get_layer_preview_status(obj)
+        request = self.context.get("request")
+        project = None
+        if request is not None:
+            project_id = request.query_params.get("project")
+            if project_id is not None:
+                project = Project.objects.get(id=project_id)
+        return get_layer_preview_status(obj, project)
 
     def get_multiframe_previews(self, obj):
-        if get_layer_preview_status(obj) != "ready":
+        request = self.context.get("request")
+        project = None
+        if request is not None:
+            project_id = request.query_params.get("project")
+            if project_id is not None:
+                project = Project.objects.get(id=project_id)
+        if get_layer_preview_status(obj, project) != "ready":
             return None
-        return layer_default_multiframe_previews(obj)
+        return layer_default_multiframe_previews(obj, project)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
