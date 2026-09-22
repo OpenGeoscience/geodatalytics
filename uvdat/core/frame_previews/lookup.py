@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from uvdat.core.frame_previews.fingerprint import params_fingerprint, style_fingerprint
+from uvdat.core.frame_previews.fingerprint import params_fingerprint
 from uvdat.core.frame_previews.types import FramePreviewData
 from uvdat.core.models.frame_preview import PreviewStatus, RasterFramePreview
 
 if TYPE_CHECKING:
-    from uvdat.core.models import Layer, LayerFrame
+    from uvdat.core.models import Layer, LayerFrame, Project
 
 
 def serialize_frame_preview(preview: RasterFramePreview) -> FramePreviewData:
@@ -78,16 +78,20 @@ def previews_current_for_fingerprint(layer: Layer, fingerprint: str) -> bool:
     return preview_status_for_fingerprint(layer, fingerprint) == "ready"
 
 
-def layer_default_fingerprint(layer: Layer) -> str:
+def layer_default_fingerprint(layer: Layer, project: Project | None) -> str:
     """Fingerprint for layer-level default previews (default style params, else ``{}``)."""
-    if layer.default_style_id is not None:
-        return style_fingerprint(layer.default_style)
+    if project is not None:
+        layer_default_style = layer.styles.filter(is_default=True, project=project).first()
+        if layer_default_style is not None:
+            return params_fingerprint(layer_default_style.raster_style_params)
     return params_fingerprint({})
 
 
-def layer_default_multiframe_previews(layer: Layer) -> list[FramePreviewData] | None:
+def layer_default_multiframe_previews(
+    layer: Layer, project: Project | None
+) -> list[FramePreviewData] | None:
     """Previews for the layer default fingerprint (default style params or ``{}``)."""
     return ordered_complete_previews(
         layer,
-        layer_default_fingerprint(layer),
+        layer_default_fingerprint(layer, project),
     )

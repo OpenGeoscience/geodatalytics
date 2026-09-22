@@ -56,7 +56,7 @@ class LayerStyleViewSet(ModelViewSet):
                 "You do not have permission to create styles in this project.",
                 status=403,
             )
-        is_default = request.data.pop("is_default", False)
+        is_default = request.data.get("is_default", False)
         serializer = LayerStyleWithPreviewsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -64,16 +64,17 @@ class LayerStyleViewSet(ModelViewSet):
                 instance = serializer.save()
             except jsonschema.exceptions.ValidationError as e:
                 return Response(e.message, status=400)
-            if is_default and instance.layer.default_style != instance:
-                instance.layer.default_style = instance
-                instance.layer.save()
+            if is_default:
+                instance.layer.styles.filter(project=instance.project).exclude(
+                    id=instance.id
+                ).update(is_default=False)
         # Enqueue after commit so a worker cannot start before style rows exist.
         invalidate_and_enqueue_previews(instance)
         return Response(serializer.data, status=200)
 
     def partial_update(self, request, **kwargs):
         instance = self.get_object()
-        is_default = request.data.pop("is_default", False)
+        is_default = request.data.get("is_default", False)
         serializer = LayerStyleWithPreviewsSerializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -81,19 +82,24 @@ class LayerStyleViewSet(ModelViewSet):
                 serializer.save()
             except jsonschema.exceptions.ValidationError as e:
                 return Response(e.message, status=400)
-            if is_default and instance.layer.default_style != instance:
-                instance.layer.default_style = instance
-                instance.layer.save()
+            if is_default:
+                instance.layer.styles.filter(project=instance.project).exclude(
+                    id=instance.id
+                ).update(is_default=False)
         invalidate_and_enqueue_previews(instance)
         return Response(serializer.data, status=200)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         with transaction.atomic():
-            if instance.layer.default_style == instance:
-                instance.layer.default_style = (
-                    LayerStyle.objects.filter(layer=instance.layer).exclude(id=instance.id).first()
+            if instance.is_default:
+                new_default = (
+                    instance.layer.styles.filter(project=instance.project)
+                    .exclude(id=instance.id)
+                    .first()
                 )
-                instance.layer.save()
+                if new_default is not None:
+                    new_default.is_default = True
+                    new_default.save()
             self.perform_destroy(instance)
         return Response(status=204)

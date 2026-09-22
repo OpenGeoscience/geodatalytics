@@ -192,12 +192,8 @@ def flood_simulation(result_id):
         # Create a default style for new layer
         layer = dataset.layers.first()
         style = LayerStyle.objects.create(
-            name="Flood Depth",
-            layer=layer,
-            project=result.project,
+            name="Flood Depth", layer=layer, project=result.project, is_default=True
         )
-        layer.default_style = style
-        layer.save()
         cmap, _ = Colormap.objects.get_or_create(
             name="flood",
             project=result.project,

@@ -30,11 +30,11 @@ def layer_queryset_with_previews(
     # fingerprint are loaded in ``previews_by_frame_id`` with a filtered query.
     if for_layer_style:
         qs = queryset if queryset is not None else LayerStyle.objects.all()
-        return qs.select_related("layer", "layer__default_style").prefetch_related(
+        return qs.select_related("layer").prefetch_related(
             STYLE_LAYER_RASTER_FRAMES_PREFETCH,
         )
 
     qs = queryset if queryset is not None else Layer.objects.all()
-    return qs.select_related("dataset", "default_style").prefetch_related(
+    return qs.select_related("dataset").prefetch_related(
         LAYER_RASTER_FRAMES_PREFETCH,
     )
