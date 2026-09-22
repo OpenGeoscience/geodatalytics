@@ -11,12 +11,14 @@ def populate_is_default(apps, schema_editor):
         style.is_default = (
             style.layer.default_style.id == style.id if style.layer.default_style else False
         )
+        style.save()
 
 
 def populate_default_style(apps, schema_editor):
     Layer = apps.get_model("core", "Layer")
     for layer in Layer.objects.all():
         layer.default_style = layer.styles.filter(is_default=True).first()
+        layer.save()
 
 
 class Migration(migrations.Migration):
