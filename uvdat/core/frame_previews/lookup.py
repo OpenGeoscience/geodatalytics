@@ -79,7 +79,10 @@ def previews_current_for_fingerprint(layer: Layer, fingerprint: str) -> bool:
 
 
 def layer_default_fingerprint(layer: Layer) -> str:
-    """Fingerprint for layer-level default previews with no styling applied."""
+    """Fingerprint for layer-level default previews (default style params, else ``{}``)."""
+    layer_default_style = layer.styles.filter(is_default=True).first()
+    if layer_default_style is not None:
+        return params_fingerprint(layer_default_style.raster_style_params)
     return params_fingerprint({})
 
 
