@@ -5,19 +5,34 @@ from __future__ import annotations
 from django.db import migrations, models
 
 
+def populate_is_default(apps, schema_editor):
+    LayerStyle = apps.get_model("core", "LayerStyle")
+    for style in LayerStyle.objects.all():
+        style.is_default = (
+            style.layer.default_style.id == style.id if style.layer.default_style else False
+        )
+
+
+def populate_default_style(apps, schema_editor):
+    Layer = apps.get_model("core", "Layer")
+    for layer in Layer.objects.all():
+        layer.default_style = layer.styles.filter(is_default=True).first()
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("core", "0029_bookmarks"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name="layer",
-            name="default_style",
-        ),
         migrations.AddField(
             model_name="layerstyle",
             name="is_default",
             field=models.BooleanField(default=False),
+        ),
+        migrations.RunPython(populate_is_default, reverse_code=populate_default_style),
+        migrations.RemoveField(
+            model_name="layer",
+            name="default_style",
         ),
     ]
