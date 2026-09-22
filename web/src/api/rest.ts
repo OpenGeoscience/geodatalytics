@@ -134,8 +134,13 @@ export async function getDatasetLayers(
   ).data;
 }
 
-export async function getLayer(layerId: number): Promise<Layer> {
-  return (await apiClient.get(`layers/${layerId}/`)).data;
+export async function getLayer(
+  layerId: number,
+  projectId: number | undefined,
+): Promise<Layer> {
+  let url = `layers/${layerId}/`;
+  if (projectId) url += `?project=${projectId}`;
+  return (await apiClient.get(url)).data;
 }
 
 export async function getLayerFrames(layerId: number): Promise<LayerFrame[]> {

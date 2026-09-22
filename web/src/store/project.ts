@@ -232,7 +232,7 @@ export const useProjectStore = defineStore("project", () => {
           const [layerIdStr, copyIdStr] = styleKey.split(".");
           const layerId = parseInt(layerIdStr);
           const copyId = parseInt(copyIdStr);
-          const layer = await getLayer(layerId);
+          const layer = await getLayer(layerId, currentProject.value?.id);
           await layerStore.addLayer(layer, copyId);
         }),
       );

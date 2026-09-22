@@ -59,7 +59,7 @@ export const useLayerStore = defineStore("layer", () => {
   }
 
   async function fetchAvailableLayer(layerId: number) {
-    const layer = await getLayer(layerId);
+    const layer = await getLayer(layerId, projectStore.currentProject?.id);
     if (!availableLayers.value.map((l: Layer) => l.id).includes(layer.id)) {
       availableLayers.value = [...availableLayers.value, layer];
     } else {
