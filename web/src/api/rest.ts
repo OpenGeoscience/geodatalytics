@@ -273,8 +273,13 @@ export async function getVectorDataBounds(vectorId: number): Promise<number[]> {
   return (await apiClient.get(`vectors/${vectorId}/bounds/`)).data;
 }
 
-export async function getLayerStyles(layerId: number): Promise<LayerStyle[]> {
-  return (await apiClient.get(`layer-styles/?layer=${layerId}`)).data.results;
+export async function getLayerStyles(
+  layerId: number,
+  projectId: number | undefined,
+): Promise<LayerStyle[]> {
+  let url = `layer-styles/?layer=${layerId}`;
+  if (projectId) url += `&project=${projectId}`;
+  return (await apiClient.get(url)).data.results;
 }
 
 export async function getLayerStyle(styleId: number): Promise<LayerStyle> {
