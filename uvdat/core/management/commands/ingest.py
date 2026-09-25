@@ -221,7 +221,7 @@ def ingest_charts(data: list[ChartItem], *, replace=False, skip_cache=False) -> 
             click.echo(f"\t\t Converting data for {chart_for_conversion.name}.")
             chart_for_conversion.spawn_conversion_task(
                 conversion_options=chart.get("conversion_options"),
-                asynchronous=False,
+                run_mode=TaskRunMode.SYNC,
             )
         else:
             click.secho(

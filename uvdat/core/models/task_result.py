@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import contextlib
-from contextvars import ContextVar
 import json
 import logging
 
@@ -20,22 +18,6 @@ from .project import Project
 from .querysets import ProjectQuerySet
 
 logger = logging.getLogger(__name__)
-
-# Set while running in a context (e.g. `manage.py ingest`) where TaskResult
-# WebSocket notifications are meaningless: tasks run synchronously with no
-# client session listening. When set, result_post_save skips the push entirely
-# rather than attempting it and logging a warning.
-_suppress_notifications: ContextVar[bool] = ContextVar("suppress_task_notifications", default=False)
-
-
-@contextlib.contextmanager
-def suppress_task_notifications():
-    """Silence TaskResult WebSocket notifications for the current context."""
-    token = _suppress_notifications.set(True)
-    try:
-        yield
-    finally:
-        _suppress_notifications.reset(token)
 
 
 class TaskResult(models.Model):
@@ -98,10 +80,10 @@ class TaskResult(models.Model):
 
 @receiver(post_save, sender=TaskResult)
 def result_post_save(sender, instance, **kwargs):
-    # In contexts such as `manage.py ingest`, tasks run synchronously with no
-    # client session listening, so the push is meaningless -- skip it silently
-    # (no attempt, no warning). See suppress_task_notifications().
-    if _suppress_notifications.get():
+    # Sync runs (e.g. `manage.py ingest`) have no client session listening;
+    from uvdat.core.tasks.run_mode import TaskRunMode  # noqa: PLC0415
+
+    if (instance.inputs or {}).get("run_mode") == TaskRunMode.SYNC:
         return
 
     # Prevent circular import
@@ -115,18 +97,6 @@ def result_post_save(sender, instance, **kwargs):
     if channel_layer is None:
         return
 
-    # This WebSocket push streams live TaskResult updates to browser clients
-    # subscribed to a channel group. It is best-effort: a failed notification
-    # must never abort the surrounding TaskResult.save(). Failures are logged at
-    # WARNING so a genuinely broken channel layer in production is still visible.
-    try:
-        async_to_sync(channel_layer.group_send)(
-            group_name, {"type": "send_notification", "message": json.dumps(payload)}
-        )
-    except Exception:  # notification failures must never propagate
-        logger.warning(
-            "Failed to send TaskResult notification for %s to group %r",
-            instance,
-            group_name,
-            exc_info=True,
-        )
+    async_to_sync(channel_layer.group_send)(
+        group_name, {"type": "send_notification", "message": json.dumps(payload)}
+    )

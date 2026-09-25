@@ -87,10 +87,7 @@ class Dataset(models.Model):
         run_mode: TaskRunMode | str = "async",
     ):
         # Prevent circular import
-        from uvdat.core.models.task_result import (  # noqa: PLC0415
-            TaskResult,
-            suppress_task_notifications,
-        )
+        from uvdat.core.models.task_result import TaskResult  # noqa: PLC0415
         from uvdat.core.tasks.dataset import convert_dataset  # noqa: PLC0415
         from uvdat.core.tasks.run_mode import TaskRunMode  # noqa: PLC0415
 
@@ -112,6 +109,7 @@ class Dataset(models.Model):
                     "layer_options": layer_options,
                     "network_options": network_options,
                     "region_options": region_options,
+                    "run_mode": str(run_mode),
                 },
                 status="Initializing task...",
                 creator=self.owner(),
@@ -119,6 +117,6 @@ class Dataset(models.Model):
             convert_dataset_signature.delay(result_id=result.id)
             return result
 
-        with suppress_task_notifications():
-            convert_dataset_signature.apply()
+        # Sync: no TaskResult (and nested sync tasks stash run_mode in their own inputs).
+        convert_dataset_signature.apply()
         return None
