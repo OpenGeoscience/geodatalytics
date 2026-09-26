@@ -28,7 +28,7 @@
     "html2canvas-pro": "2.4.3",
     "json-editor-vue": "0.19.2",
     "lodash": "4.18.1",
-    "maplibre-gl": "5.24.0",
+    "maplibre-gl": "6.11.1",
     "pinia": "4.0.3",
     "pmtiles": "4.5.0",
     "proj4": "2.22.0",
