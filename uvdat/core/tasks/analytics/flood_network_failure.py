@@ -11,7 +11,14 @@ import numpy as np
 if TYPE_CHECKING:
     from django.contrib.gis.geos import Point
 
-from uvdat.core.models import Layer, Network, TaskResult
+from uvdat.core.models import (
+    Layer,
+    Network,
+    NetworkAnimation,
+    NetworkNode,
+    NetworkState,
+    TaskResult,
+)
 
 from .analysis_type import AnalysisInputError, AnalysisTask, AnalysisType
 from .flood_simulation import FloodSimulation
@@ -36,7 +43,7 @@ class FloodNetworkFailure(AnalysisType):
             "depth_tolerance_meters": 0.1,
             "station_radius_meters": 30,
         }
-        self.output_types = {"failures": "network_animation"}
+        self.output_types = {"animation": "network_animation"}
         self.attribution = "Northeastern University & Kitware, Inc."
 
     @classmethod
@@ -124,7 +131,18 @@ def flood_network_failure(result_id):
     source = tilesource.get_tilesource_from_path(raster_path)
     metadata = source.getMetadata()
 
-    animation_results = {}
+    n_existing_anims = NetworkAnimation.objects.filter(
+        name__contains="Flood Failure",
+        network=network,
+        project=result.project,
+    ).count()
+    animation = NetworkAnimation.objects.create(
+        name=f"Flood Failure {n_existing_anims + 1}",
+        network=network,
+        project=result.project,
+        task_result=result,
+    )
+    animation.sync_layers.add(flood_layer)
     node_failures = []
     for frame in metadata.get("frames", []):
         frame_index = frame.get("Index")
@@ -139,5 +157,10 @@ def flood_network_failure(result_id):
             )
             if node_id not in node_failures and np.any(np.where(region_data > tolerance)):
                 node_failures.append(node_id)
-        animation_results[frame_index] = node_failures.copy()
-    result.write_outputs({"failures": animation_results})
+        state = NetworkState.objects.create(
+            animation=animation,
+            index=frame_index,
+        )
+        state.deactivated_nodes.set(NetworkNode.objects.filter(id__in=node_failures))
+        state.update_components()
+    result.write_outputs({"animation": animation.id})
