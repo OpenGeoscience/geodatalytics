@@ -5,6 +5,7 @@ import type {
   Dataset,
   Layer,
   Network,
+  NetworkAnimation,
   RasterData,
   VectorData,
   Region,
@@ -26,6 +27,7 @@ const showableTypes = [
   "chart",
   "dataset",
   "network",
+  "network_animation",
   "layer",
   "taskresult",
   "rasterdata",
@@ -38,6 +40,7 @@ interface Showable {
   dataset?: Dataset;
   layer?: Layer;
   network?: Network;
+  network_animation?: NetworkAnimation;
   rasterdata?: RasterData;
   vectordata?: VectorData;
   taskresult?: TaskResult;
@@ -227,7 +230,7 @@ export const usePanelStore = defineStore("panel", () => {
     dragModes.value = [];
   }
 
-  function isVisible(showable: Showable): boolean {
+  function isVisible(showable: Showable, nested: boolean = true): boolean {
     if (showable.region) {
       return mapStore.regionShownId === showable.region.id;
     } else if (showable.chart) {
@@ -252,38 +255,51 @@ export const usePanelStore = defineStore("panel", () => {
         (d) => d.id === showable.network?.dataset,
       );
       return isVisible({ dataset });
+    } else if (showable.network_animation) {
+      return (
+        networkStore.currentAnimation?.id === showable.network_animation.id
+      );
     } else if (showable.taskresult) {
       const taskType = analysisStore.availableAnalysisTypes?.find(
         (t) => t.db_value === showable.taskresult?.task_type,
       );
       if (taskType) {
-        const showableChildren: Record<string, any>[] = [];
-        Object.entries(showable.taskresult.outputs).forEach(
-          ([outputKey, outputValue]) => {
-            const type = taskType?.output_types[outputKey].toLowerCase();
-            if (showableTypes.includes(type)) {
-              showableChildren.push({
-                id: outputValue,
-                type,
-              });
-            }
-          },
-        );
-        Object.entries(showable.taskresult.inputs).forEach(
-          ([inputKey, inputValue]) => {
-            const type = taskType?.input_types[inputKey].toLowerCase();
-            const value: Record<string, any> = taskType.input_options[
-              inputKey
-            ]?.find((o: any) => o.id === inputValue);
-            if (showableTypes.includes(type)) {
-              showableChildren.push({
-                ...value,
-                type,
-              });
-            }
-          },
-        );
-        return showableChildren.every((o) => isVisible({ [o.type]: o }));
+        if (nested) {
+          const showableChildren: Record<string, any>[] = [];
+          Object.entries(showable.taskresult.outputs).forEach(
+            ([outputKey, outputValue]) => {
+              const type = taskType?.output_types[outputKey].toLowerCase();
+              if (showableTypes.includes(type)) {
+                showableChildren.push({
+                  id: outputValue,
+                  type,
+                });
+              }
+            },
+          );
+          Object.entries(showable.taskresult.inputs).forEach(
+            ([inputKey, inputValue]) => {
+              const type = taskType?.input_types[inputKey].toLowerCase();
+              const value: Record<string, any> = taskType.input_options[
+                inputKey
+              ]?.find((o: any) => o.id === inputValue);
+              if (showableTypes.includes(type)) {
+                showableChildren.push({
+                  ...value,
+                  type,
+                });
+              }
+            },
+          );
+          return showableChildren.every((o) => isVisible({ [o.type]: o }));
+        } else {
+          return (
+            analysisStore.currentAnalysisTab === "old" &&
+            analysisStore.currentAnalysisType?.db_value ===
+              showable.taskresult.task_type &&
+            analysisStore.currentResult?.id === showable.taskresult.id
+          );
+        }
       }
     } else if (showable.rasterdata) {
       return isVisible({ dataset: { id: showable.rasterdata.dataset } });
@@ -297,6 +313,7 @@ export const usePanelStore = defineStore("panel", () => {
     showable: Showable,
     visible: boolean,
     frame: number | undefined = undefined,
+    nested: boolean = true,
   ) {
     if (showable.region) {
       mapStore.showRegion(visible ? showable.region : undefined);
@@ -318,12 +335,14 @@ export const usePanelStore = defineStore("panel", () => {
     } else if (showable.dataset) {
       const id = showable.dataset.id;
       if (visible) await layerStore.fetchAvailableLayersForDataset(id);
-      const layersList = visible
-        ? layerStore.availableLayers
-        : layerStore.selectedLayers;
-      layersList
-        .filter((layer: Layer) => layer.dataset === id)
-        .forEach((layer: Layer) => setVisibility({ layer }, visible, frame));
+      if (nested) {
+        const layersList = visible
+          ? layerStore.availableLayers
+          : layerStore.selectedLayers;
+        layersList
+          .filter((layer: Layer) => layer.dataset === id)
+          .forEach((layer: Layer) => setVisibility({ layer }, visible, frame));
+      }
     } else if (showable.layer) {
       let add = visible;
       layerStore.selectedLayers = layerStore.selectedLayers.map((layer) => {
@@ -334,11 +353,11 @@ export const usePanelStore = defineStore("panel", () => {
         return layer;
       });
       if (add) {
-        layerStore.addLayer(showable.layer, undefined, frame);
+        await layerStore.addLayer(showable.layer, undefined, frame);
       }
     } else if (showable.network) {
-      let network = showable.network;
-      if (visible) {
+      if (visible && networkStore.currentNetwork?.id !== showable.network.id) {
+        let network = showable.network;
         if (!network.nodes) {
           network = await getNetwork(network.id);
         }
@@ -349,41 +368,74 @@ export const usePanelStore = defineStore("panel", () => {
           networkPanel.visible = true;
           networkPanel.collapsed = false;
         }
+        networkStore.currentNetwork = network;
       }
-      networkStore.currentNetwork = visible ? network : undefined;
-      const dataset = projectStore.availableDatasets?.find(
-        (d) => d.id === showable.network?.dataset,
-      );
-      return setVisibility({ dataset }, visible, frame);
+      if (nested) {
+        const dataset = projectStore.availableDatasets?.find(
+          (d) => d.id === showable.network?.dataset,
+        );
+        return setVisibility({ dataset }, visible, frame);
+      }
+    } else if (showable.network_animation) {
+      if (nested) {
+        const network = await getNetwork(showable.network_animation.network);
+        await setVisibility({ network }, visible);
+      }
+      await networkStore.fetchAnimations();
+      networkStore.currentAnimation = visible
+        ? networkStore.availableAnimations.find(
+            (anim) => anim.id === showable.network_animation?.id,
+          )
+        : undefined;
     } else if (showable.taskresult) {
       const taskType = analysisStore.availableAnalysisTypes?.find(
         (t) => t.db_value === showable.taskresult?.task_type,
       );
-      if (taskType) {
-        Object.entries(showable.taskresult.outputs).map(
-          ([outputKey, outputValue]) => {
-            const type = taskType.output_types[outputKey].toLowerCase();
-            if (showableTypes.includes(type)) {
-              setVisibility({ [type]: { id: outputValue } }, visible, frame);
-            }
-          },
-        );
-        Object.entries(showable.taskresult.inputs).map(
-          ([inputKey, inputValue]) => {
-            const type = taskType.input_types[inputKey].toLowerCase();
-            const value: Record<string, any> = taskType.input_options[
-              inputKey
-            ].find((o: any) => o.id === inputValue);
-            if (showableTypes.includes(type)) {
-              setVisibility({ [type]: value }, visible, frame);
-            }
-          },
-        );
+      if (nested) {
+        if (taskType && showable.taskresult.outputs) {
+          Object.entries(showable.taskresult.outputs).map(
+            ([outputKey, outputValue]) => {
+              const type = taskType.output_types[outputKey].toLowerCase();
+              if (showableTypes.includes(type)) {
+                setVisibility({ [type]: { id: outputValue } }, visible, frame);
+              }
+            },
+          );
+          Object.entries(showable.taskresult.inputs).map(
+            ([inputKey, inputValue]) => {
+              const type = taskType.input_types[inputKey].toLowerCase();
+              const value: Record<string, any> = taskType.input_options[
+                inputKey
+              ].find((o: any) => o.id === inputValue);
+              if (showableTypes.includes(type)) {
+                setVisibility({ [type]: value }, visible, frame);
+              }
+            },
+          );
+        }
+      } else {
+        if (visible) {
+          const analyticsPanel = panelArrangement.value.find(
+            (panel) => panel.id === "analytics",
+          );
+          if (analyticsPanel) {
+            analyticsPanel.visible = true;
+            analyticsPanel.collapsed = false;
+          }
+          analysisStore.currentAnalysisTab = "old";
+          analysisStore.currentAnalysisType = taskType;
+          await analysisStore.fetchResults();
+          analysisStore.currentResult = analysisStore.availableResults.find(
+            (result) => result.id === showable.taskresult?.id,
+          );
+        } else {
+          analysisStore.currentResult = undefined;
+        }
       }
-    } else if (showable.rasterdata && showable.rasterdata.dataset) {
+    } else if (showable.rasterdata && showable.rasterdata.dataset && nested) {
       const dataset = await getDataset(showable.rasterdata.dataset);
       setVisibility({ dataset }, visible, frame);
-    } else if (showable.vectordata && showable.vectordata.dataset) {
+    } else if (showable.vectordata && showable.vectordata.dataset && nested) {
       const dataset = await getDataset(showable.vectordata.dataset);
       setVisibility({ dataset }, visible, frame);
     }

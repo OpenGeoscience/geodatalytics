@@ -22,8 +22,8 @@ import {
   useMapStore,
   useLayerStore,
   useProjectStore,
-  useNetworkStore,
   useFramePreviewStore,
+  useNetworkStore,
 } from ".";
 
 export interface MapLayerStyleRaw {
@@ -81,9 +81,9 @@ function colormapMarkersSubsample(
     }
     const elements = [markers[0]];
     const totalItems = markers.length - 1;
-    const interval = Math.floor(totalItems / (n - 1));
+    const interval = totalItems / (n - 1);
     for (let i = 1; i < n - 1; i++) {
-      elements.push(markers[i * interval]);
+      elements.push(markers[Math.floor(i * interval)]);
     }
     elements.push(markers[markers.length - 1]);
     return elements;
@@ -411,8 +411,8 @@ export const useStyleStore = defineStore("style", () => {
   const mapStore = useMapStore();
   const projectStore = useProjectStore();
   const layerStore = useLayerStore();
-  const networkStore = useNetworkStore();
   const framePreviewStore = useFramePreviewStore();
+  const networkStore = useNetworkStore();
 
   function isLayerStyleEditing(layer: Layer) {
     return editingStyleLayerKeys.value.has(layerStyleKey(layer));
@@ -539,7 +539,6 @@ export const useStyleStore = defineStore("style", () => {
         setMapLayerStyle(mapLayerId, currentStyleSpec, frame, frame.vector);
       }
     });
-    networkStore.styleVisibleNetworks();
 
     const hasMultiframeRaster =
       frames.length > 1 && frames.some((f) => f.raster);
@@ -568,7 +567,8 @@ export const useStyleStore = defineStore("style", () => {
       ];
     }
     const mapLayer = map.getLayer(mapLayerId) as
-      MapLibreLayerWithMetadata | undefined;
+      | MapLibreLayerWithMetadata
+      | undefined;
     if (mapLayer === undefined) {
       return;
     }
@@ -578,6 +578,13 @@ export const useStyleStore = defineStore("style", () => {
     }
     const paint: Record<string, any> = {};
     const propsSpec = vector?.summary?.properties;
+    // Styles other than size may be overriden by network animation
+    const sizeOnly =
+      networkStore.currentAnimation &&
+      [
+        networkStore.networkNodesMapLayerId,
+        networkStore.networkEdgesMapLayerId,
+      ].includes(mapLayerId);
 
     // Ensure that all colormaps have been fetched from db
     styleSpec.colors.forEach((colorConfig) => {
@@ -592,68 +599,74 @@ export const useStyleStore = defineStore("style", () => {
     });
 
     if (mapLayerId.includes("fill") && propsSpec) {
-      paint["fill-opacity"] = opacity / 2;
-      const color = getVectorColorPaintProperty(
-        styleSpec,
-        "polygons",
-        propsSpec,
-        colormaps.value,
-      );
-      if (color) paint["fill-color"] = color;
-      const visibility = getVectorVisibilityPaintProperty(
-        { ...styleSpec, filters },
-        "polygons",
-      );
-      if (visibility !== undefined) paint["fill-opacity"] = visibility;
+      if (!sizeOnly) {
+        paint["fill-opacity"] = opacity / 2;
+        const color = getVectorColorPaintProperty(
+          styleSpec,
+          "polygons",
+          propsSpec,
+          colormaps.value,
+        );
+        if (color) paint["fill-color"] = color;
+        const visibility = getVectorVisibilityPaintProperty(
+          { ...styleSpec, filters },
+          "polygons",
+        );
+        if (visibility !== undefined) paint["fill-opacity"] = visibility;
+      }
     } else if (mapLayerId.includes("line") && propsSpec) {
-      paint["line-opacity"] = opacity;
-      const color = getVectorColorPaintProperty(
-        styleSpec,
-        "lines",
-        propsSpec,
-        colormaps.value,
-      );
-      if (color) paint["line-color"] = color;
+      if (!sizeOnly) {
+        paint["line-opacity"] = opacity;
+        const color = getVectorColorPaintProperty(
+          styleSpec,
+          "lines",
+          propsSpec,
+          colormaps.value,
+        );
+        if (color) paint["line-color"] = color;
+        const visibility = getVectorVisibilityPaintProperty(
+          { ...styleSpec, filters },
+          "lines",
+        );
+        if (visibility !== undefined) paint["line-opacity"] = visibility;
+      }
       const size = getVectorSizePaintProperty(styleSpec, "lines", propsSpec);
       if (size) paint["line-width"] = size;
-      const visibility = getVectorVisibilityPaintProperty(
-        { ...styleSpec, filters },
-        "lines",
-      );
-      if (visibility !== undefined) paint["line-opacity"] = visibility;
     } else if (mapLayerId.includes("circle") && propsSpec) {
-      paint["circle-opacity"] = opacity;
-      paint["circle-stroke-opacity"] = opacity;
-      const color = getVectorColorPaintProperty(
-        styleSpec,
-        "points",
-        propsSpec,
-        colormaps.value,
-      );
-      if (color) {
-        paint["circle-color"] = color;
-      }
-      const strokeColor = getVectorColorPaintProperty(
-        styleSpec,
-        "points",
-        propsSpec,
-        colormaps.value,
-        true,
-      );
-      if (strokeColor) {
-        paint["circle-stroke-color"] = strokeColor;
-        paint["circle-stroke-width"] = 3;
+      if (!sizeOnly) {
+        paint["circle-opacity"] = opacity;
+        paint["circle-stroke-opacity"] = opacity;
+        const color = getVectorColorPaintProperty(
+          styleSpec,
+          "points",
+          propsSpec,
+          colormaps.value,
+        );
+        if (color) {
+          paint["circle-color"] = color;
+        }
+        const strokeColor = getVectorColorPaintProperty(
+          styleSpec,
+          "points",
+          propsSpec,
+          colormaps.value,
+          true,
+        );
+        if (strokeColor) {
+          paint["circle-stroke-color"] = strokeColor;
+          paint["circle-stroke-width"] = 3;
+        }
+        const visibility = getVectorVisibilityPaintProperty(
+          { ...styleSpec, filters },
+          "points",
+        );
+        if (visibility !== undefined) {
+          paint["circle-opacity"] = visibility;
+          paint["circle-stroke-opacity"] = visibility;
+        }
       }
       const size = getVectorSizePaintProperty(styleSpec, "points", propsSpec);
       if (size) paint["circle-radius"] = size;
-      const visibility = getVectorVisibilityPaintProperty(
-        { ...styleSpec, filters },
-        "points",
-      );
-      if (visibility !== undefined) {
-        paint["circle-opacity"] = visibility;
-        paint["circle-stroke-opacity"] = visibility;
-      }
     } else if (mapLayerId.includes("raster")) {
       const rasterTilesQuery = getRasterTilesQuery(
         { ...styleSpec, filters },

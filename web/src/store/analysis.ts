@@ -4,6 +4,7 @@ import {
   getProjectAnalysisTypes,
   getProjectCharts,
   getTaskResults,
+  getTaskInputOptions,
 } from "@/api/rest";
 import type { Chart, AnalysisType, TaskResult } from "@/types";
 import { defineStore } from "pinia";
@@ -61,6 +62,15 @@ export const useAnalysisStore = defineStore("analysis", () => {
 
   async function initResults(analysisType: string, projectId: number) {
     availableResults.value = await getTaskResults(analysisType, projectId);
+  }
+
+  async function fetchInputOptions() {
+    if (!projectStore.currentProject || !currentAnalysisType.value) return;
+    currentAnalysisType.value.input_options = await getTaskInputOptions(
+      currentAnalysisType.value.db_value,
+      projectStore.currentProject.id,
+    );
+    initSelectedInputs();
   }
 
   async function fetchResults() {
@@ -341,6 +351,7 @@ export const useAnalysisStore = defineStore("analysis", () => {
     initCharts,
     initAnalysisTypes,
     initResults,
+    fetchInputOptions,
     fetchResults,
     initSelectedInputs,
     inputIsNumeric,

@@ -1,166 +1,207 @@
+import { debounce } from "lodash";
 import { defineStore } from "pinia";
-import { ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import {
   getDatasetNetworks,
-  getNetworkGCC,
+  getLayer,
+  getNetworkAnimations,
+  getNetworkAnimationStates,
   getProjectNetworks,
+  createNetworkAnimation,
+  deleteNetworkAnimation,
+  deleteNetworkAnimationState,
+  createNetworkAnimationState,
 } from "@/api/rest";
 import type {
   Dataset,
-  GCCResult,
+  Layer,
   Network,
-  NetworkEdge,
-  NetworkNode,
-  NetworkStyle,
+  NetworkAnimation,
+  NetworkAnimationConfig,
   NetworkState,
 } from "@/types";
-
-import { usePanelStore, useMapStore, useStyleStore, useLayerStore } from ".";
-
-const GCCcache: GCCResult[] = [];
-const networkStyle: NetworkStyle = {
-  color: {
-    selected: "#ffffff",
-    deactivate: "#f54242",
-    activate: "#008837",
-    inactive: "#000000",
-    gcc: "#f7e059",
-  },
-  opacity: {
-    inactive: 0.5,
-  },
-};
-const networkPaintProperties = [
-  "circle-opacity",
-  "circle-stroke-opacity",
-  "line-opacity",
-  "circle-color",
-  "circle-stroke-color",
-  "line-color",
-];
-
-function getNetworkPaintPropertyValue(
-  paintProperty: string,
-  networkState: NetworkState,
-  defaultPropValue: any,
-) {
-  const deactivate = networkState.changes?.deactivate_nodes || [];
-  const activate = networkState.changes?.activate_nodes || [];
-  const inactive =
-    networkState.deactivated?.nodes.filter(
-      (n) => !deactivate.includes(n) && !activate.includes(n),
-    ) || [];
-  let gcc = networkState.gcc || [];
-  if (!inactive.length && !deactivate.length && !activate.length) {
-    gcc = []; // Network default state; don't show GCC
-  }
-
-  if (paintProperty.includes("opacity")) {
-    return [
-      "case",
-      [
-        "any",
-        ["in", ["get", "node_id"], ["literal", inactive]],
-        ["in", ["get", "from_node_id"], ["literal", inactive]],
-        ["in", ["get", "to_node_id"], ["literal", inactive]],
-      ],
-      networkStyle.opacity.inactive,
-      defaultPropValue,
-    ];
-  }
-
-  return [
-    "case",
-    [
-      "any",
-      [
-        "in",
-        ["get", "node_id"],
-        ["literal", networkState.selected?.nodes || []],
-      ],
-      [
-        "in",
-        ["get", "edge_id"],
-        ["literal", networkState.selected?.edges || []],
-      ],
-    ],
-    networkStyle.color.selected,
-    [
-      "any",
-      ["in", ["get", "node_id"], ["literal", deactivate]],
-      ["in", ["get", "from_node_id"], ["literal", deactivate]],
-      ["in", ["get", "to_node_id"], ["literal", deactivate]],
-    ],
-    networkStyle.color.deactivate,
-    [
-      "any",
-      ["in", ["get", "node_id"], ["literal", activate]],
-      ["in", ["get", "from_node_id"], ["literal", activate]],
-      ["in", ["get", "to_node_id"], ["literal", activate]],
-    ],
-    networkStyle.color.activate,
-    [
-      "any",
-      ["in", ["get", "node_id"], ["literal", inactive]],
-      ["in", ["get", "from_node_id"], ["literal", inactive]],
-      ["in", ["get", "to_node_id"], ["literal", inactive]],
-    ],
-    networkStyle.color.inactive,
-    [
-      "any",
-      ["in", ["get", "node_id"], ["literal", gcc]],
-      ["in", ["get", "from_node_id"], ["literal", gcc]],
-      ["in", ["get", "to_node_id"], ["literal", gcc]],
-    ],
-    networkStyle.color.gcc,
-    defaultPropValue,
-  ];
-}
+import {
+  usePanelStore,
+  useProjectStore,
+  useStyleStore,
+  useMapStore,
+  useLayerStore,
+  useAppStore,
+} from ".";
 
 export const useNetworkStore = defineStore("network", () => {
   const panelStore = usePanelStore();
-  const mapStore = useMapStore();
+  const projectStore = useProjectStore();
   const styleStore = useStyleStore();
+  const mapStore = useMapStore();
   const layerStore = useLayerStore();
+  const appStore = useAppStore();
 
   const loadingNetworks = ref<boolean>(false);
   const availableNetworks = ref<Network[]>([]);
   const currentNetwork = ref<Network>();
-  const networkStates = ref<Record<number, NetworkState>>({});
+  const networkNodesMapLayerId = ref<string>();
+  const networkEdgesMapLayerId = ref<string>();
+  const availableAnimations = ref<NetworkAnimation[]>([]);
+  const currentAnimation = ref<NetworkAnimation>();
+  const currentAnimationTick = ref<number>(0);
+  const currentAnimationSyncLayers = ref<Layer[]>([]);
+  const animationConfig = ref<NetworkAnimationConfig>();
+  const loadingStates = ref<boolean>(false);
+  const availableAnimationStates = ref<NetworkState[]>([]);
+  const hoverNodeIds = ref<number[]>([]);
+  const creatingAnimation = ref<boolean>(false);
+  const animationToDelete = ref<NetworkAnimation>();
+  const newAnimationName = ref<string>();
+  const stateToDelete = ref<NetworkState>();
 
-  // These are only used in NetworksPanel.vue, but must be here
-  // so the state persists when the panel is moved around
-  const currentNetworkNodes = ref<NetworkNode[]>([]);
-  const currentNetworkEdges = ref<NetworkEdge[]>([]);
+  const FALLBACK_COLOR = "black";
+  const FALLBACK_OPACITY = 1;
 
-  watch(currentNetwork, () => {
-    currentNetworkNodes.value = [];
-    currentNetworkEdges.value = [];
-    if (currentNetwork.value) {
-      resetNetworkState(currentNetwork.value.id);
+  const editAllowed = computed(() => {
+    if (!projectStore.currentProject || !appStore.authenticated) return false;
+    return ["owner", "collaborator"].includes(
+      projectStore.permissions[projectStore.currentProject.id],
+    );
+  });
+  const currentAnimationEditable = computed(() => {
+    // If animation was generated by a task, disallow edits
+    return currentAnimation.value?.task_result === undefined;
+  });
+  const currentAnimationState = computed(() => {
+    return availableAnimationStates.value?.find(
+      (state) => state.index === currentAnimationTick.value,
+    );
+  });
+  const currentAnimationStateComponents = computed(() => {
+    return currentAnimationState.value?.components.toSorted(
+      (a, b) => b.nodes.length - a.nodes.length,
+    );
+  });
+  const deactivatedNodes = computed(() => {
+    if (!animationConfig.value || !currentAnimationState.value) return [];
+    let deactivatedNodes: Set<number> = new Set();
+    if (animationConfig.value.time_mode === "slider") {
+      deactivatedNodes = deactivatedNodes.union(
+        new Set(currentAnimationState.value.deactivated_nodes),
+      );
+    } else if (animationConfig.value.time_mode === "colormap") {
+      availableAnimationStates.value.forEach((state) => {
+        deactivatedNodes = deactivatedNodes.union(
+          new Set(state.deactivated_nodes),
+        );
+      });
     }
+    return [...deactivatedNodes];
+  });
+  const colorByValues = computed(() => {
+    if (!animationConfig.value) return;
+    return animationConfig.value.time_mode === "slider"
+      ? currentAnimationStateComponents.value?.map((component, index) => ({
+          id: component.id,
+          name: `Component ${index}`,
+          node_ids: component.nodes,
+        }))
+      : availableAnimationStates.value.map((state) => ({
+          id: state.id,
+          name: `State ${state.index}`,
+          node_ids: state.deactivated_nodes,
+        }));
+  });
+  const networkColors = computed(() => {
+    if (
+      !animationConfig.value?.colormap ||
+      !currentAnimationStateComponents.value ||
+      !colorByValues.value?.length
+    ) {
+      return {};
+    }
+    const colors = styleStore.colormapMarkersSubsample(
+      animationConfig.value.colormap,
+      {
+        discrete: true,
+        n_colors: colorByValues.value.length,
+      },
+    );
+    if (!colors) return {};
+    return Object.fromEntries(
+      colorByValues.value.map((v, i) => [v.id, colors[i].color]),
+    );
+  });
+  const nodeGroups = computed(() => {
+    if (!colorByValues.value || !animationConfig.value) return;
+    const groups = colorByValues.value.map((group) => ({
+      id: group.id,
+      name: group.name,
+      node_ids: group.node_ids,
+      color: networkColors.value[group.id],
+      opacity: FALLBACK_OPACITY,
+    }));
+    if (animationConfig.value.time_mode === "slider") {
+      groups.push({
+        id: -1,
+        name: "Deactivated",
+        node_ids: deactivatedNodes.value,
+        color: animationConfig.value.deactivated_color,
+        opacity: animationConfig.value.deactivated_opacity,
+      });
+    }
+    return groups;
+  });
+  const nodeGroupsWithHighlights = computed(() => {
+    if (!nodeGroups.value || !animationConfig.value) return;
+    const groups = nodeGroups.value.map((group) => ({
+      ...group,
+      node_ids: group.node_ids.filter(
+        (nId) => !hoverNodeIds.value.includes(nId),
+      ),
+    }));
+    if (hoverNodeIds.value.length) {
+      groups.push({
+        id: -2,
+        name: "Highlighted",
+        node_ids: hoverNodeIds.value,
+        color: animationConfig.value.hover_color,
+        opacity: 1,
+      });
+    }
+    return groups;
+  });
+  const nodeGroupColorMarkers = computed(() => {
+    if (!currentNetwork.value || !nodeGroups.value) return [];
+    const totalNodes = currentNetwork.value.counts.nodes;
+    let visited = 0;
+    return nodeGroups.value
+      .filter((group) => group.name !== "Highlighted")
+      .map((group) => {
+        visited += group.node_ids.length;
+        return {
+          color: group.color,
+          node_ids: group.node_ids,
+          value: visited / totalNodes,
+          label: `${group.name} (${group.node_ids.length} nodes)`,
+        };
+      });
   });
 
-  // Actions
+  function resetAnimationConfig() {
+    animationConfig.value = {
+      time_mode: "slider",
+      interval: 1,
+      colormap: styleStore.colormaps.find((c) => c.name === "viridis"),
+      deactivated_color: "#ff0000",
+      deactivated_opacity: 1,
+      hover_color: "#feffab",
+    };
+  }
+
   async function initNetworks(projectId: number) {
     loadingNetworks.value = true;
     const networks = await getProjectNetworks(projectId);
     availableNetworks.value = networks;
     currentNetwork.value = undefined;
     loadingNetworks.value = false;
-    networks.forEach((n) => resetNetworkState(n.id));
-  }
-
-  function resetNetworkState(networkId: number) {
-    networkStates.value[networkId] = {
-      selected: { nodes: [], edges: [] },
-      deactivated: { nodes: [], edges: [] },
-      changes: {
-        deactivate_nodes: [],
-        activate_nodes: [],
-      },
-      gcc: null,
-    };
+    resetAnimationConfig();
   }
 
   async function getNetwork(
@@ -196,155 +237,282 @@ export const useNetworkStore = defineStore("network", () => {
     return network;
   }
 
-  async function isNodeActive(nodeId: number, dataset: Dataset) {
-    const network = await getNetwork(nodeId, dataset);
-    if (network) {
-      const deactivated = Array.from(
-        networkStates.value[network.id]?.deactivated?.nodes || [],
-      );
-      return !deactivated.includes(nodeId);
-    }
-  }
-
-  async function toggleNodeActive(nodeId: number, dataset: Dataset) {
-    const network = await getNetwork(nodeId, dataset);
-    if (network) {
-      let deactivated = Array.from(
-        networkStates.value[network.id]?.deactivated?.nodes || [],
-      );
-      if (!deactivated.includes(nodeId)) {
-        deactivated.push(nodeId);
-      } else {
-        deactivated = deactivated.filter((id) => id !== nodeId);
-      }
-      await setNetworkDeactivatedNodes(network, deactivated);
-    }
-  }
-
-  async function setNetworkDeactivatedNodes(
-    network: Network,
-    nodeIds: number[],
-    animation = false,
-  ) {
-    if (!networkStates.value[network.id]) resetNetworkState(network.id);
-    const networkState = networkStates.value[network.id];
-    if (!networkState.deactivated)
-      networkState.deactivated = { nodes: [], edges: [] };
-    if (animation) {
-      networkState.changes = {
-        deactivate_nodes: nodeIds.filter(
-          (n) => !networkState.deactivated?.nodes.includes(n),
-        ),
-        activate_nodes: networkState.deactivated.nodes.filter(
-          (n) => !nodeIds.includes(n),
-        ),
-      };
-    }
-    networkState.deactivated.nodes = Array.from(nodeIds);
-    if (nodeIds.length && nodeIds.length < 1000) {
-      const cachedResult = GCCcache.find(
-        (result) =>
-          JSON.stringify(result.deactivatedNodes.toSorted()) ===
-          JSON.stringify(nodeIds.toSorted()),
-      );
-      if (cachedResult) networkState.gcc = cachedResult.gcc;
-      else {
-        networkState.gcc = await getNetworkGCC(
-          network.id,
-          networkState.deactivated.nodes,
-        );
-        GCCcache.push({
-          deactivatedNodes: nodeIds,
-          gcc: networkState.gcc,
-        });
-      }
-    } else {
-      networkState.gcc = [];
-    }
-    networkStates.value[network.id] = networkState;
-    styleNetwork(network);
-  }
-
-  function styleVisibleNetworks() {
-    const visibleVectorIds = new Set(
-      mapStore
-        .getUserMapLayers()
-        .map((id) => mapStore.parseLayerString(id))
-        .filter((info) => info.type === "vector")
-        .map((info) => info.typeId),
-    );
-    availableNetworks.value.forEach((network) => {
-      if (visibleVectorIds.has(network.vector_data)) {
-        styleNetwork(network);
-      }
-    });
-  }
-
-  function styleNetwork(network: Network) {
-    const networkState = networkStates.value[network.id];
-    const map = mapStore.getMap();
-    mapStore.getUserMapLayers().forEach((mapLayerId) => {
-      const layerInfo = mapStore.parseLayerString(mapLayerId);
-      if (!(
-        layerInfo.type === "vector" && layerInfo.typeId === network.vector_data
-      )) {
-        // No-op for map layers that do not correspond to the Network's VectorData object
-        return;
-      }
-      const currentStyleSpec =
-        styleStore.selectedLayerStyles[
-          `${layerInfo.layerId}.${layerInfo.layerCopyId}`
-        ].style_spec;
-      const frames = layerStore.framesByLayerId[layerInfo.layerId];
-      const currentFrame = frames.find((f) => f.id === layerInfo.frameId);
-      if (!(currentStyleSpec && currentFrame)) {
-        // Must have current style to use as default and current frame to get vector feature properties
-        return;
-      }
-      networkPaintProperties.forEach((paintProperty) => {
-        if (!paintProperty.includes(layerInfo.layerType)) {
-          // No-op for paint properties that do not match the current layer's type (i.e. line-color for point layer)
-          return;
-        }
-        let defaultPropValue: any = currentStyleSpec?.opacity;
-        if (paintProperty.includes("color")) {
-          const groupName = layerInfo.layerType === "line" ? "lines" : "points";
-          const propsSpec = currentFrame.vector?.summary?.properties;
-          if (propsSpec) {
-            defaultPropValue = styleStore.getVectorColorPaintProperty(
-              currentStyleSpec,
-              groupName,
-              propsSpec,
-              styleStore.colormaps,
-              paintProperty.includes("stroke"),
+  function currentAnimationUpdated() {
+    currentAnimationTick.value = 0;
+    if (!currentNetwork.value || !currentAnimation.value) {
+      [networkNodesMapLayerId.value, networkEdgesMapLayerId.value].forEach(
+        (mapLayerId) => {
+          if (mapLayerId) {
+            // Previously applied custom style to map layer, reset style with style store
+            const layerInfo = mapStore.parseLayerString(mapLayerId);
+            const layer = layerStore.selectedLayers.find(
+              (l) => l.id === layerInfo.layerId,
             );
-          } else {
-            defaultPropValue = "black";
+            if (layer) styleStore.updateLayerStyles(layer);
           }
-        }
-        const paintPropertyValue = getNetworkPaintPropertyValue(
-          paintProperty,
-          networkState,
-          defaultPropValue,
+        },
+      );
+      networkNodesMapLayerId.value = undefined;
+      networkEdgesMapLayerId.value = undefined;
+    } else {
+      const networkMapLayers = mapStore
+        .getUserMapLayers()
+        .filter((mapLayerId) => {
+          const layerInfo = mapStore.parseLayerString(mapLayerId);
+          return (
+            layerInfo.type === "vector" &&
+            currentNetwork.value &&
+            layerInfo.typeId === currentNetwork.value.vector_data
+          );
+        });
+      networkNodesMapLayerId.value = networkMapLayers.find((mapLayerId) =>
+        mapLayerId.includes("circle"),
+      );
+      networkEdgesMapLayerId.value = networkMapLayers.find((mapLayerId) =>
+        mapLayerId.includes("line"),
+      );
+    }
+  }
+
+  async function fetchAnimations() {
+    if (!currentNetwork.value || !projectStore.currentProject) {
+      availableAnimations.value = [];
+    } else {
+      availableAnimations.value = await getNetworkAnimations(
+        currentNetwork.value.id,
+        projectStore.currentProject.id,
+      );
+    }
+  }
+
+  async function fetchAnimationStates() {
+    if (!currentAnimation.value) {
+      availableAnimationStates.value = [];
+    } else {
+      loadingStates.value = true;
+      availableAnimationStates.value = await getNetworkAnimationStates(
+        currentAnimation.value.id,
+      );
+      loadingStates.value = false;
+    }
+  }
+
+  async function fetchAnimationSyncLayers() {
+    if (!currentAnimation.value || !projectStore.currentProject) {
+      currentAnimationSyncLayers.value = [];
+      return;
+    }
+    currentAnimationSyncLayers.value = await Promise.all(
+      currentAnimation.value.sync_layers.map(
+        async (layerId) =>
+          await getLayer(layerId, projectStore.currentProject?.id),
+      ),
+    );
+  }
+
+  async function createAnimation() {
+    if (
+      !projectStore.currentProject?.id ||
+      !currentNetwork.value?.id ||
+      !editAllowed.value ||
+      !newAnimationName.value?.length
+    ) {
+      return;
+    }
+    currentAnimation.value = await createNetworkAnimation(
+      newAnimationName.value,
+      currentNetwork.value.id,
+      projectStore.currentProject.id,
+    );
+    creatingAnimation.value = false;
+    newAnimationName.value = undefined;
+    await fetchAnimations();
+  }
+
+  async function deleteAnimation() {
+    if (!animationToDelete.value) {
+      return;
+    }
+    if (currentAnimation.value?.id === animationToDelete.value.id) {
+      currentAnimation.value = undefined;
+    }
+    await deleteNetworkAnimation(animationToDelete.value.id);
+    await fetchAnimations();
+    animationToDelete.value = undefined;
+  }
+
+  async function createAnimationState() {
+    if (!currentAnimation.value) {
+      return;
+    }
+    await createNetworkAnimationState(
+      currentAnimation.value.id,
+      availableAnimationStates.value.length,
+    );
+    await fetchAnimationStates();
+  }
+
+  async function deleteAnimationState() {
+    if (!stateToDelete.value || !editAllowed.value || !currentAnimation.value) {
+      return;
+    }
+    await deleteNetworkAnimationState(stateToDelete.value.id);
+    await fetchAnimationStates();
+    stateToDelete.value = undefined;
+  }
+
+  function updateNetworkLayerStyle() {
+    if (
+      !currentNetwork.value ||
+      !networkNodesMapLayerId.value ||
+      !networkEdgesMapLayerId.value ||
+      !currentAnimationState.value ||
+      !animationConfig.value ||
+      !nodeGroupsWithHighlights.value
+    ) {
+      return;
+    }
+    const map = mapStore.getMap();
+    const nodeColor: any = ["case"];
+    const edgeColor: any = ["case"];
+    const nodeOpacity: any = ["case"];
+    const edgeOpacity: any = ["case"];
+
+    nodeGroupsWithHighlights.value.forEach((group) => {
+      // Group conditions
+      const nodeCondition = [
+        "in",
+        ["get", "node_id"],
+        ["literal", group.node_ids],
+      ];
+      const edgeCondition = [
+        // If group represents deactivated or hover nodes, include edge if either to or from node is included
+        // Otherwise only include edge if both to and from are included
+        ["Deactivated", "Highlighted"].includes(group.name) ? "any" : "all",
+        ["in", ["get", "from_node_id"], ["literal", group.node_ids]],
+        ["in", ["get", "to_node_id"], ["literal", group.node_ids]],
+      ];
+      nodeColor.push(nodeCondition);
+      nodeOpacity.push(nodeCondition);
+      edgeColor.push(edgeCondition);
+      edgeOpacity.push(edgeCondition);
+      // Group outputs
+      nodeColor.push(group.color);
+      nodeOpacity.push(group.opacity);
+      edgeColor.push(group.color);
+      edgeOpacity.push(group.opacity);
+    });
+    // Fallback outputs
+    nodeColor.push(FALLBACK_COLOR);
+    edgeColor.push(FALLBACK_COLOR);
+    nodeOpacity.push(FALLBACK_OPACITY);
+    edgeOpacity.push(FALLBACK_OPACITY);
+
+    map.setPaintProperty(
+      networkNodesMapLayerId.value,
+      "circle-color",
+      nodeColor,
+    );
+    map.setPaintProperty(
+      networkNodesMapLayerId.value,
+      "circle-stroke-color",
+      nodeColor,
+    );
+    map.setPaintProperty(networkEdgesMapLayerId.value, "line-color", edgeColor);
+    map.setPaintProperty(
+      networkNodesMapLayerId.value,
+      "circle-opacity",
+      nodeOpacity,
+    );
+    map.setPaintProperty(
+      networkNodesMapLayerId.value,
+      "circle-stroke-opacity",
+      nodeOpacity,
+    );
+    map.setPaintProperty(
+      networkEdgesMapLayerId.value,
+      "line-opacity",
+      edgeOpacity,
+    );
+  }
+
+  const debouncedUpdateNetworkLayerStyle = debounce(
+    updateNetworkLayerStyle,
+    100,
+  );
+
+  function updateSyncLayers() {
+    if (!currentAnimationSyncLayers.value?.length) return;
+    currentAnimationSyncLayers.value.forEach((syncLayer) => {
+      if (panelStore.isVisible({ layer: syncLayer })) {
+        const selectedLayer = layerStore.selectedLayers.find(
+          (l) => l.id === syncLayer.id,
         );
-        map.setPaintProperty(mapLayerId, paintProperty, paintPropertyValue);
-      });
+        if (selectedLayer) {
+          selectedLayer.current_frame_index = currentAnimationTick.value;
+          layerStore.updateLayerFrame(selectedLayer);
+        }
+      }
     });
   }
+
+  watch(currentNetwork, () => {
+    if (currentNetwork.value) {
+      panelStore.setVisibility({ network: currentNetwork.value }, true);
+    }
+    availableAnimations.value = [];
+    currentAnimation.value = undefined;
+    currentAnimationTick.value = 0;
+    availableAnimationStates.value = [];
+    resetAnimationConfig();
+    fetchAnimations();
+  });
+  watch(currentAnimation, async () => {
+    currentAnimationUpdated();
+    await fetchAnimationStates();
+    await fetchAnimationSyncLayers();
+    updateNetworkLayerStyle();
+  });
+  watch(currentAnimationTick, () => {
+    debouncedUpdateNetworkLayerStyle();
+    updateSyncLayers();
+  });
+  watch(animationConfig, debouncedUpdateNetworkLayerStyle, { deep: true });
+  watch(hoverNodeIds, debouncedUpdateNetworkLayerStyle);
 
   return {
     availableNetworks,
     currentNetwork,
-    networkStates,
+    availableAnimations,
+    currentAnimation,
+    currentAnimationTick,
+    currentAnimationSyncLayers,
+    animationConfig,
+    availableAnimationStates,
+    currentAnimationState,
+    currentAnimationStateComponents,
     loadingNetworks,
-    currentNetworkNodes,
-    currentNetworkEdges,
+    loadingStates,
     initNetworks,
     getNetwork,
-    isNodeActive,
-    toggleNodeActive,
-    setNetworkDeactivatedNodes,
-    styleVisibleNetworks,
-    styleNetwork,
+    fetchAnimations,
+    fetchAnimationStates,
+    deactivatedNodes,
+    networkColors,
+    nodeGroupColorMarkers,
+    hoverNodeIds,
+    networkNodesMapLayerId,
+    networkEdgesMapLayerId,
+    updateSyncLayers,
+    editAllowed,
+    currentAnimationEditable,
+    creatingAnimation,
+    newAnimationName,
+    createAnimation,
+    deleteAnimation,
+    animationToDelete,
+    createAnimationState,
+    deleteAnimationState,
+    stateToDelete,
   };
 });
