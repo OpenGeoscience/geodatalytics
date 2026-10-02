@@ -1,63 +1,71 @@
 from __future__ import annotations
 
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from uvdat.core.models import Network
+from uvdat.core.models import Network, NetworkAnimation, NetworkState
 from uvdat.core.rest.serializers import (
-    NetworkEdgeSerializer,
-    NetworkNodeSerializer,
+    NetworkAnimationSerializer,
     NetworkSerializer,
+    NetworkStateSerializer,
 )
-
-
-class GCCQueryParamSerializer(serializers.Serializer):
-    exclude_nodes = serializers.RegexField(r"^\d+(,\s?\d+)*$")
-
-
-class GCCResultSerializer(serializers.Serializer):
-    gcc = serializers.ListField(child=serializers.IntegerField())
 
 
 class NetworkViewSet(ModelViewSet):
     queryset = Network.objects.all()
     serializer_class = NetworkSerializer
 
-    @action(detail=True, methods=["get"])
-    def nodes(self, request, **kwargs):
-        network: Network = self.get_object()
-        page = self.paginate_queryset(network.nodes.all())
-        return Response(
-            NetworkNodeSerializer(page, many=True).data,
-            status=200,
+
+class NetworkAnimationViewSet(ModelViewSet):
+    queryset = NetworkAnimation.objects.all()
+    serializer_class = NetworkAnimationSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        project_id: str | None = self.request.query_params.get("project")
+        if project_id is not None and project_id.isdigit():
+            qs = qs.filter(project=int(project_id))
+        network_id: str | None = self.request.query_params.get("network")
+        if network_id is not None and network_id.isdigit():
+            qs = qs.filter(network=int(network_id))
+        return qs
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        # Automatically create a first state
+        state = NetworkState.objects.create(
+            animation=instance,
+            index=0,
         )
+        state.update_components()
 
-    @action(detail=True, methods=["get"])
-    def edges(self, request, **kwargs):
-        network: Network = self.get_object()
-        page = self.paginate_queryset(network.edges.all())
-        return Response(
-            NetworkEdgeSerializer(page, many=True).data,
-            status=200,
-        )
 
-    @swagger_auto_schema(query_serializer=GCCQueryParamSerializer)
-    @action(detail=True, methods=["get"])
-    def gcc(self, request, **kwargs):
-        network: Network = self.get_object()
+class NetworkStateViewSet(ModelViewSet):
+    queryset = NetworkState.objects.prefetch_related(
+        "deactivated_nodes", "components", "components__nodes"
+    ).all()
+    serializer_class = NetworkStateSerializer
 
-        # Validate and de-serialize query params
-        serializer = GCCQueryParamSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        exclude_nodes = [int(n) for n in serializer.validated_data["exclude_nodes"].split(",")]
+    def get_queryset(self):
+        qs = super().get_queryset()
+        project_id: str | None = self.request.query_params.get("project")
+        if project_id is not None and project_id.isdigit():
+            qs = qs.filter(animation__project=int(project_id))
+        network_id: str | None = self.request.query_params.get("network")
+        if network_id is not None and network_id.isdigit():
+            qs = qs.filter(animation__network=int(network_id))
+        anim_id: str | None = self.request.query_params.get("animation")
+        if anim_id is not None and anim_id.isdigit():
+            qs = qs.filter(animation=int(anim_id))
+        return qs
 
-        gcc = network.get_gcc(excluded_nodes=exclude_nodes)
-        if gcc is None:
-            return Response(None)
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.update_components()
 
-        result = GCCResultSerializer(data={"gcc": gcc})
-        result.is_valid(raise_exception=True)
-        return Response(result.validated_data["gcc"], status=200)
+    def perform_destroy(self, instance):
+        # Update other animation state indices
+        other_states = instance.animation.states.exclude(id=instance.id).order_by("index")
+        for i, state in enumerate(other_states):
+            state.index = i
+        NetworkState.objects.bulk_update(other_states, ["index"])
+        instance.delete()

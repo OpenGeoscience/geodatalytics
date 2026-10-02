@@ -9,7 +9,7 @@ from .data import RasterDataViewSet, VectorDataViewSet
 from .dataset import DatasetViewSet
 from .file_item import FileItemViewSet
 from .layer import LayerFrameViewSet, LayerStyleViewSet, LayerViewSet
-from .networks import NetworkViewSet
+from .networks import NetworkAnimationViewSet, NetworkStateViewSet, NetworkViewSet
 from .project import ProjectViewSet
 from .regions import RegionViewSet
 from .user import UserViewSet
@@ -25,6 +25,8 @@ __all__ = [
     "LayerFrameViewSet",
     "LayerStyleViewSet",
     "LayerViewSet",
+    "NetworkAnimationViewSet",
+    "NetworkStateViewSet",
     "NetworkViewSet",
     "ProjectViewSet",
     "RasterDataViewSet",

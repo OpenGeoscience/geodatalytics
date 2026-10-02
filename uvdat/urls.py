@@ -20,6 +20,8 @@ from uvdat.core.rest import (
     LayerFrameViewSet,
     LayerStyleViewSet,
     LayerViewSet,
+    NetworkAnimationViewSet,
+    NetworkStateViewSet,
     NetworkViewSet,
     ProjectViewSet,
     RasterDataViewSet,
@@ -49,6 +51,8 @@ router.register(r"rasters", RasterDataViewSet, basename="rasters")
 router.register(r"vectors", VectorDataViewSet, basename="vectors")
 router.register(r"regions", RegionViewSet, basename="regions")
 router.register(r"networks", NetworkViewSet, basename="networks")
+router.register(r"network-animations", NetworkAnimationViewSet, basename="network-animations")
+router.register(r"network-states", NetworkStateViewSet, basename="network-states")
 router.register(r"basemaps", BasemapViewSet, basename="basemaps")
 router.register(r"analytics", AnalyticsViewSet, basename="analytics")
 router.register(r"bookmarks", BookmarkViewSet, basename="bookmarks")

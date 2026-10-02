@@ -17,6 +17,37 @@ from uvdat.core.tasks.analytics.analysis_type import AnalysisInputError
 EXCLUDE_FIELDS = ["chart_data", "chart_options", "nodes", "outputs"]
 
 
+def serialize_input_options(analysis_type, project_id):
+    filtered_input_options = {}
+    for k, v in analysis_type.get_input_options().items():
+        if isinstance(v, QuerySet):
+            filtered_queryset = v.filter_by_projects(Project.objects.filter(id=project_id))
+            input_serializer = next(
+                iter(
+                    [
+                        s
+                        for _, s in inspect.getmembers(uvdat_serializers, inspect.isclass)
+                        if issubclass(s, ModelSerializer)
+                        and s.Meta.model == filtered_queryset.model
+                    ]
+                ),
+                None,
+            )
+            if input_serializer is not None:
+                options = [
+                    {k: v for k, v in input_serializer(o).data.items() if k not in EXCLUDE_FIELDS}
+                    for o in filtered_queryset
+                ]
+            else:
+                options = [{"id": o.id, "name": o.name} for o in filtered_queryset]
+        elif any(not isinstance(o, dict) for o in v):
+            options = [{"id": o, "name": o} for o in v]
+        else:
+            options = v
+        filtered_input_options[k] = options
+    return filtered_input_options
+
+
 class AnalyticsViewSet(ReadOnlyModelViewSet):
     queryset = TaskResult.objects.all()
     serializer_class = uvdat_serializers.TaskResultSerializer
@@ -37,37 +68,6 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
                 ).exists()
             ):
                 continue
-            filtered_input_options = {}
-            for k, v in instance.get_input_options().items():
-                if isinstance(v, QuerySet):
-                    filtered_queryset = v.filter_by_projects(Project.objects.filter(id=project_id))
-                    input_serializer = next(
-                        iter(
-                            [
-                                s
-                                for _, s in inspect.getmembers(uvdat_serializers, inspect.isclass)
-                                if issubclass(s, ModelSerializer)
-                                and s.Meta.model == filtered_queryset.model
-                            ]
-                        ),
-                        None,
-                    )
-                    if input_serializer is not None:
-                        options = [
-                            {
-                                k: v
-                                for k, v in input_serializer(o).data.items()
-                                if k not in EXCLUDE_FIELDS
-                            }
-                            for o in filtered_queryset
-                        ]
-                    else:
-                        options = [{"id": o.id, "name": o.name} for o in filtered_queryset]
-                elif any(not isinstance(o, dict) for o in v):
-                    options = [{"id": o, "name": o} for o in v]
-                else:
-                    options = v
-                filtered_input_options[k] = options
             serializer = uvdat_serializers.AnalysisTypeSerializer(
                 data={
                     "name": instance.name,
@@ -75,7 +75,7 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
                     "description": instance.description,
                     "details": instance.details,
                     "attribution": instance.attribution,
-                    "input_options": filtered_input_options,
+                    "input_options": serialize_input_options(instance, project_id),
                     "input_types": instance.input_types,
                     "input_defaults": instance.input_defaults,
                     "optional_inputs": instance.optional_inputs,
@@ -85,6 +85,21 @@ class AnalyticsViewSet(ReadOnlyModelViewSet):
             serializer.is_valid(raise_exception=True)
             serialized.append(serializer.data)
         return Response(serialized, status=200)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"project/(?P<project_id>[\d*]+)/types/(?P<task_type>.+)/input-options",
+    )
+    def get_input_options(self, request, project_id: int, task_type: str, **kwargs):
+        for analysis_type in analysis_types:
+            instance = analysis_type()
+            if instance.db_value == task_type and analysis_type.is_enabled():
+                return Response(serialize_input_options(instance, project_id), status=200)
+        return Response(
+            f"Task type '{task_type}' not found.",
+            status=404,
+        )
 
     @action(
         detail=False,
