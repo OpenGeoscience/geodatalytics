@@ -23,8 +23,10 @@ from uvdat.core.models import (
     LayerFrame,
     LayerStyle,
     Network,
-    NetworkEdge,
+    NetworkAnimation,
+    NetworkComponent,
     NetworkNode,
+    NetworkState,
     Project,
     RasterData,
     Region,
@@ -325,27 +327,63 @@ class RegionFeatureCollectionSerializer(geojson.Serializer):
         return val
 
 
-class NetworkNodeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = NetworkNode
-        fields = "__all__"
+class TaskResultSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField("get_name")
 
+    def get_name(self, obj):
+        if obj.name and obj.created:
+            timestamp = obj.created.strftime("%Y-%m-%d %I:%M %p UTC")
+            return f"{timestamp} - {obj.name}"
+        return obj.name
 
-class NetworkEdgeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetworkEdge
+        model = TaskResult
         fields = "__all__"
 
 
 class NetworkSerializer(serializers.ModelSerializer):
     dataset = serializers.SerializerMethodField("get_dataset")
-    nodes = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    counts = serializers.SerializerMethodField("get_counts")
 
     def get_dataset(self, obj):
         return obj.vector_data.dataset.id
 
+    def get_counts(self, obj):
+        return {
+            "nodes": obj.nodes.count(),
+            "edges": obj.edges.count(),
+        }
+
     class Meta:
         model = Network
+        fields = "__all__"
+
+
+class NetworkAnimationSerializer(serializers.ModelSerializer):
+    task_result = TaskResultSerializer()
+
+    class Meta:
+        model = NetworkAnimation
+        fields = "__all__"
+
+
+class NetworkNodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetworkNode
+        fields = ["id", "name", "metadata"]
+
+
+class NetworkComponentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetworkComponent
+        fields = ["id", "nodes"]
+
+
+class NetworkStateSerializer(serializers.ModelSerializer):
+    components = NetworkComponentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = NetworkState
         fields = "__all__"
 
 
@@ -360,20 +398,6 @@ class AnalysisTypeSerializer(serializers.Serializer):
     optional_inputs = serializers.JSONField()
     input_types = serializers.JSONField()
     output_types = serializers.JSONField()
-
-
-class TaskResultSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField("get_name")
-
-    def get_name(self, obj):
-        if obj.name and obj.created:
-            timestamp = obj.created.strftime("%Y-%m-%d %I:%M %p UTC")
-            return f"{timestamp} - {obj.name}"
-        return obj.name
-
-    class Meta:
-        model = TaskResult
-        fields = "__all__"
 
 
 class BookmarkSerializer(serializers.ModelSerializer):

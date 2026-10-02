@@ -101,6 +101,7 @@ export interface Colormap {
   markers?: {
     color: string;
     value: number;
+    label?: string;
   }[];
 }
 
@@ -318,63 +319,42 @@ export interface Network {
   nodes: number[];
   metadata: Record<string, any>;
   vector_data: number;
+  counts: {
+    nodes: number;
+    edges: number;
+  };
 }
 
-export interface NetworkNode {
+export interface NetworkAnimation {
   id: number;
   name: string;
   network: number;
-  metadata: object;
-  capacity: number | null;
-  location: number[];
-  active?: boolean;
+  project: number;
+  task_result: TaskResult | undefined;
+  sync_layers: number[];
 }
 
-export interface NetworkEdge {
+export interface NetworkAnimationConfig {
+  time_mode: "slider" | "colormap";
+  interval: number | undefined;
+  colormap?: Colormap;
+  deactivated_color: string;
+  deactivated_opacity: number;
+  hover_color: string;
+}
+
+export interface NetworkComponent {
   id: number;
-  name: string;
-  network: number;
-  metadata: object;
-  capacity: number | null;
-  line_geometry: object;
-  directed: boolean;
-  from_node: number;
-  to_node: number;
-  active: boolean;
-}
-
-export interface NetworkStyle {
-  opacity: {
-    inactive: number;
-  };
-  color: {
-    inactive: string;
-    deactivate: string;
-    activate: string;
-    gcc: string;
-    selected: string;
-  };
+  state: number;
+  nodes: number[];
 }
 
 export interface NetworkState {
-  selected?: {
-    nodes: number[];
-    edges: number[];
-  };
-  deactivated?: {
-    nodes: number[];
-    edges: number[];
-  };
-  changes?: {
-    deactivate_nodes: number[];
-    activate_nodes: number[];
-  };
-  gcc: number[] | null;
-}
-
-export interface GCCResult {
-  deactivatedNodes: number[];
-  gcc: number[];
+  id: number;
+  animation: number;
+  index: number;
+  deactivated_nodes: number[];
+  components: NetworkComponent[];
 }
 
 export interface VectorTile {
@@ -498,6 +478,9 @@ export interface Bookmark {
   current_chart: number | undefined;
   current_basemap: number | undefined;
   current_network: number | undefined;
+  current_network_animation: number | undefined;
+  network_animation_tick: number;
+  network_animation_config: NetworkAnimationConfig | undefined;
   selected_layers: (number | undefined)[];
   selected_layer_current_frames: Record<string, number>;
   selected_layer_order: string[];
