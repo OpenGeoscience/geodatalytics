@@ -9,7 +9,14 @@ from .dataset import Dataset, DatasetTag
 from .file_item import FileItem
 from .frame_preview import RasterFramePreview
 from .layer import Layer, LayerFrame
-from .networks import Network, NetworkEdge, NetworkNode
+from .networks import (
+    Network,
+    NetworkAnimation,
+    NetworkComponent,
+    NetworkEdge,
+    NetworkNode,
+    NetworkState,
+)
 from .project import Project
 from .regions import Region
 from .styles import (
@@ -37,8 +44,11 @@ __all__ = [
     "LayerFrame",
     "LayerStyle",
     "Network",
+    "NetworkAnimation",
+    "NetworkComponent",
     "NetworkEdge",
     "NetworkNode",
+    "NetworkState",
     "Project",
     "RasterData",
     "RasterFramePreview",

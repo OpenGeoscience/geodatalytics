@@ -16,8 +16,11 @@ from uvdat.core.models import (
     LayerFrame,
     LayerStyle,
     Network,
+    NetworkAnimation,
+    NetworkComponent,
     NetworkEdge,
     NetworkNode,
+    NetworkState,
     Project,
     RasterData,
     RasterFramePreview,
@@ -151,6 +154,21 @@ class NetworkEdgeAdmin(admin.ModelAdmin):
 class NetworkNodeAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "network", "dataset"]
     list_select_related = ["network__vector_data__dataset"]
+
+
+@admin.register(NetworkAnimation)
+class NetworkAnimationAdmin(admin.ModelAdmin):
+    list_display = ["id", "name", "network", "project"]
+
+
+@admin.register(NetworkState)
+class NetworkStateAdmin(admin.ModelAdmin):
+    list_display = ["id", "animation", "index"]
+
+
+@admin.register(NetworkComponent)
+class NetworkComponentAdmin(admin.ModelAdmin):
+    list_display = ["id", "state"]
 
 
 @admin.register(TaskResult)
