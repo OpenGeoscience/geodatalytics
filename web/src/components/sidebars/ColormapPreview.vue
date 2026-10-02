@@ -1,17 +1,30 @@
 <script setup lang="ts">
 import type { Colormap } from "@/types";
-import { watch, ref, onMounted } from "vue";
+import { watch, ref, computed, onMounted } from "vue";
 import { useStyleStore } from "@/store";
 
 const styleStore = useStyleStore();
 
 const canvas = ref();
+const tooltipActivator = ref();
+const hoverXProportion = ref();
+
+const emit = defineEmits(["hover"]);
 const props = defineProps<{
   colormap: Colormap;
   discrete: boolean;
+  proportional?: boolean;
+  tooltip?: boolean;
   nColors: number;
   range?: [number | undefined, number | undefined];
 }>();
+
+const hoverMarker = computed(() => {
+  if (!hoverXProportion.value) return undefined;
+  return props.colormap.markers?.find(
+    (marker) => hoverXProportion.value < marker.value,
+  );
+});
 
 function draw() {
   let markers = props.colormap.markers;
@@ -20,7 +33,7 @@ function draw() {
   const rect = [0, 0, canvas.value.width, canvas.value.height];
   ctx.clearRect(...rect);
   if (props.discrete) {
-    if (props.nColors > 0) {
+    if (props.nColors > 0 && !props.proportional) {
       markers = styleStore.colormapMarkersSubsample(
         {
           id: -1,
@@ -38,8 +51,13 @@ function draw() {
       markers.forEach((marker, index) => {
         if (markers) {
           ctx.fillStyle = marker.color;
-          const start = (canvas.value.width / markers.length) * index;
-          const end = (canvas.value.width / markers.length) * (index + 1);
+          let start = (canvas.value.width / markers.length) * index;
+          let end = (canvas.value.width / markers.length) * (index + 1);
+          if (props.proportional) {
+            start =
+              (index > 0 ? markers[index - 1].value : 0) * canvas.value.width;
+            end = marker.value * canvas.value.width;
+          }
           ctx.fillRect(start, 0, end, canvas.value.height);
         }
       });
@@ -63,12 +81,23 @@ watch(
   draw,
   { deep: true },
 );
+watch(hoverMarker, () => {
+  emit("hover", hoverMarker.value);
+});
 </script>
 
 <template>
-  <div class="d-flex" style="column-gap: 5px; width: 100%">
+  <div
+    ref="tooltipActivator"
+    style="width: 100%"
+    @mousemove="(e) => (hoverXProportion = e.offsetX / canvas.clientWidth)"
+    @mouseleave="(e) => (hoverXProportion = undefined)"
+  >
     <span v-if="props.range">{{ props.range[0]?.toPrecision(3) }}</span>
     <canvas ref="canvas" class="colormap-canvas"></canvas>
+    <v-tooltip v-if="tooltip" :activator="tooltipActivator">
+      {{ hoverMarker?.label }}
+    </v-tooltip>
     <span v-if="props.range">{{ props.range[1]?.toPrecision(3) }}</span>
   </div>
 </template>

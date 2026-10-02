@@ -132,6 +132,9 @@ export const useProjectStore = defineStore("project", () => {
       current_chart: analysisStore.currentChart?.id,
       current_basemap: mapStore.currentBasemap?.id,
       current_network: networkStore.currentNetwork?.id,
+      current_network_animation: networkStore.currentAnimation?.id,
+      network_animation_tick: networkStore.currentAnimationTick,
+      network_animation_config: networkStore.animationConfig,
       selected_layers: includeLayers.map((layer) => layer.id),
       selected_layer_current_frames: styleKeysToCurrentFrames,
       selected_layer_order: Object.keys(styleKeysToCurrentFrames),
@@ -211,9 +214,6 @@ export const useProjectStore = defineStore("project", () => {
       analysisStore.currentChart = analysisStore.availableCharts?.find(
         (c) => c.id === bookmark.current_chart,
       );
-      networkStore.currentNetwork = networkStore.availableNetworks.find(
-        (n) => n.id === bookmark.current_network,
-      );
 
       // @ts-ignore "Type instantiation is excessively deep and possibly infinite"
       mapStore.currentBasemap = mapStore.availableBasemaps?.find(
@@ -275,6 +275,18 @@ export const useProjectStore = defineStore("project", () => {
           analysisStore.currentAnalysisTab = "old";
         }
       }
+
+      networkStore.currentNetwork = networkStore.availableNetworks.find(
+        (n) => n.id === bookmark.current_network,
+      );
+      await networkStore.fetchAnimations();
+      networkStore.currentAnimation = networkStore.availableAnimations.find(
+        (anim) => anim.id === bookmark.current_network_animation,
+      );
+      await networkStore.fetchAnimationStates();
+      networkStore.currentAnimationTick = bookmark.network_animation_tick;
+      networkStore.animationConfig = bookmark.network_animation_config;
+
       currentBookmarkLoaded.value = true;
     }
   }
