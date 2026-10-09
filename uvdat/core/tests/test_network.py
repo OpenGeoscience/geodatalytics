@@ -39,4 +39,4 @@ def test_rest_dataset_networks(client, project_factory, network_edge):
 
     data: list[dict] = resp.json()
     assert len(data) == 1
-    assert len(data[0]["nodes"]) == 2
+    assert data[0]["counts"]["nodes"] == 2
