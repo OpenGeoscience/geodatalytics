@@ -254,6 +254,36 @@ function rewind() {
                     class="d-flex mt-2"
                     style="justify-content: space-between; align-items: center"
                   >
+                    Default Node Color
+                    <v-menu
+                      :close-on-content-click="false"
+                      open-on-hover
+                      location="end"
+                    >
+                      <template #activator="{ props: activatorProps }">
+                        <div
+                          v-bind="activatorProps"
+                          class="color-square"
+                          :style="{
+                            backgroundColor:
+                              networkStore.animationConfig.default_color,
+                          }"
+                        ></div>
+                      </template>
+                      <v-card>
+                        <v-color-picker
+                          v-model:model-value="
+                            networkStore.animationConfig.default_color
+                          "
+                          mode="rgb"
+                        />
+                      </v-card>
+                    </v-menu>
+                  </div>
+                  <div
+                    class="d-flex mt-2"
+                    style="justify-content: space-between; align-items: center"
+                  >
                     Highlighted Node Color
                     <v-menu
                       :close-on-content-click="false"

@@ -341,6 +341,7 @@ export interface NetworkAnimationConfig {
   deactivated_color: string;
   deactivated_opacity: number;
   hover_color: string;
+  default_color: string;
 }
 
 export interface NetworkComponent {

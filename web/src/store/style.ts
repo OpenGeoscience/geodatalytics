@@ -586,6 +586,8 @@ export const useStyleStore = defineStore("style", () => {
         networkStore.networkEdgesMapLayerId,
       ].includes(mapLayerId);
 
+    if (sizeOnly) networkStore.updateNetworkLayerStyle();
+
     // Ensure that all colormaps have been fetched from db
     styleSpec.colors.forEach((colorConfig) => {
       if (

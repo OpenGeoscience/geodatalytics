@@ -58,9 +58,6 @@ export const useNetworkStore = defineStore("network", () => {
   const animationNeedsSave = ref<boolean>(false);
   const animationSaveLoading = ref<boolean>(false);
 
-  const FALLBACK_COLOR = "black";
-  const FALLBACK_OPACITY = 1;
-
   const editAllowed = computed(() => {
     if (!projectStore.currentProject || !appStore.authenticated) return false;
     return ["owner", "collaborator"].includes(
@@ -138,7 +135,7 @@ export const useNetworkStore = defineStore("network", () => {
       name: group.name,
       node_ids: group.node_ids,
       color: networkColors.value[group.id],
-      opacity: FALLBACK_OPACITY,
+      opacity: 1,
     }));
     if (animationConfig.value.time_mode === "slider") {
       groups = groups.map((group) => {
@@ -201,6 +198,7 @@ export const useNetworkStore = defineStore("network", () => {
       deactivated_color: "#ff0000",
       deactivated_opacity: 1,
       hover_color: "#feffab",
+      default_color: appStore.theme === "dark" ? "#ffffff" : "#000000",
     };
   }
 
@@ -382,6 +380,13 @@ export const useNetworkStore = defineStore("network", () => {
       return;
     }
     const map = mapStore.getMap();
+    if (
+      !map.getLayer(networkNodesMapLayerId.value) ||
+      !map.getLayer(networkEdgesMapLayerId.value)
+    ) {
+      return;
+    }
+
     const nodeColor: any = ["case"];
     const edgeColor: any = ["case"];
     const nodeOpacity: any = ["case"];
@@ -412,10 +417,10 @@ export const useNetworkStore = defineStore("network", () => {
       edgeOpacity.push(group.opacity);
     });
     // Fallback outputs
-    nodeColor.push(FALLBACK_COLOR);
-    edgeColor.push(FALLBACK_COLOR);
-    nodeOpacity.push(FALLBACK_OPACITY);
-    edgeOpacity.push(FALLBACK_OPACITY);
+    nodeColor.push(animationConfig.value.default_color);
+    edgeColor.push(animationConfig.value.default_color);
+    nodeOpacity.push(1);
+    edgeOpacity.push(1);
 
     map.setPaintProperty(
       networkNodesMapLayerId.value,
@@ -519,6 +524,22 @@ export const useNetworkStore = defineStore("network", () => {
   });
   watch(animationConfig, debouncedUpdateNetworkLayerStyle, { deep: true });
   watch(hoverNodeIds, debouncedUpdateNetworkLayerStyle);
+  watch(
+    () => appStore.theme,
+    () => {
+      if (
+        appStore.theme === "dark" &&
+        animationConfig.value?.default_color === "#000000"
+      ) {
+        animationConfig.value.default_color = "#ffffff";
+      } else if (
+        appStore.theme === "light" &&
+        animationConfig.value?.default_color === "#ffffff"
+      ) {
+        animationConfig.value.default_color = "#000000";
+      }
+    },
+  );
 
   return {
     availableNetworks,
@@ -543,6 +564,7 @@ export const useNetworkStore = defineStore("network", () => {
     hoverNodeIds,
     networkNodesMapLayerId,
     networkEdgesMapLayerId,
+    updateNetworkLayerStyle,
     updateSyncLayers,
     editAllowed,
     currentAnimationEditable,
