@@ -62,6 +62,10 @@ class NetworkStateViewSet(ModelViewSet):
         instance = serializer.save()
         instance.update_components()
 
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        instance.update_components()
+
     def perform_destroy(self, instance):
         # Update other animation state indices
         other_states = instance.animation.states.exclude(id=instance.id).order_by("index")
