@@ -12,7 +12,6 @@ const searchText = ref<string | undefined>();
 const currentMode = ref();
 const ticker = ref();
 const tickerClock = ref(0);
-const animationInterval = ref(1); // seconds
 const tickerInterval = 0.5; // seconds
 
 const numTicks = computed(() => {
@@ -39,7 +38,10 @@ function play() {
   currentMode.value = "play";
   ticker.value = setInterval(() => {
     tickerClock.value += tickerInterval;
-    if (tickerClock.value % animationInterval.value === 0) {
+    if (
+      networkStore.animationConfig?.interval &&
+      tickerClock.value % networkStore.animationConfig.interval === 0
+    ) {
       if (networkStore.currentAnimationTick < numTicks.value) {
         networkStore.currentAnimationTick += 1;
       } else {
@@ -54,7 +56,10 @@ function rewind() {
   currentMode.value = "rewind";
   ticker.value = setInterval(() => {
     tickerClock.value += tickerInterval;
-    if (tickerClock.value % animationInterval.value === 0) {
+    if (
+      networkStore.animationConfig?.interval &&
+      tickerClock.value % networkStore.animationConfig.interval === 0
+    ) {
       if (networkStore.currentAnimationTick > 0) {
         networkStore.currentAnimationTick -= 1;
       } else {
