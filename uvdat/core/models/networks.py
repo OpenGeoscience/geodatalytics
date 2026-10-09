@@ -111,7 +111,7 @@ class NetworkAnimation(models.Model):
     network = models.ForeignKey(Network, on_delete=models.CASCADE, related_name="animations")
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="animations")
     task_result = models.ForeignKey(
-        TaskResult, on_delete=models.CASCADE, related_name="animations", null=True
+        TaskResult, on_delete=models.CASCADE, related_name="animations", null=True, blank=True
     )
     sync_layers = models.ManyToManyField(Layer, blank=True)
 

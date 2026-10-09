@@ -144,6 +144,7 @@ class Migration(migrations.Migration):
             name="task_result",
             field=models.ForeignKey(
                 null=True,
+                blank=True,
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="animations",
                 to="core.taskresult",

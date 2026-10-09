@@ -360,7 +360,7 @@ class NetworkSerializer(serializers.ModelSerializer):
 
 
 class NetworkAnimationSerializer(serializers.ModelSerializer):
-    task_result = TaskResultSerializer()
+    task_result = TaskResultSerializer(read_only=True)
 
     class Meta:
         model = NetworkAnimation
