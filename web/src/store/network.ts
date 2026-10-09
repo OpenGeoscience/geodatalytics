@@ -352,6 +352,7 @@ export const useNetworkStore = defineStore("network", () => {
     if (!currentAnimation.value) {
       return;
     }
+    loadingStates.value = true
     await createNetworkAnimationState(
       currentAnimation.value.id,
       availableAnimationStates.value.length,
@@ -363,6 +364,7 @@ export const useNetworkStore = defineStore("network", () => {
     if (!stateToDelete.value || !editAllowed.value || !currentAnimation.value) {
       return;
     }
+    loadingStates.value = true;
     await deleteNetworkAnimationState(stateToDelete.value.id);
     await fetchAnimationStates();
     stateToDelete.value = undefined;

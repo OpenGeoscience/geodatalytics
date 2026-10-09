@@ -28,22 +28,7 @@ class Network(models.Model):
         return self.vector_data.dataset
 
     def get_graph(self):
-        network = {
-            "nodes": NetworkNode.objects.filter(network=self),
-            "edges": NetworkEdge.objects.filter(network=self),
-        }
-        if len(network.get("nodes")) == 0 and len(network.get("edges")) == 0:
-            return None
-
-        # Construct adj list
-        edge_list: dict[int, list[int]] = {}
-        for e in network.get("edges"):
-            if e.from_node.id not in edge_list:
-                edge_list[e.from_node.id] = []
-            edge_list[e.from_node.id].append(e.to_node.id)
-        for edges in edge_list.values():
-            edges.sort()
-        return nx.from_dict_of_lists(edge_list)
+        return nx.Graph([(edge.from_node.id, edge.to_node.id) for edge in self.edges.all()])
 
 
 class NetworkNode(models.Model):
@@ -147,14 +132,19 @@ class NetworkState(models.Model):
             key=len,
             reverse=True,
         )
-        network_graph = self.animation.network.get_graph().copy()
         deactivated_ids = list(self.deactivated_nodes.values_list("id", flat=True))
-        network_graph.remove_nodes_from(deactivated_ids)
-        new_component_spec = sorted(
-            [list(c) for c in nx.connected_components(network_graph) if len(c) > 1],
-            key=len,
-            reverse=True,
-        )
+        if len(deactivated_ids) > 0:
+            network_graph = self.animation.network.get_graph()
+            network_graph.remove_nodes_from(deactivated_ids)
+            components = nx.connected_components(network_graph)
+            new_component_spec = sorted(
+                [list(c) for c in components if len(c) > 1],
+                key=len,
+                reverse=True,
+            )
+        else:
+            # no deactivated nodes means all nodes are in one component
+            new_component_spec = [[n.id for n in self.animation.network.nodes.all()]]
         # If update necessary, delete old components and create new ones
         if new_component_spec != old_component_spec:
             self.components.all().delete()
