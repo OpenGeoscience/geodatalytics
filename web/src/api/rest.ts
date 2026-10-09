@@ -234,6 +234,12 @@ export async function deleteNetworkAnimationState(
   return (await apiClient.delete(`network-states/${stateId}/`)).data;
 }
 
+export async function updateNetworkAnimationState(
+  state: NetworkState,
+): Promise<NetworkState> {
+  return (await apiClient.patch(`network-states/${state.id}/`, state)).data;
+}
+
 export async function getVectorSummary(
   vectorId: number,
 ): Promise<VectorSummary> {

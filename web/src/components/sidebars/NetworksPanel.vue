@@ -358,37 +358,6 @@ function rewind() {
           />
           <div v-else>
             <div
-              v-if="
-                networkStore.editAllowed &&
-                networkStore.currentAnimationEditable
-              "
-              class="d-flex"
-              style="justify-content: space-between"
-            >
-              <v-btn
-                color="primary"
-                variant="text"
-                density="compact"
-                class="px-1"
-                prepend-icon="mdi-delete"
-                text="Delete Current State"
-                :disabled="!networkStore.currentAnimationState"
-                @click="
-                  networkStore.stateToDelete =
-                    networkStore.currentAnimationState
-                "
-              ></v-btn>
-              <v-btn
-                color="primary"
-                variant="text"
-                density="compact"
-                class="px-1"
-                prepend-icon="mdi-plus"
-                text="Add State"
-                @click="networkStore.createAnimationState"
-              ></v-btn>
-            </div>
-            <div
               v-if="!networkStore.availableAnimationStates?.length"
               class="animation-row"
             >
@@ -439,6 +408,56 @@ function rewind() {
                   :disabled="networkStore.currentAnimationTick < 1"
                   @click="rewind"
                 />
+              </div>
+            </div>
+            <div
+              v-if="
+                networkStore.editAllowed &&
+                networkStore.currentAnimationEditable
+              "
+            >
+              <div class="d-flex" style="justify-content: space-between">
+                <v-btn
+                  color="primary"
+                  variant="text"
+                  density="compact"
+                  class="px-1"
+                  prepend-icon="mdi-delete"
+                  text="Delete State"
+                  :disabled="!networkStore.currentAnimationState"
+                  @click="
+                    networkStore.stateToDelete =
+                      networkStore.currentAnimationState
+                  "
+                ></v-btn>
+                <v-btn
+                  color="primary"
+                  variant="text"
+                  density="compact"
+                  class="px-1"
+                  prepend-icon="mdi-plus"
+                  text="Add State"
+                  @click="networkStore.createAnimationState"
+                ></v-btn>
+              </div>
+              <div style="text-align: center">
+                <v-progress-linear
+                  v-if="networkStore.animationSaveLoading"
+                  indeterminate
+                  class="mt-2"
+                />
+                <v-btn
+                  v-else-if="networkStore.animationNeedsSave"
+                  color="primary"
+                  block
+                  @click="networkStore.saveAnimationStates"
+                >
+                  Save & compute components
+                </v-btn>
+                <span v-else>
+                  Click any node on the map to find a button for toggling that
+                  node's state.
+                </span>
               </div>
             </div>
           </div>

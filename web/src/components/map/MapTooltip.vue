@@ -140,17 +140,10 @@ watch(clickedFeature, () => {
 
 async function updateClickedFeatureIsDeactivatedNode() {
   if (clickedFeature.value) {
-    const feature = clickedFeature.value.feature;
-    const sourceId = feature.source;
     const nodeId = clickedFeature.value.feature.properties.node_id;
     if (nodeId) {
-      const { dataset } = layerStore.getDBObjectsForSourceID(sourceId);
-      if (dataset) {
-        const active = await networkStore.isNodeActive(nodeId, dataset);
-        clickedFeatureIsDeactivatedNode.value = !active;
-      } else {
-        clickedFeatureIsDeactivatedNode.value = false;
-      }
+      clickedFeatureIsDeactivatedNode.value =
+        networkStore.deactivatedNodes.includes(nodeId);
     } else {
       clickedFeatureIsDeactivatedNode.value = false;
     }
@@ -163,12 +156,9 @@ function toggleNodeHandler() {
   if (clickedFeature.value === undefined) {
     throw new Error("Clicked node is undefined!");
   }
-  const feature = clickedFeature.value.feature;
-  const sourceId = feature.source;
   const nodeId = clickedFeature.value.feature.properties.node_id;
-  const { dataset, layer } = layerStore.getDBObjectsForSourceID(sourceId);
-  if (nodeId && dataset && layer) {
-    networkStore.toggleNodeActive(nodeId, dataset);
+  if (nodeId) {
+    networkStore.toggleNodeActive(nodeId);
   }
   updateClickedFeatureIsDeactivatedNode();
 }
@@ -184,7 +174,11 @@ function toggleNodeHandler() {
     <!-- Render for Network Nodes -->
     <!-- TODO: Eventually allow deactivating Network Edges -->
     <v-btn
-      v-if="clickedFeature.feature.properties.node_id"
+      v-if="
+        clickedFeature.feature.properties.node_id &&
+        networkStore.editAllowed &&
+        networkStore.currentAnimationEditable
+      "
       block
       variant="outlined"
       :text="
