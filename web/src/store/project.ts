@@ -285,7 +285,12 @@ export const useProjectStore = defineStore("project", () => {
       );
       await networkStore.fetchAnimationStates();
       networkStore.currentAnimationTick = bookmark.network_animation_tick;
-      networkStore.animationConfig = bookmark.network_animation_config;
+      networkStore.animationConfig = networkStore.animationConfig
+        ? {
+            ...networkStore.animationConfig,
+            ...bookmark.network_animation_config,
+          }
+        : bookmark.network_animation_config;
 
       currentBookmarkLoaded.value = true;
     }
