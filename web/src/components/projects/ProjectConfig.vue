@@ -146,14 +146,6 @@ function selectProject(project: Project) {
   }
 }
 
-async function loadSelectedProject() {
-  await projectStore.loadProjects();
-  projectStore.currentProject = projectStore.availableProjects.find(
-    (p) => p.id === selectedProject.value?.id,
-  );
-  projectStore.projectConfigMode = undefined;
-}
-
 function addDatasetToProject(dataset: Dataset) {
   savingId.value = dataset.id;
   const projDatasetIds = projDatasets.value?.map((d) => d.id);
@@ -446,21 +438,6 @@ watch(selectedProject, resetProjectEdit);
               <v-icon icon="mdi-arrow-right" />
             </v-btn>
           </div>
-          <v-btn
-            v-else
-            variant="tonal"
-            width="100%"
-            @click="projectStore.projectConfigMode = 'new'"
-            >+ New</v-btn
-          >
-          <v-btn
-            v-if="selectedProject"
-            class="options"
-            color="primary"
-            @click="loadSelectedProject"
-          >
-            Load Project
-          </v-btn>
         </div>
         <div v-if="selectedProject" class="tab-content">
           <v-alert v-if="selectedProject.allow_unauthenticated" class="mr-16">
