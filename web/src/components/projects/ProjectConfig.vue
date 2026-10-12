@@ -444,15 +444,23 @@ watch(selectedProject, resetProjectEdit);
           </div>
         </div>
         <div v-if="selectedProject" class="tab-content">
-          <v-alert v-if="selectedProject.allow_unauthenticated" class="mr-16">
-            <v-icon icon="mdi-alert-box-outline" color="error"></v-icon>
-            This project allows unauthenticated view access.
-          </v-alert>
           <v-tabs v-model="currentTab" color="primary">
             <v-tab value="datasets">Dataset Selection</v-tab>
             <v-tab value="users">Access Control</v-tab>
           </v-tabs>
+          <v-alert
+            v-if="selectedProject.allow_unauthenticated"
+            class="mr-16 mb-2"
+          >
+            <v-icon icon="mdi-alert-box-outline" color="error"></v-icon>
+            This project allows unauthenticated view access.
+          </v-alert>
           <div v-if="currentTab === 'datasets'">
+            <v-alert class="mr-16">
+              <v-icon icon="mdi-information-outline" color="primary"></v-icon>
+              Add datasets with the + buttons in the "All Datasets" list. Remove
+              datasets with the X buttons in the "Project Datasets" list.
+            </v-alert>
             <v-progress-linear
               v-if="
                 projectStore.loadingDatasets ||
