@@ -59,7 +59,17 @@ watch(() => appStore.currentUser, onReady);
           </v-btn>
           <v-card-title> Error: </v-card-title>
           <v-card-text>
-            {{ appStore.currentError }}
+            <span v-if="typeof appStore.currentError === 'string'">
+              {{ appStore.currentError }}
+            </span>
+            <div
+              v-for="[key, value] in Object.entries(appStore.currentError)"
+              v-else-if="typeof appStore.currentError === 'object'"
+              :key="key"
+            >
+              <span class="capitalize">{{ key }}:</span>
+              {{ value }}
+            </div>
           </v-card-text>
         </v-card>
       </v-overlay>
