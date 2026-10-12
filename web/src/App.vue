@@ -139,7 +139,7 @@ scrollbar changes disables default styling and rounding so corners appear square
   padding: 8px;
   border-radius: 4px;
   width: 200px;
-  background-color: rgb(var(--v-theme-on-surface-variant));
-  color: rgb(var(--v-theme-surface-variant));
+  background-color: rgb(var(--v-theme-surface-variant));
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 </style>

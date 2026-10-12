@@ -66,7 +66,8 @@ const projectStore = useProjectStore();
         <v-btn
           v-if="tutorialStore.showTutorialStep < tutorialStore.numTutorialSteps"
           variant="text"
-          icon="mdi-arrow-right"
+          text="Next"
+          color="primary"
           size="sm"
           @click="tutorialStore.tutorialProceed"
         ></v-btn>
