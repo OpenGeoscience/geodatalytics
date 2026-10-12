@@ -364,6 +364,13 @@ export const useProjectStore = defineStore("project", () => {
   async function loadProjects() {
     clearState();
     availableProjects.value = await getProjects();
+    if (!availableProjects.value.length) {
+      tutorialStore.showOneTimeInstruction(
+        appStore.authenticated
+          ? "no_projects_authenticated"
+          : "no_projects_unauthenticated",
+      );
+    }
     loadingProjects.value = false;
   }
 

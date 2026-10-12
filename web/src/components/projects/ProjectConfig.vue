@@ -267,20 +267,6 @@ watch(selectedProject, resetProjectEdit);
         <v-icon icon="mdi-cog" size="large" color="primary" />
       </v-btn>
     </div>
-    <v-card
-      v-if="
-        !projectStore.loadingProjects &&
-        projectStore.availableProjects.length === 0
-      "
-      class="tutorial-popup"
-    >
-      <v-card-text v-if="appStore.authenticated">
-        To get started, create a project and add datasets to it.
-      </v-card-text>
-      <v-card-text v-else>
-        There are currently no projects that allow unauthenticated access.
-      </v-card-text>
-    </v-card>
     <div v-if="projectStore.currentProject" class="project-row text-body-small">
       <v-btn
         flat
