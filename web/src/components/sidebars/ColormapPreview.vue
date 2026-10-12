@@ -58,7 +58,7 @@ function draw() {
               (index > 0 ? markers[index - 1].value : 0) * canvas.value.width;
             end = marker.value * canvas.value.width;
           }
-          ctx.fillRect(start, 0, end, canvas.value.height);
+          ctx.fillRect(start, 0, end - start, canvas.value.height);
         }
       });
   } else {

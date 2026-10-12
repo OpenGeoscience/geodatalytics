@@ -567,8 +567,7 @@ export const useStyleStore = defineStore("style", () => {
       ];
     }
     const mapLayer = map.getLayer(mapLayerId) as
-      | MapLibreLayerWithMetadata
-      | undefined;
+      MapLibreLayerWithMetadata | undefined;
     if (mapLayer === undefined) {
       return;
     }

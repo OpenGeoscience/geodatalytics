@@ -96,17 +96,29 @@ export const useNetworkStore = defineStore("network", () => {
   });
   const colorByValues = computed(() => {
     if (!animationConfig.value) return;
-    return animationConfig.value.time_mode === "slider"
-      ? currentAnimationStateComponents.value?.map((component, index) => ({
-          id: component.id,
-          name: `Component ${index}`,
-          node_ids: component.nodes,
-        }))
-      : availableAnimationStates.value.map((state) => ({
-          id: state.id,
-          name: `State ${state.index}`,
-          node_ids: state.deactivated_nodes,
-        }));
+    if (animationConfig.value.time_mode === "slider") {
+      return currentAnimationStateComponents.value?.map((component, index) => ({
+        id: component.id,
+        name: `Component ${index}`,
+        node_ids: component.nodes,
+      }));
+    } else {
+      let seen = new Set();
+      return availableAnimationStates.value
+        .toSorted((a, b) => a.index - b.index)
+        .map((state) => {
+          const deactivated = state.deactivated_nodes.filter(
+            (nId) => !seen.has(nId),
+          );
+          seen = seen.union(new Set(deactivated));
+          return {
+            id: state.id,
+            name: `State ${state.index}`,
+            node_ids: deactivated,
+          };
+        })
+        .filter((state) => state.node_ids.length > 0);
+    }
   });
   const networkColors = computed(() => {
     if (
@@ -352,7 +364,7 @@ export const useNetworkStore = defineStore("network", () => {
     if (!currentAnimation.value) {
       return;
     }
-    loadingStates.value = true
+    loadingStates.value = true;
     await createNetworkAnimationState(
       currentAnimation.value.id,
       availableAnimationStates.value.length,
