@@ -42,6 +42,7 @@ export const useProjectStore = defineStore("project", () => {
   const availableProjects = ref<Project[]>([]);
   const currentProject = ref<Project>();
   const projectConfigMode = ref<"new" | "existing">();
+  const showUserSelectDialog = ref<boolean>(false);
   const loadingDatasets = ref<boolean>(false);
   const allDatasets = ref<Dataset[]>();
   const availableDatasets = ref<Dataset[]>();
@@ -371,6 +372,7 @@ export const useProjectStore = defineStore("project", () => {
     availableProjects,
     currentProject,
     projectConfigMode,
+    showUserSelectDialog,
     loadingDatasets,
     allDatasets,
     availableDatasets,

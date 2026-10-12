@@ -216,7 +216,11 @@ function datasetUploaded() {
 onMounted(() => {
   window.addEventListener("keydown", (e) => {
     if (e.key == "Escape" && projectStore.projectConfigMode) {
-      projectStore.projectConfigMode = undefined;
+      if (projectStore.showUserSelectDialog) {
+        projectStore.showUserSelectDialog = false;
+      } else {
+        projectStore.projectConfigMode = undefined;
+      }
     }
   });
 });
