@@ -370,7 +370,11 @@ export const useNetworkStore = defineStore("network", () => {
     }
     loadingStates.value = true;
     const index = availableAnimationStates.value.length;
-    await createNetworkAnimationState(currentAnimation.value.id, index);
+    await createNetworkAnimationState(
+      currentAnimation.value.id,
+      index,
+      deactivatedNodes.value,
+    );
     await fetchAnimationStates();
     currentAnimationTick.value = index;
   }

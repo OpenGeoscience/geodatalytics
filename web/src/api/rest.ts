@@ -224,8 +224,15 @@ export async function getNetworkAnimationStates(
 export async function createNetworkAnimationState(
   animation: number,
   index: number,
+  deactivated_nodes: number[],
 ): Promise<NetworkState> {
-  return (await apiClient.post(`network-states/`, { animation, index })).data;
+  return (
+    await apiClient.post(`network-states/`, {
+      animation,
+      index,
+      deactivated_nodes,
+    })
+  ).data;
 }
 
 export async function deleteNetworkAnimationState(
