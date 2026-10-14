@@ -258,6 +258,10 @@ export const useNetworkStore = defineStore("network", () => {
 
   function currentAnimationUpdated() {
     currentAnimationTick.value = 0;
+    if (animationConfig.value) {
+      // Automatically switch to slider time mode
+      animationConfig.value.time_mode = "slider";
+    }
     if (!currentNetwork.value || !currentAnimation.value) {
       [networkNodesMapLayerId.value, networkEdgesMapLayerId.value].forEach(
         (mapLayerId) => {
@@ -365,11 +369,10 @@ export const useNetworkStore = defineStore("network", () => {
       return;
     }
     loadingStates.value = true;
-    await createNetworkAnimationState(
-      currentAnimation.value.id,
-      availableAnimationStates.value.length,
-    );
+    const index = availableAnimationStates.value.length;
+    await createNetworkAnimationState(currentAnimation.value.id, index);
     await fetchAnimationStates();
+    currentAnimationTick.value = index;
   }
 
   async function deleteAnimationState() {
@@ -379,6 +382,9 @@ export const useNetworkStore = defineStore("network", () => {
     loadingStates.value = true;
     await deleteNetworkAnimationState(stateToDelete.value.id);
     await fetchAnimationStates();
+    if (currentAnimationTick.value == stateToDelete.value.index) {
+      currentAnimationTick.value = availableAnimationStates.value.length - 1;
+    }
     stateToDelete.value = undefined;
   }
 
