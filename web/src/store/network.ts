@@ -401,40 +401,48 @@ export const useNetworkStore = defineStore("network", () => {
       return;
     }
 
-    const nodeColor: any = ["case"];
-    const edgeColor: any = ["case"];
-    const nodeOpacity: any = ["case"];
-    const edgeOpacity: any = ["case"];
+    let nodeColor: any, edgeColor: any, nodeOpacity: any, edgeOpacity: any;
+    if (!nodeGroupsWithHighlights.value.length) {
+      nodeColor = animationConfig.value.default_color;
+      edgeColor = animationConfig.value.default_color;
+      nodeOpacity = 1;
+      edgeOpacity = 1;
+    } else {
+      nodeColor = ["case"];
+      edgeColor = ["case"];
+      nodeOpacity = ["case"];
+      edgeOpacity = ["case"];
 
-    nodeGroupsWithHighlights.value.forEach((group) => {
-      // Group conditions
-      const nodeCondition = [
-        "in",
-        ["get", "node_id"],
-        ["literal", group.node_ids],
-      ];
-      const edgeCondition = [
-        // If group represents deactivated or hover nodes, include edge if either to or from node is included
-        // Otherwise only include edge if both to and from are included
-        ["Deactivated", "Highlighted"].includes(group.name) ? "any" : "all",
-        ["in", ["get", "from_node_id"], ["literal", group.node_ids]],
-        ["in", ["get", "to_node_id"], ["literal", group.node_ids]],
-      ];
-      nodeColor.push(nodeCondition);
-      nodeOpacity.push(nodeCondition);
-      edgeColor.push(edgeCondition);
-      edgeOpacity.push(edgeCondition);
-      // Group outputs
-      nodeColor.push(group.color);
-      nodeOpacity.push(group.opacity);
-      edgeColor.push(group.color);
-      edgeOpacity.push(group.opacity);
-    });
-    // Fallback outputs
-    nodeColor.push(animationConfig.value.default_color);
-    edgeColor.push(animationConfig.value.default_color);
-    nodeOpacity.push(1);
-    edgeOpacity.push(1);
+      nodeGroupsWithHighlights.value.forEach((group) => {
+        // Group conditions
+        const nodeCondition = [
+          "in",
+          ["get", "node_id"],
+          ["literal", group.node_ids],
+        ];
+        const edgeCondition = [
+          // If group represents deactivated or hover nodes, include edge if either to or from node is included
+          // Otherwise only include edge if both to and from are included
+          ["Deactivated", "Highlighted"].includes(group.name) ? "any" : "all",
+          ["in", ["get", "from_node_id"], ["literal", group.node_ids]],
+          ["in", ["get", "to_node_id"], ["literal", group.node_ids]],
+        ];
+        nodeColor.push(nodeCondition);
+        nodeOpacity.push(nodeCondition);
+        edgeColor.push(edgeCondition);
+        edgeOpacity.push(edgeCondition);
+        // Group outputs
+        nodeColor.push(group.color);
+        nodeOpacity.push(group.opacity);
+        edgeColor.push(group.color);
+        edgeOpacity.push(group.opacity);
+      });
+      // Fallback outputs
+      nodeColor.push(animationConfig.value.default_color);
+      edgeColor.push(animationConfig.value.default_color);
+      nodeOpacity.push(1);
+      edgeOpacity.push(1);
+    }
 
     map.setPaintProperty(
       networkNodesMapLayerId.value,
