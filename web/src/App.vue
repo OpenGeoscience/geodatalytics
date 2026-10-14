@@ -8,14 +8,8 @@ import ControlsBar from "./components/ControlsBar.vue";
 import SplashPage from "./components/SplashPage.vue";
 import TutorialPopup from "./components/TutorialPopup.vue";
 
-import {
-  useAppStore,
-  usePanelStore,
-  useProjectStore,
-  useConversionStore,
-} from "@/store";
+import { useAppStore, useProjectStore, useConversionStore } from "@/store";
 const appStore = useAppStore();
-const panelStore = usePanelStore();
 const projectStore = useProjectStore();
 const conversionStore = useConversionStore();
 
@@ -64,17 +58,9 @@ watch(() => appStore.currentUser, onReady);
         </v-card>
       </v-overlay>
       <div>
-        <div
-          :class="
-            panelStore.draggingPanel ? 'main-area no-select' : 'main-area'
-          "
-          @mousemove="panelStore.dragPanel"
-          @mouseup="panelStore.stopDrag"
-        >
-          <ToggleCompareMap />
-          <SideBars />
-          <ControlsBar />
-        </div>
+        <ToggleCompareMap />
+        <SideBars />
+        <ControlsBar />
       </div>
     </div>
   </v-app>

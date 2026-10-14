@@ -777,9 +777,12 @@ watch(() => layerStore.selectedLayers, updateObjectVisibility, { deep: true });
         v-else-if="analysisStore.loadingAnalysisTypes"
         indeterminate
       ></v-progress-linear>
-      <v-card-text v-else class="help-text"
-        >No available Analytics.</v-card-text
-      >
+      <v-card-text v-else-if="!projectStore.currentProject" class="help-text">
+        Select a project to view its Analytics.
+      </v-card-text>
+      <v-card-text v-else class="help-text">
+        No available Analytics.
+      </v-card-text>
     </v-card>
   </div>
 </template>
