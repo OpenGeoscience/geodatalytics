@@ -189,7 +189,7 @@ export const useNetworkStore = defineStore("network", () => {
     if (!currentNetwork.value || !nodeGroups.value) return [];
     const totalNodes = currentNetwork.value.counts.nodes;
     let visited = 0;
-    return nodeGroups.value
+    const markers: { color: string; value: number }[] = nodeGroups.value
       .filter((group) => group.name !== "Highlighted")
       .map((group) => {
         visited += group.node_ids.length;
@@ -200,6 +200,13 @@ export const useNetworkStore = defineStore("network", () => {
           label: `${group.name} (${group.node_ids.length} nodes)`,
         };
       });
+    if (animationConfig.value?.default_color) {
+      markers.push({
+        color: animationConfig.value?.default_color,
+        value: 1,
+      });
+    }
+    return markers;
   });
 
   function resetAnimationConfig() {
