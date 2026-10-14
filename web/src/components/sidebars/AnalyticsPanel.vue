@@ -85,6 +85,20 @@ const runAllowed = computed(() => {
     projectStore.permissions[projectStore.currentProject.id],
   );
 });
+const notRunnableReason = computed(() => {
+  for (const key in analysisStore.currentAnalysisType?.input_types) {
+    if (
+      !["string", "number"].includes(
+        analysisStore.currentAnalysisType.input_types[key],
+      ) &&
+      !analysisStore.currentAnalysisType.input_options[key].length &&
+      !analysisStore.currentAnalysisType.optional_inputs?.includes(key)
+    ) {
+      return `Required input "${key}" does not have any selection options available in this project, so this task is not available to run.`;
+    }
+  }
+  return undefined;
+});
 
 function getInputSelectionRules(key: string) {
   return [
@@ -391,7 +405,10 @@ watch(() => layerStore.selectedLayers, updateObjectVisibility, { deep: true });
 
         <v-window v-model="analysisStore.currentAnalysisTab">
           <v-window-item v-if="runAllowed" value="new">
-            <v-form ref="inputForm" class="pa-3" @submit.prevent>
+            <div v-if="notRunnableReason" class="pa-2">
+              {{ notRunnableReason }}
+            </div>
+            <v-form v-else vref="inputForm" class="pa-3" @submit.prevent>
               <v-card-subtitle class="px-1">Select inputs</v-card-subtitle>
               <div
                 v-for="[key, value] in Object.entries(
