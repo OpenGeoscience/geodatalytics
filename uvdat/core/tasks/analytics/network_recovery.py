@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 import random
 
 from celery import shared_task
@@ -144,13 +145,9 @@ def network_recovery(result_id):
         nodes_sorted, _edge_list = sort_graph_centrality(network_graph, mode)
         node_recoveries.sort(key=nodes_sorted.index)
 
-    n_existing_anims = NetworkAnimation.objects.filter(
-        name__contains="Flood Recovery",
-        network=network,
-        project=result.project,
-    ).count()
+    now = datetime.now.strftime("%Y-%m-%d %I:%M %p UTC")
     recovery_animation = NetworkAnimation.objects.create(
-        name=f"Flood Recovery {n_existing_anims + 1}",
+        name=f"Flood Recovery {now}",
         network=network,
         project=result.project,
         task_result=result,
