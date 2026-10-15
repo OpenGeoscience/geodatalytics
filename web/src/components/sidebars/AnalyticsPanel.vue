@@ -408,7 +408,7 @@ watch(() => layerStore.selectedLayers, updateObjectVisibility, { deep: true });
             <div v-if="notRunnableReason" class="pa-2">
               {{ notRunnableReason }}
             </div>
-            <v-form v-else vref="inputForm" class="pa-3" @submit.prevent>
+            <v-form v-else ref="inputForm" class="pa-3" @submit.prevent>
               <v-card-subtitle class="px-1">Select inputs</v-card-subtitle>
               <div
                 v-for="[key, value] in Object.entries(
