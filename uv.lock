@@ -1444,7 +1444,7 @@ wheels = [
 
 [[package]]
 name = "django-large-image"
-version = "0.10.4"
+version = "0.10.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -1453,9 +1453,9 @@ dependencies = [
     { name = "filelock" },
     { name = "large-image" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0f/26/600f731500233fe41115fa5c2c2076279737f3a84d0b21a5987d076f76cd/django_large_image-0.10.4.tar.gz", hash = "sha256:0cb04b0ae14a0a38660a5b4c06f5b2d4b35e54f1b61fc7c697265869c49dee8a", size = 942882, upload-time = "2026-09-04T17:22:54.427Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/44/c44f24e3234d144f26a8f37a951898582cd42d16c22545d0d53e8b061c0d/django_large_image-0.10.5.tar.gz", hash = "sha256:cf7fcdc427833367f3b51443a2ee03737dce2dae7bb16ccea1eb168265f9c1ab", size = 943762, upload-time = "2026-09-21T18:13:35.544Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/e6/16f5405223c6823d54975aadd010ed3abc6a300e9a1f3ae9fe5d557fefcf/django_large_image-0.10.4-py3-none-any.whl", hash = "sha256:339647a26c2c3e79b19a12e9487f89c628c8ea62d74dde0b1f9dcb152b71cf2c", size = 958057, upload-time = "2026-09-04T17:22:51.909Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/07/82688fda58e00080f4401593cd25e36ea4540e54e3b255eda9392e424547/django_large_image-0.10.5-py3-none-any.whl", hash = "sha256:0ed135ee42015012d3d5740ad592dc80a1f3efc7ac7559b7936c55c55b155dbe", size = 958871, upload-time = "2026-09-21T18:13:33.065Z" },
 ]
 
 [[package]]
@@ -2160,7 +2160,7 @@ requires-dist = [
     { name = "django-extensions", specifier = "==4.1" },
     { name = "django-filter", specifier = "==26.1" },
     { name = "django-guardian", specifier = "==3.5.0" },
-    { name = "django-large-image", specifier = "==0.10.4" },
+    { name = "django-large-image", specifier = "==0.10.5" },
     { name = "django-minio-storage", marker = "extra == 'development'", specifier = "==0.5.9" },
     { name = "django-oauth-toolkit", specifier = "==3.4.1" },
     { name = "django-resonant-settings", extras = ["allauth", "celery"], specifier = "==0.52.1" },
