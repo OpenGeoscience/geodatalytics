@@ -6,11 +6,11 @@ import {
   getChart,
   getTaskResult,
   getNetwork,
+  getNetworkAnimation,
   getRegion,
   subscribeToTaskResult,
 } from "@/api/rest";
 import VueMarkdown from "vue-markdown-render";
-import NodeAnimation from "./NodeAnimation.vue";
 import SliderNumericInput from "../SliderNumericInput.vue";
 
 import {
@@ -84,6 +84,20 @@ const runAllowed = computed(() => {
   return ["owner", "collaborator"].includes(
     projectStore.permissions[projectStore.currentProject.id],
   );
+});
+const notRunnableReason = computed(() => {
+  for (const key in analysisStore.currentAnalysisType?.input_types) {
+    if (
+      !["string", "number"].includes(
+        analysisStore.currentAnalysisType.input_types[key],
+      ) &&
+      !analysisStore.currentAnalysisType.input_options[key].length &&
+      !analysisStore.currentAnalysisType.optional_inputs?.includes(key)
+    ) {
+      return `Required input "${key}" does not have any selection options available in this project, so this task is not available to run.`;
+    }
+  }
+  return undefined;
 });
 
 function getInputSelectionRules(key: string) {
@@ -166,6 +180,9 @@ async function getFullObject(type: string, value: any) {
   if (type == "network") {
     value = await getNetwork(value.id);
   }
+  if (type == "network_animation") {
+    value = await getNetworkAnimation(value.id);
+  }
   if (type == "taskresult") {
     value = await getTaskResult(value.id);
   }
@@ -245,6 +262,43 @@ async function fillInputsAndOutputs() {
   }
 }
 
+function updateObjectVisibility() {
+  if (fullInputs.value) {
+    fullInputs.value = Object.fromEntries(
+      Object.entries(fullInputs.value).map(([key, input]) => {
+        return [
+          key,
+          {
+            ...input,
+            visible:
+              input.showable &&
+              panelStore.isVisible({
+                [input.type]: input,
+              }),
+          },
+        ];
+      }),
+    );
+  }
+  if (fullOutputs.value) {
+    fullOutputs.value = Object.fromEntries(
+      Object.entries(fullOutputs.value).map(([key, output]) => {
+        return [
+          key,
+          {
+            ...output,
+            visible:
+              output.showable &&
+              panelStore.isVisible({
+                [output.type]: output,
+              }),
+          },
+        ];
+      }),
+    );
+  }
+}
+
 async function subscribe() {
   if (appStore.authenticated && analysisStore.currentResult) {
     await subscribeToTaskResult(analysisStore.currentResult.id);
@@ -269,6 +323,8 @@ watch(
   () => {
     if (analysisStore.currentAnalysisTab === "old") {
       analysisStore.fetchResults();
+    } else if (analysisStore.currentAnalysisTab === "new") {
+      analysisStore.fetchInputOptions();
     }
   },
 );
@@ -276,13 +332,14 @@ watch(
 watch(
   [
     () => analysisStore.currentResult,
-    () => layerStore.selectedLayers,
     () => analysisStore.currentChart,
     () => mapStore.regionShownId,
   ],
   fillInputsAndOutputs,
   { deep: true },
 );
+
+watch(() => layerStore.selectedLayers, updateObjectVisibility, { deep: true });
 </script>
 
 <template>
@@ -312,18 +369,22 @@ watch(
           <span>{{ analysisStore.currentAnalysisType.name }}</span>
           <v-tooltip text="Close" location="bottom">
             <template #activator="{ props }">
-              <v-btn
+              <v-icon
                 v-bind="props"
                 icon="mdi-close"
                 variant="plain"
+                size="small"
                 @click="analysisStore.currentAnalysisType = undefined"
               />
             </template>
           </v-tooltip>
         </v-card-title>
-        <v-expansion-panels v-if="analysisStore.currentAnalysisType.details">
+        <v-expansion-panels
+          v-if="analysisStore.currentAnalysisType.details"
+          flat
+        >
           <v-expansion-panel bg-color="transparent">
-            <v-expansion-panel-title class="py-3" style="min-height: 0"
+            <v-expansion-panel-title class="py-3 px-4" style="min-height: 0"
               >Details</v-expansion-panel-title
             >
             <v-expansion-panel-text class="px-3">
@@ -344,7 +405,10 @@ watch(
 
         <v-window v-model="analysisStore.currentAnalysisTab">
           <v-window-item v-if="runAllowed" value="new">
-            <v-form ref="inputForm" class="pa-3" @submit.prevent>
+            <div v-if="notRunnableReason" class="pa-2">
+              {{ notRunnableReason }}
+            </div>
+            <v-form v-else ref="inputForm" class="pa-3" @submit.prevent>
               <v-card-subtitle class="px-1">Select inputs</v-card-subtitle>
               <div
                 v-for="[key, value] in Object.entries(
@@ -622,28 +686,7 @@ watch(
                           v-for="[key, value] in Object.entries(fullOutputs)"
                           :key="key"
                         >
-                          <template v-if="value?.type == 'network_animation'">
-                            <td colspan="2">
-                              <div v-if="value?.length === 0">
-                                No nodes are affected in this scenario.
-                              </div>
-                              <node-animation
-                                v-else-if="networkInput?.visible"
-                                :node-failures="
-                                  key === 'failures' ? value : undefined
-                                "
-                                :node-recoveries="
-                                  key === 'recoveries' ? value : undefined
-                                "
-                                :network="networkInput"
-                                :additional-animation-layers="
-                                  additionalAnimationLayers
-                                "
-                              />
-                              <div v-else>Show network to view animation.</div>
-                            </td>
-                          </template>
-                          <template v-else-if="value?.type == 'markdown'">
+                          <template v-if="value?.type == 'markdown'">
                             <td colspan="2">
                               <vue-markdown :source="value?.name" />
                             </td>
@@ -753,6 +796,7 @@ watch(
   min-width: 100px;
   overflow-x: hidden;
   text-overflow: ellipsis;
+  font-size: 1rem;
 }
 .overflow-visible > .v-table__wrapper {
   overflow: visible !important;

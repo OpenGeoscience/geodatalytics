@@ -1,50 +1,14 @@
 from __future__ import annotations
 
 from django.contrib.gis.db import models as geo_models
-from django.db import connection, models
+from django.db import models
+import networkx as nx
 
 from .data import VectorData, VectorFeature
+from .layer import Layer
+from .project import Project
 from .querysets import ProjectQuerySet
-
-GCC_QUERY = """
-WITH RECURSIVE n as (
-    -- starting node
-    SELECT id FROM (
-        SELECT cnn.id
-        FROM core_networknode cnn
-        WHERE
-            cnn.network_id = %(network_id)s AND
-            NOT (cnn.id = ANY(%(excluded_nodes)s))
-        ORDER BY random()
-        LIMIT 1
-    ) nn
-    UNION
-    -- Select the *other* node in the edge
-    SELECT CASE
-        WHEN e.to_node_id = n.id
-        THEN e.from_node_id
-        ELSE e.to_node_id
-    END
-    FROM n
-    JOIN (
-        SELECT *
-        FROM core_networkedge ne
-        WHERE
-            ne.network_id = %(network_id)s AND
-            NOT (
-                ne.from_node_id = ANY(%(excluded_nodes)s) OR
-                ne.to_node_id = ANY(%(excluded_nodes)s)
-            )
-    ) e
-    ON
-        e.from_node_id = n.id OR
-        e.to_node_id = n.id
-)
-SELECT id FROM n ORDER BY id
-;
-"""
-
-GCC_QUERY_ITERATION_THRESHOLD = 50
+from .task_result import TaskResult
 
 
 class Network(models.Model):
@@ -63,43 +27,8 @@ class Network(models.Model):
     def dataset(self):
         return self.vector_data.dataset
 
-    def get_gcc(self, excluded_nodes: list[int]):
-        total_nodes = NetworkNode.objects.filter(network=self).count()
-
-        # This is used to store all the nodes we've already visited,
-        # starting with the explicitly excluded nodes
-        cur_excluded_nodes = excluded_nodes.copy()
-
-        # Store largest network found so far
-        gcc: list[int] = []
-
-        # Track the number of iterations, aborting if this reaches some threshold
-        iterations = 0
-
-        with connection.cursor() as cursor:
-            # If the GCC size is greater than half the network, we know that there's no way to
-            # find a larger one. If we've exhausted all nodes, also stop searching.
-            while not (len(gcc) > (total_nodes // 2) or len(cur_excluded_nodes) >= total_nodes):
-                cursor.execute(
-                    GCC_QUERY,
-                    {
-                        "excluded_nodes": cur_excluded_nodes,
-                        "network_id": self.pk,
-                    },
-                )
-                nodes: list[int] = [x[0] for x in cursor.fetchall()]
-                if not nodes:
-                    raise RuntimeError("Expected to find nodes but found none")
-
-                cur_excluded_nodes.extend(nodes)
-                if len(nodes) > len(gcc):
-                    gcc = nodes
-
-                iterations += 1
-                if iterations > GCC_QUERY_ITERATION_THRESHOLD:
-                    return None
-
-        return gcc
+    def get_graph(self):
+        return nx.Graph([(edge.from_node.id, edge.to_node.id) for edge in self.edges.all()])
 
 
 class NetworkNode(models.Model):
@@ -160,3 +89,76 @@ class NetworkEdge(models.Model):
     @property
     def dataset(self):
         return self.network.dataset
+
+
+class NetworkAnimation(models.Model):
+    name = models.CharField(max_length=255)
+    network = models.ForeignKey(Network, on_delete=models.CASCADE, related_name="animations")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="animations")
+    task_result = models.ForeignKey(
+        TaskResult, on_delete=models.CASCADE, related_name="animations", null=True, blank=True
+    )
+    sync_layers = models.ManyToManyField(Layer, blank=True)
+
+    project_filter_path = "project"
+    objects = ProjectQuerySet.as_manager()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "network", "project"], name="unique_name_network_project"
+            )
+        ]
+
+    def __str__(self):
+        return f"Network Animation ({self.id})"
+
+
+class NetworkState(models.Model):
+    animation = models.ForeignKey(NetworkAnimation, on_delete=models.CASCADE, related_name="states")
+    index = models.PositiveIntegerField(default=0)
+    deactivated_nodes = models.ManyToManyField(NetworkNode, blank=True)
+
+    project_filter_path = "animation__project"
+    objects = ProjectQuerySet.as_manager()
+
+    def __str__(self):
+        return f"Network State ({self.id})"
+
+    def update_components(self):
+        # Check whether component relationships need to be updated
+        old_component_spec = sorted(
+            [list(c.nodes.values_list("id", flat=True)) for c in self.components.all()],
+            key=len,
+            reverse=True,
+        )
+        deactivated_ids = list(self.deactivated_nodes.values_list("id", flat=True))
+        if len(deactivated_ids) > 0:
+            network_graph = self.animation.network.get_graph()
+            network_graph.remove_nodes_from(deactivated_ids)
+            components = nx.connected_components(network_graph)
+            new_component_spec = sorted(
+                [list(c) for c in components if len(c) > 1],
+                key=len,
+                reverse=True,
+            )
+        else:
+            # no deactivated nodes means all nodes are in one component
+            new_component_spec = [[n.id for n in self.animation.network.nodes.all()]]
+        # If update necessary, delete old components and create new ones
+        if new_component_spec != old_component_spec:
+            self.components.all().delete()
+            for node_set in new_component_spec:
+                component = NetworkComponent.objects.create(state=self)
+                component.nodes.set(NetworkNode.objects.filter(id__in=node_set))
+
+
+class NetworkComponent(models.Model):
+    state = models.ForeignKey(NetworkState, on_delete=models.CASCADE, related_name="components")
+    nodes = models.ManyToManyField(NetworkNode, blank=True)
+
+    project_filter_path = "state__animation__project"
+    objects = ProjectQuerySet.as_manager()
+
+    def __str__(self):
+        return f"Network Component ({self.id})"

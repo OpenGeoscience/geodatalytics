@@ -7,7 +7,7 @@ from s3_file_field import S3FileField
 from .basemap import Basemap
 from .chart import Chart
 from .layer import Layer
-from .networks import Network
+from .networks import Network, NetworkAnimation
 from .project import Project
 from .querysets import ProjectQuerySet
 from .task_result import TaskResult
@@ -15,7 +15,9 @@ from .task_result import TaskResult
 
 class Bookmark(models.Model):
     name = models.CharField(max_length=255)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="views", null=True)
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="bookmarks", null=True
+    )
     thumbnail = S3FileField()
 
     theme = models.CharField(max_length=10, default="light")
@@ -24,23 +26,28 @@ class Bookmark(models.Model):
         blank=True,  # max length matches TaskResult.task_type
     )
     current_result = models.ForeignKey(
-        TaskResult, on_delete=models.CASCADE, related_name="views", null=True
+        TaskResult, on_delete=models.CASCADE, related_name="bookmarks", null=True
     )
     current_basemap = models.ForeignKey(
-        Basemap, on_delete=models.CASCADE, related_name="views", null=True
+        Basemap, on_delete=models.CASCADE, related_name="bookmarks", null=True
     )
     current_chart = models.ForeignKey(
-        Chart, on_delete=models.CASCADE, related_name="views", null=True
+        Chart, on_delete=models.CASCADE, related_name="bookmarks", null=True
     )
     current_network = models.ForeignKey(
-        Network, on_delete=models.CASCADE, related_name="views", null=True
+        Network, on_delete=models.CASCADE, related_name="bookmarks", null=True
     )
+    current_network_animation = models.ForeignKey(
+        NetworkAnimation, on_delete=models.CASCADE, related_name="bookmarks", null=True
+    )
+    network_animation_tick = models.IntegerField(default=0)
+    network_animation_config = models.JSONField(null=True)
     left_sidebar_open = models.BooleanField(default=False)
     right_sidebar_open = models.BooleanField(default=False)
     map_zoom = models.IntegerField(null=True)
     map_center = geo_models.PointField(null=True)
     panel_arrangement = models.JSONField(blank=True, null=True)
-    selected_layers = models.ManyToManyField(Layer, related_name="views", blank=True)
+    selected_layers = models.ManyToManyField(Layer, related_name="bookmarks", blank=True)
     selected_layer_current_frames = models.JSONField(blank=True, null=True)
     selected_layer_order = models.JSONField(blank=True, null=True)
     selected_layer_styles = models.JSONField(blank=True, null=True)
@@ -51,7 +58,7 @@ class Bookmark(models.Model):
     class Meta:
         constraints = [
             # We enforce name uniqueness across projects
-            models.UniqueConstraint(name="uniqueviewname", fields=["project", "name"])
+            models.UniqueConstraint(name="uniquebookmarkname", fields=["project", "name"])
         ]
 
     def __str__(self):

@@ -9,12 +9,12 @@ import type {
   Chart,
   AnalysisType,
   Network,
+  NetworkAnimation,
+  NetworkState,
   RasterDataValues,
   FileItem,
   RasterData,
   VectorData,
-  NetworkNode,
-  NetworkEdge,
   LayerStyle,
   VectorSummary,
   LayerFrame,
@@ -181,39 +181,70 @@ export async function getNetwork(networkId: number): Promise<Network> {
   return (await apiClient.get(`networks/${networkId}/`)).data;
 }
 
-export async function getNetworkNodes(
+export async function getNetworkAnimations(
   networkId: number,
-  limit: number,
-  offset: number,
-): Promise<NetworkNode[]> {
+  projectId: number,
+): Promise<NetworkAnimation[]> {
   return (
     await apiClient.get(
-      `networks/${networkId}/nodes/?limit=${limit}&offset=${offset}`,
+      `network-animations/?network=${networkId}&project=${projectId}`,
     )
+  ).data.results;
+}
+
+export async function getNetworkAnimation(
+  animationId: number,
+): Promise<NetworkAnimation> {
+  return (await apiClient.get(`network-animations/${animationId}/`)).data;
+}
+
+export async function createNetworkAnimation(
+  name: string,
+  network: number,
+  project: number,
+): Promise<NetworkAnimation> {
+  return (
+    await apiClient.post(`network-animations/`, { name, network, project })
   ).data;
 }
 
-export async function getNetworkEdges(
-  networkId: number,
-  limit: number,
-  offset: number,
-): Promise<NetworkEdge[]> {
+export async function deleteNetworkAnimation(
+  animId: number,
+): Promise<NetworkAnimation> {
+  return (await apiClient.delete(`network-animations/${animId}/`)).data;
+}
+
+export async function getNetworkAnimationStates(
+  animId: number,
+): Promise<NetworkState[]> {
+  return (await apiClient.get(`network-states/?animation=${animId}`)).data
+    .results;
+}
+
+export async function createNetworkAnimationState(
+  animation: number,
+  index: number,
+  deactivated_nodes: number[],
+): Promise<NetworkState> {
   return (
-    await apiClient.get(
-      `networks/${networkId}/edges/?limit=${limit}&offset=${offset}`,
-    )
+    await apiClient.post(`network-states/`, {
+      animation,
+      index,
+      deactivated_nodes,
+    })
   ).data;
 }
 
-export async function getNetworkGCC(
-  networkId: number,
-  exclude_nodes: number[],
-): Promise<number[]> {
-  return (
-    await apiClient.get(
-      `networks/${networkId}/gcc/?exclude_nodes=${exclude_nodes.toString()}`,
-    )
-  ).data;
+export async function deleteNetworkAnimationState(
+  stateId: number,
+): Promise<NetworkState> {
+  return (await apiClient.delete(`network-states/${stateId}/`)).data;
+}
+
+export async function updateNetworkAnimationState(
+  state: NetworkState,
+): Promise<NetworkState> {
+  return (await apiClient.patch(`network-states/${state.id}/`, state)).data;
 }
 
 export async function getVectorSummary(
@@ -242,6 +273,17 @@ export async function runAnalysis(
     await apiClient.post(
       `analytics/project/${projectId}/types/${analysisType}/run/`,
       args,
+    )
+  ).data;
+}
+
+export async function getTaskInputOptions(
+  analysisType: string,
+  projectId: number,
+) {
+  return (
+    await apiClient.get(
+      `analytics/project/${projectId}/types/${analysisType}/input-options/`,
     )
   ).data;
 }

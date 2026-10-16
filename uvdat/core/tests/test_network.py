@@ -40,42 +40,28 @@ def test_rest_dataset_networks(client, project_factory, network_edge):
 
     data: list[dict] = resp.json()
     assert len(data) == 1
-    assert len(data[0]["nodes"]) == 2
+    assert data[0]["counts"]["nodes"] == 2
 
 
 @pytest.mark.django_db
-def test_rest_network_gcc_empty(authenticated_api_client, user, project: Project, network: Network):
-    dataset = network.vector_data.dataset
-    project.set_owner(user)
-    project.datasets.add(dataset)
-    resp = authenticated_api_client.get(f"/api/v1/networks/{network.id}/gcc/?exclude_nodes=1")
-
-    assert resp.status_code == 200
-    assert resp.json() == []
-
-
-@pytest.mark.parametrize("group_sizes", [(3, 2), (20, 3)])
-@pytest.mark.django_db
-def test_rest_network_gcc(
+def test_create_network_animation(
     authenticated_api_client,
     user,
     project: Project,
     network: Network,
     network_edge_factory,
     network_node_factory,
-    group_sizes,
 ):
     dataset = network.vector_data.dataset
     project.set_owner(user)
     project.datasets.add(dataset)
-    group_a_size, group_b_size = group_sizes
 
     # Create two groups of nodes that fully connected
-    group_a = [network_node_factory(network=network) for _ in range(group_a_size)]
+    group_a = [network_node_factory(network=network) for _ in range(3)]
     for from_node, to_node in itertools.combinations(group_a, 2):
         network_edge_factory(network=network, from_node=from_node, to_node=to_node)
 
-    group_b = [network_node_factory(network=network) for _ in range(group_b_size)]
+    group_b = [network_node_factory(network=network) for _ in range(2)]
     for from_node, to_node in itertools.combinations(group_b, 2):
         network_edge_factory(network=network, from_node=from_node, to_node=to_node)
 
@@ -91,10 +77,40 @@ def test_rest_network_gcc(
     #  |
     #  *
 
-    resp = authenticated_api_client.get(
-        f"/api/v1/networks/{network.id}/gcc/?exclude_nodes={connecting_node.id}"
+    # Create animation
+    resp_1 = authenticated_api_client.post(
+        "/api/v1/network-animations/",
+        {
+            "name": "Test Anim",
+            "network": network.id,
+            "project": project.id,
+        },
     )
+    assert resp_1.status_code == 201
+    anim = resp_1.json()
 
-    larger_group: list[NetworkNode] = max(group_a, group_b, key=len)
-    assert resp.status_code == 200
-    assert sorted(resp.json()) == sorted([n.id for n in larger_group])
+    # First state in animation should be created by default
+    resp_2 = authenticated_api_client.get(f"/api/v1/network-states/?animation={anim.get('id')}")
+    assert resp_2.status_code == 200
+    states = resp_2.json().get("results")
+    assert len(states) == 1
+    state = states[0]
+
+    # State should have no deactivated nodes and one component with all nodes
+    assert len(state.get("deactivated_nodes")) == 0
+    assert len(state.get("components")) == 1
+    assert len(state.get("components")[0].get("nodes")) == 6
+
+    # Update deactivated nodes for first state
+    resp_3 = authenticated_api_client.patch(
+        f"/api/v1/network-states/{state.get('id')}/", {"deactivated_nodes": [connecting_node.id]}
+    )
+    assert resp_3.status_code == 200
+    state = resp_3.json()
+
+    # Now state should have one deactivated node and two components
+    assert len(state.get("deactivated_nodes")) == 1
+    assert len(state.get("components")) == 2
+    # Components should be sorted by their sizes
+    assert len(state.get("components")[0].get("nodes")) == 3
+    assert len(state.get("components")[1].get("nodes")) == 2

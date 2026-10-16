@@ -15,10 +15,8 @@ import {
   getLayerStyles,
   updateLayerStyle,
   getVectorSummary,
-  deleteColormap,
 } from "@/api/rest";
-import ColormapPreview from "./ColormapPreview.vue";
-import ColormapEditor from "./ColormapEditor.vue";
+import ColormapSelect from "./ColormapSelect.vue";
 import SliderNumericInput from "../SliderNumericInput.vue";
 
 import {
@@ -28,6 +26,8 @@ import {
   useLayerStore,
   useAppStore,
   useFramePreviewStore,
+  useNetworkStore,
+  useMapStore,
 } from "@/store";
 const styleStore = useStyleStore();
 const projectStore = useProjectStore();
@@ -35,6 +35,8 @@ const panelStore = usePanelStore();
 const layerStore = useLayerStore();
 const appStore = useAppStore();
 const framePreviewStore = useFramePreviewStore();
+const networkStore = useNetworkStore();
+const mapStore = useMapStore();
 
 const emit = defineEmits(["setLayerActive"]);
 const props = defineProps<{
@@ -45,10 +47,6 @@ const props = defineProps<{
 const unsavedChanges = ref(true);
 const showEditOptions = ref(false);
 const showDeleteConfirmation = ref(false);
-const showColormapEditor = ref(false);
-const editColormapGroupName = ref();
-const editColormap = ref<Colormap | undefined>();
-const delColormap = ref<Colormap | undefined>();
 const newNameMode = ref<"create" | "update" | undefined>();
 const newName = ref();
 const tab = ref("color");
@@ -78,6 +76,21 @@ const styleKey = computed(() => styleStore.layerStyleKey(props.layer));
 
 const currentLayerStyle = computed(() => {
   return styleStore.selectedLayerStyles[styleKey.value];
+});
+
+const stylingDisabledReason = computed(() => {
+  if (networkStore.currentAnimation && networkStore.networkNodesMapLayerId) {
+    const networkLayerInfo = mapStore.parseLayerString(
+      networkStore.networkNodesMapLayerId,
+    );
+    if (
+      networkLayerInfo.layerId == props.layer.id &&
+      networkLayerInfo.layerCopyId === props.layer.copy_id
+    ) {
+      return "Styles for this layer are currently overridden by a network animation";
+    }
+  }
+  return undefined;
 });
 
 const setCurrentLayerStyle = (style: LayerStyle) => {
@@ -415,44 +428,6 @@ function setGroupColormap(groupName: string, colormap: Colormap) {
   });
 }
 
-function openColormapEditor(groupName: string, colormap: Colormap | undefined) {
-  if (!editMode.value) return;
-  showColormapEditor.value = true;
-  editColormapGroupName.value = groupName;
-  editColormap.value = colormap;
-}
-
-function confirmDeleteColormap() {
-  if (!editMode.value) return;
-  if (delColormap.value?.id) {
-    deleteColormap(delColormap.value.id).then(() => {
-      delColormap.value = undefined;
-      styleStore.colormaps = styleStore.colormaps.filter(
-        (c) => c.id !== delColormap.value?.id,
-      );
-      // update other styles in case colormap changed to default
-      layerStore.selectedLayers.forEach((layer) => {
-        const key = styleStore.layerStyleKey(layer);
-        getLayerStyles(layer.id, projectStore.currentProject?.id).then(
-          (styles) => {
-            const updated = styles.find(
-              (s) => s.id === styleStore.selectedLayerStyles[key].id,
-            );
-            if (updated) {
-              styleStore.selectedLayerStyles[key] = updated;
-              if (layer.id === props.layer.id) {
-                availableStyles.value = styles;
-                currentStyleSpec.value = updated.style_spec;
-              }
-              styleStore.updateLayerStyles(layer);
-            }
-          },
-        );
-      });
-    });
-  }
-}
-
 function setSizeGroups(different: boolean | null) {
   if (!currentStyleSpec.value) return;
   if (different) {
@@ -737,16 +712,25 @@ onMounted(resetCurrentStyle);
     :close-on-content-click="false"
     persistent
     no-click-animation
-    @update:model-value="emit('setLayerActive', !isActiveLayer)"
+    @update:model-value="
+      () => {
+        if (!stylingDisabledReason) {
+          emit('setLayerActive', !isActiveLayer);
+        }
+      }
+    "
   >
     <template #activator="{ props: activatorProps }">
       <v-icon
         v-tooltip="
-          appliedStyleName ? 'Style: ' + appliedStyleName : 'Configure styling'
+          stylingDisabledReason ||
+          (appliedStyleName
+            ? 'Style: ' + appliedStyleName
+            : 'Configure styling')
         "
         v-bind="activatorProps"
         icon="mdi-palette"
-        style="opacity: 1"
+        :style="stylingDisabledReason ? { opacity: 0.5 } : { opacity: 1 }"
       />
     </template>
     <v-card
@@ -1033,98 +1017,16 @@ onMounted(resetCurrentStyle);
                         >
                       </td>
                       <td>
-                        <v-select
+                        <colormap-select
                           :model-value="getColormap(group.colormap)"
-                          :items="colormaps"
-                          item-title="name"
-                          density="compact"
-                          variant="outlined"
-                          hide-details
-                          return-object
                           :disabled="!group.visible"
-                          @update:model-value="
+                          :n-colors="group.colormap?.n_colors || -1"
+                          :discrete="group.colormap?.discrete || false"
+                          :edit-mode="editMode"
+                          @update="
                             (v: Colormap) => setGroupColormap(group.name, v)
                           "
-                        >
-                          <template #item="{ props: itemProps, item }">
-                            <v-list-item v-bind="itemProps">
-                              <template #append>
-                                <v-icon
-                                  v-if="
-                                    item.project ==
-                                      projectStore.currentProject?.id &&
-                                    editMode
-                                  "
-                                  v-tooltip="'Edit Colormap'"
-                                  icon="mdi-pencil"
-                                  class="ml-2"
-                                  @click="openColormapEditor(group.name, item)"
-                                />
-                                <v-icon
-                                  v-if="
-                                    item.project ==
-                                      projectStore.currentProject?.id &&
-                                    editMode
-                                  "
-                                  v-tooltip="'Delete Colormap'"
-                                  icon="mdi-delete"
-                                  class="ml-2"
-                                  @click="delColormap = item"
-                                />
-                                <div style="width: 300px" class="ml-2">
-                                  <colormap-preview
-                                    :colormap="item"
-                                    :discrete="
-                                      group.colormap?.discrete || false
-                                    "
-                                    :n-colors="group.colormap?.n_colors || -1"
-                                  />
-                                </div>
-                              </template>
-                            </v-list-item>
-                          </template>
-                          <template #selection="{ item }">
-                            <span
-                              v-if="getColormap(group.colormap)?.markers"
-                              class="pr-15"
-                              >{{ item.name }}</span
-                            >
-                            <div
-                              v-if="
-                                group.colormap &&
-                                getColormap(group.colormap)?.markers
-                              "
-                              style="width: 300px"
-                              class="ml-2"
-                            >
-                              <colormap-preview
-                                :colormap="item"
-                                :discrete="group.colormap.discrete || false"
-                                :n-colors="group.colormap.n_colors || -1"
-                              />
-                            </div>
-                            <span v-else class="secondary-text"
-                              >Select Colormap</span
-                            >
-                          </template>
-                          <template #prepend-item>
-                            <v-list-item
-                              v-if="editMode"
-                              @click="openColormapEditor(group.name, undefined)"
-                            >
-                              <div
-                                style="
-                                  color: rgb(var(--v-theme-primary));
-                                  align-items: center;
-                                  display: flex;
-                                "
-                              >
-                                <v-icon color="primary">mdi-plus</v-icon>
-                                Create Custom Colormap
-                              </div>
-                            </v-list-item>
-                          </template>
-                        </v-select>
+                        />
                       </td>
                     </tr>
                     <tr v-if="group.colormap">
@@ -1482,101 +1384,18 @@ onMounted(resetCurrentStyle);
                           >
                         </td>
                         <td>
-                          <v-select
+                          <colormap-select
                             :model-value="getColormap(group.colormap)"
-                            :items="colormaps"
                             :disabled="
                               !group.visible || !group.colormap.color_by
                             "
-                            item-title="name"
-                            density="compact"
-                            variant="outlined"
-                            hide-details
-                            return-object
-                            @update:model-value="
+                            :n-colors="group.colormap?.n_colors || -1"
+                            :discrete="group.colormap?.discrete || false"
+                            :edit-mode="editMode"
+                            @update="
                               (v: Colormap) => setGroupColormap(group.name, v)
                             "
-                          >
-                            <template #item="{ props: itemProps, item }">
-                              <v-list-item v-bind="itemProps">
-                                <template #append>
-                                  <v-icon
-                                    v-if="
-                                      item.project ==
-                                        projectStore.currentProject?.id &&
-                                      editMode
-                                    "
-                                    v-tooltip="'Edit Colormap'"
-                                    icon="mdi-pencil"
-                                    class="ml-2"
-                                    @click="
-                                      openColormapEditor(group.name, item)
-                                    "
-                                  />
-                                  <v-icon
-                                    v-if="
-                                      item.project ==
-                                        projectStore.currentProject?.id &&
-                                      editMode
-                                    "
-                                    v-tooltip="'Delete Colormap'"
-                                    icon="mdi-delete"
-                                    class="ml-2"
-                                    @click="delColormap = item"
-                                  />
-                                  <div style="width: 300px" class="ml-2">
-                                    <colormap-preview
-                                      :colormap="item"
-                                      :discrete="
-                                        group.colormap.discrete || false
-                                      "
-                                      :n-colors="group.colormap.n_colors || -1"
-                                    />
-                                  </div>
-                                </template>
-                              </v-list-item>
-                            </template>
-                            <template #selection="{ item }">
-                              <span
-                                v-if="getColormap(group.colormap)?.markers"
-                                class="pr-15"
-                                >{{ item.name }}</span
-                              >
-                              <div
-                                v-if="getColormap(group.colormap)?.markers"
-                                style="width: 300px"
-                                class="ml-2"
-                              >
-                                <colormap-preview
-                                  :colormap="item"
-                                  :discrete="group.colormap.discrete || false"
-                                  :n-colors="group.colormap.n_colors || -1"
-                                />
-                              </div>
-                              <span v-else class="secondary-text"
-                                >Select Colormap</span
-                              >
-                            </template>
-                            <template #prepend-item>
-                              <v-list-item
-                                v-if="editMode"
-                                @click="
-                                  openColormapEditor(group.name, undefined)
-                                "
-                              >
-                                <div
-                                  style="
-                                    color: rgb(var(--v-theme-primary));
-                                    align-items: center;
-                                    display: flex;
-                                  "
-                                >
-                                  <v-icon color="primary">mdi-plus</v-icon>
-                                  Create Custom Colormap
-                                </div>
-                              </v-list-item>
-                            </template>
-                          </v-select>
+                          />
                         </td>
                       </tr>
                       <tr>
@@ -2335,60 +2154,6 @@ onMounted(resetCurrentStyle);
             </v-btn>
           </v-card-actions>
         </v-card>
-      </v-dialog>
-
-      <v-dialog :model-value="!!delColormap" contained peristent>
-        <v-card v-if="delColormap" color="background">
-          <v-card-subtitle
-            class="pa-2"
-            style="background-color: rgb(var(--v-theme-surface))"
-          >
-            Delete Colormap
-            <span class="secondary-text">({{ delColormap.name }})</span>
-
-            <v-icon
-              icon="mdi-close"
-              style="float: right"
-              @click="delColormap = undefined"
-            />
-          </v-card-subtitle>
-
-          <v-card-text>
-            Are you sure you want to delete colormap "{{ delColormap.name }}"?
-            <div
-              class="pa-3 d-flex"
-              style="align-items: center; column-gap: 10px"
-            >
-              <v-icon icon="mdi-alert" color="warning" />
-              <span class="secondary-text">
-                This action cannot be undone. Any style using this colormap will
-                revert to a default colormap.
-              </span>
-            </div>
-          </v-card-text>
-
-          <v-card-actions>
-            <v-btn class="secondary-button" @click="delColormap = undefined">
-              <v-icon color="primary" class="mr-1">mdi-close-circle</v-icon>
-              Cancel
-            </v-btn>
-            <v-btn color="error" variant="tonal" @click="confirmDeleteColormap">
-              <v-icon color="error" class="mr-1">mdi-delete</v-icon>
-              Delete
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <v-dialog v-model="showColormapEditor" contained>
-        <ColormapEditor
-          :edit="editColormap"
-          @close="
-            showColormapEditor = false;
-            editColormapGroupName = undefined;
-          "
-          @submit="(cmap) => setGroupColormap(editColormapGroupName, cmap)"
-        />
       </v-dialog>
     </v-card>
   </v-menu>
