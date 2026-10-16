@@ -285,20 +285,42 @@ export function waitForRasterSourceLoaded(
   });
 }
 
-/** Wait until MapLibre finishes a render with no pending tile/fade work. */
-export function waitForMapIdle(
+/**
+ * After a raster source is loaded, wait briefly for its tiles to paint.
+ * Prefers map idle when the map is quiet, but caps the wait so unrelated
+ * basemap/other-layer loading cannot stall the preview handoff.
+ */
+export function waitForRasterSourcePainted(
   map: MaplibreMap,
-  timeoutMs = 10000,
+  sourceId: string,
+  timeoutMs = 400,
 ): Promise<void> {
   return new Promise((resolve) => {
-    const timeout = window.setTimeout(() => {
+    if (!map.getSource(sourceId)) {
+      resolve();
+      return;
+    }
+
+    let settled = false;
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      window.clearTimeout(timeout);
       map.off("idle", onIdle);
       resolve();
-    }, timeoutMs);
+    };
+
+    const timeout = window.setTimeout(finish, timeoutMs);
 
     function onIdle() {
-      window.clearTimeout(timeout);
-      resolve();
+      if (map.isSourceLoaded(sourceId)) {
+        finish();
+        return;
+      }
+      // Idle fired while our source still has work; keep listening until timeout.
+      map.once("idle", onIdle);
     }
 
     map.once("idle", onIdle);
