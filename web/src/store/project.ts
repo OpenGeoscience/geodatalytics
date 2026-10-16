@@ -89,7 +89,9 @@ export const useProjectStore = defineStore("project", () => {
   }
 
   async function fetchAvailableDatasetTags() {
-    availableDatasetTags.value = await getDatasetTags();
+    if (!availableDatasetTags.value?.length) {
+      availableDatasetTags.value = await getDatasetTags();
+    }
   }
 
   async function fetchProjectBookmarks() {
