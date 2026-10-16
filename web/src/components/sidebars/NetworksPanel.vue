@@ -608,7 +608,12 @@ function rewind() {
           <v-list-item
             v-for="network in filteredNetworks"
             :key="network.id"
-            @click="networkStore.currentNetwork = network"
+            @click="
+              () => {
+                networkStore.currentNetwork = network;
+                panelStore.setVisibility({ network }, true);
+              }
+            "
           >
             {{ network.name }}
             <template #append>
