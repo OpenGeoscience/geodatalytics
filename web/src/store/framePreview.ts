@@ -20,8 +20,8 @@ import {
   removePreviewLayer,
   removePreviewLayersExcept,
   upsertPreviewLayer,
-  waitForMapIdle,
   waitForRasterSourceLoaded,
+  waitForRasterSourcePainted,
 } from "@/utils/framePreviewLayer";
 import { prefetchFramePreviewUrls } from "@/utils/framePreviewCache";
 import { useLayerStore } from "./layer";
@@ -440,7 +440,28 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     if (!previews?.length) {
       return;
     }
-    prefetchFramePreviewUrls(previews.map((preview) => preview?.url));
+
+    // Prefer the current frame so it is warm before background batches run.
+    // Frames may not be loaded yet on addLayer; fall back to array position
+    // (previews are ordered with raster frames) then the first preview.
+    const rasterFrames = orderedRasterFrames(layerStore.layerFrames(layer));
+    const currentFrameIndex = layer.current_frame_index;
+    const previewForCurrentFrame = previewAtFrameIndex(
+      previews,
+      rasterFrames,
+      currentFrameIndex,
+    );
+    const previewByArrayPosition = previews[currentFrameIndex];
+    const firstPreview = previews[0];
+    const priorityUrl =
+      previewForCurrentFrame?.url ??
+      previewByArrayPosition?.url ??
+      firstPreview?.url;
+
+    void prefetchFramePreviewUrls(
+      previews.map((preview) => preview?.url),
+      { priorityUrls: [priorityUrl] },
+    );
   }
 
   function hasReadyPreviewForCurrentFrame(layer: Layer) {
@@ -525,7 +546,9 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       currentFrameIndex,
     );
     urlsToPrefetch.push(currentPreview?.url);
-    prefetchFramePreviewUrls(urlsToPrefetch);
+    void prefetchFramePreviewUrls(urlsToPrefetch, {
+      priorityUrls: [currentPreview?.url],
+    });
   }
 
   function hidePreviousPreview(
@@ -604,9 +627,9 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       return;
     }
 
-    // Source-loaded means tiles are cached; idle means they've been painted
-    // (and any raster-fade-duration has finished) before we drop the preview.
-    await waitForMapIdle(map);
+    // Source-loaded means tiles are cached; a short paint wait (idle or
+    // timeout) covers tile raster fade without blocking on other sources.
+    await waitForRasterSourcePainted(map, tileSourceId);
 
     if (transitionGenerationByLayerKey.get(layerKeyValue) !== generation) {
       return;
