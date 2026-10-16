@@ -20,6 +20,7 @@ import {
   removePreviewLayer,
   removePreviewLayersExcept,
   upsertPreviewLayer,
+  waitForMapIdle,
   waitForRasterSourceLoaded,
 } from "@/utils/framePreviewLayer";
 import { prefetchFramePreviewUrls } from "@/utils/framePreviewCache";
@@ -598,6 +599,14 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     }
 
     await waitForRasterSourceLoaded(map, tileSourceId);
+
+    if (transitionGenerationByLayerKey.get(layerKeyValue) !== generation) {
+      return;
+    }
+
+    // Source-loaded means tiles are cached; idle means they've been painted
+    // (and any raster-fade-duration has finished) before we drop the preview.
+    await waitForMapIdle(map);
 
     if (transitionGenerationByLayerKey.get(layerKeyValue) !== generation) {
       return;

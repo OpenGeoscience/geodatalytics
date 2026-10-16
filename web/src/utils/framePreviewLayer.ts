@@ -285,6 +285,28 @@ export function waitForRasterSourceLoaded(
   });
 }
 
+/** Wait until MapLibre finishes a render with no pending tile/fade work. */
+export function waitForMapIdle(
+  map: MaplibreMap,
+  timeoutMs = 10000,
+): Promise<void> {
+  return new Promise((resolve) => {
+    const timeout = window.setTimeout(() => {
+      map.off("idle", onIdle);
+      resolve();
+    }, timeoutMs);
+
+    function onIdle() {
+      window.clearTimeout(timeout);
+      resolve();
+    }
+
+    map.once("idle", onIdle);
+    // Idle only fires from the render loop; force a frame if already settled.
+    map.triggerRepaint();
+  });
+}
+
 export async function fadeRasterOpacities(
   map: MaplibreMap,
   layers: { id: string; from: number; to: number }[],
