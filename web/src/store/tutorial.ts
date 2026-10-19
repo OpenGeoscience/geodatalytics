@@ -132,7 +132,7 @@ export const useTutorialStore = defineStore("tutorial", () => {
       position: ["400px", "calc(100% - 570px)"],
       proceed: () => {
         panelStore.updatePanel({
-          id: "analtyics",
+          id: "analytics",
           collapsed: true,
         });
       },
