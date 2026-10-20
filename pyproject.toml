@@ -25,7 +25,7 @@ dependencies = [
   "django-guardian==3.5.0",
   "django-large-image==0.10.5",
   "django-oauth-toolkit==3.4.1",
-  "django-resonant-settings[allauth,celery]==0.52.1",
+  "django-resonant-settings[allauth,celery]==0.53.0",
   "django-resonant-utils[allauth,s3_storage]==0.20.0",
   "django-stubs-ext==6.1.1",
   "djangorestframework==3.18.1",
@@ -175,6 +175,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "**/migrations/**" = [
+  "ICN001", # unconventional-import-alias
   "N806", # non-lowercase-variable-in-function
   "RUF012", # mutable-class-default
 ]
@@ -257,6 +258,9 @@ filterwarnings = [
   "error",
   # pytest often causes unclosed socket warnings
   'ignore:unclosed <socket\.socket:ResourceWarning',
+  # swagger-spec-validator, a dependency of drf-yasg, imports the deprecated `jsonschema.RefResolver`
+  # https://github.com/Yelp/swagger_spec_validator/issues/171
+  'ignore:jsonschema\.RefResolver is deprecated:DeprecationWarning:swagger_spec_validator',
   # rasterio still uses "*" for Affine multiplication, which affine 3.0.1 pending-deprecates
   # https://github.com/rasterio/rasterio/issues/3628
   'ignore:Use `@` matmul instead of `\*` mul operator:PendingDeprecationWarning:rasterio.*',
