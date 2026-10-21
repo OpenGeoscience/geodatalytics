@@ -253,79 +253,41 @@ export function removeAllPreviewLayersForLayerKey(
   });
 }
 
+/**
+ * Wait until MapLibre reports no outstanding tile work for a source.
+ * Resolves `true` only when the source is actually loaded; a timeout (or a
+ * missing source) resolves `false` so callers can keep the preview up and
+ * retry instead of handing off to tiles that may not exist yet.
+ */
 export function waitForRasterSourceLoaded(
   map: MaplibreMap,
   sourceId: string,
   timeoutMs = 10000,
-): Promise<void> {
+): Promise<boolean> {
   return new Promise((resolve) => {
     if (!map.getSource(sourceId)) {
-      resolve();
+      resolve(false);
       return;
     }
     if (map.isSourceLoaded(sourceId)) {
-      resolve();
+      resolve(true);
       return;
     }
 
     const timeout = window.setTimeout(() => {
       map.off("sourcedata", onSourceData);
-      resolve();
+      resolve(false);
     }, timeoutMs);
 
     function onSourceData(event: MapSourceDataEvent) {
       if (event.sourceId === sourceId && event.isSourceLoaded) {
         window.clearTimeout(timeout);
         map.off("sourcedata", onSourceData);
-        resolve();
+        resolve(true);
       }
     }
 
     map.on("sourcedata", onSourceData);
-  });
-}
-
-/**
- * After a raster source is loaded, wait briefly for its tiles to paint.
- * Prefers map idle when the map is quiet, but caps the wait so unrelated
- * basemap/other-layer loading cannot stall the preview handoff.
- */
-export function waitForRasterSourcePainted(
-  map: MaplibreMap,
-  sourceId: string,
-  timeoutMs = 400,
-): Promise<void> {
-  return new Promise((resolve) => {
-    if (!map.getSource(sourceId)) {
-      resolve();
-      return;
-    }
-
-    let settled = false;
-    const finish = () => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      window.clearTimeout(timeout);
-      map.off("idle", onIdle);
-      resolve();
-    };
-
-    const timeout = window.setTimeout(finish, timeoutMs);
-
-    function onIdle() {
-      if (map.isSourceLoaded(sourceId)) {
-        finish();
-        return;
-      }
-      // Idle fired while our source still has work; keep listening until timeout.
-      map.once("idle", onIdle);
-    }
-
-    map.once("idle", onIdle);
-    // Idle only fires from the render loop; force a frame if already settled.
-    map.triggerRepaint();
   });
 }
 

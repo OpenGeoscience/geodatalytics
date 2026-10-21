@@ -21,7 +21,6 @@ import {
   removePreviewLayersExcept,
   upsertPreviewLayer,
   waitForRasterSourceLoaded,
-  waitForRasterSourcePainted,
 } from "@/utils/framePreviewLayer";
 import { prefetchFramePreviewUrls } from "@/utils/framePreviewCache";
 import { useLayerStore } from "./layer";
@@ -621,17 +620,29 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       return;
     }
 
-    await waitForRasterSourceLoaded(map, tileSourceId);
+    // Tiles are not ready yet: keep the preview on screen and retry this
+    // handoff later (still generation-guarded, so scrubbing cancels it).
+    const retryTransition = () => {
+      scheduleTileLoadAfterSettle(layerKeyValue, generation, () => {
+        void transitionToTiles(
+          layer,
+          frameIndex,
+          layerKeyValue,
+          generation,
+          targetOpacity,
+          tileLayerId,
+          tileSourceId,
+        );
+      });
+    };
+
+    const sourceLoaded = await waitForRasterSourceLoaded(map, tileSourceId);
 
     if (transitionGenerationByLayerKey.get(layerKeyValue) !== generation) {
       return;
     }
-
-    // Source-loaded means tiles are cached; a short paint wait (idle or
-    // timeout) covers tile raster fade without blocking on other sources.
-    await waitForRasterSourcePainted(map, tileSourceId);
-
-    if (transitionGenerationByLayerKey.get(layerKeyValue) !== generation) {
+    if (!sourceLoaded) {
+      retryTransition();
       return;
     }
 
