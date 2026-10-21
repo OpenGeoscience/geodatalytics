@@ -253,31 +253,37 @@ export function removeAllPreviewLayersForLayerKey(
   });
 }
 
+/**
+ * Wait until MapLibre reports no outstanding tile work for a source.
+ * Resolves `true` only when the source is actually loaded; a timeout (or a
+ * missing source) resolves `false` so callers can keep the preview up and
+ * retry instead of handing off to tiles that may not exist yet.
+ */
 export function waitForRasterSourceLoaded(
   map: MaplibreMap,
   sourceId: string,
   timeoutMs = 10000,
-): Promise<void> {
+): Promise<boolean> {
   return new Promise((resolve) => {
     if (!map.getSource(sourceId)) {
-      resolve();
+      resolve(false);
       return;
     }
     if (map.isSourceLoaded(sourceId)) {
-      resolve();
+      resolve(true);
       return;
     }
 
     const timeout = window.setTimeout(() => {
       map.off("sourcedata", onSourceData);
-      resolve();
+      resolve(false);
     }, timeoutMs);
 
     function onSourceData(event: MapSourceDataEvent) {
       if (event.sourceId === sourceId && event.isSourceLoaded) {
         window.clearTimeout(timeout);
         map.off("sourcedata", onSourceData);
-        resolve();
+        resolve(true);
       }
     }
 
