@@ -14,13 +14,20 @@ if typing.TYPE_CHECKING:
 class Chart(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, default="")
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="charts", null=True)
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="charts",
+        null=True,
+        blank=True,
+    )
     metadata = models.JSONField(blank=True, null=True)
     chart_data = models.JSONField(blank=True, null=True)
     chart_options = models.JSONField(blank=True, null=True)
     editable = models.BooleanField(default=False)
 
     project_filter_path = "project"
+    project_filter_allow_null = True
     objects = ProjectQuerySet.as_manager()
 
     def __str__(self):
