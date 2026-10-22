@@ -5,6 +5,7 @@ from django.core.management import call_command
 import osmnx
 import pytest
 from pytest_lazy_fixtures import lf
+import requests
 
 from uvdat.core.models import Chart, Dataset, Network, TaskResult
 from uvdat.core.tasks.analytics import (
@@ -85,7 +86,7 @@ def test_rest_run_analysis_task_creator(client, expected_status, user, project):
         assert resp.status_code == expected_status
         if expected_status == 200:
             assert resp.json()["creator"] == user.id
-    except osmnx._errors.ResponseStatusCodeError:
+    except (osmnx._errors.ResponseStatusCodeError, requests.exceptions.ConnectionError):
         pytest.skip("Skipping create road network test due to unavailable Overpass API.")
 
 
