@@ -22,7 +22,6 @@ import SliderNumericInput from "../SliderNumericInput.vue";
 import {
   useStyleStore,
   useProjectStore,
-  usePanelStore,
   useLayerStore,
   useAppStore,
   useFramePreviewStore,
@@ -31,7 +30,6 @@ import {
 } from "@/store";
 const styleStore = useStyleStore();
 const projectStore = useProjectStore();
-const panelStore = usePanelStore();
 const layerStore = useLayerStore();
 const appStore = useAppStore();
 const framePreviewStore = useFramePreviewStore();
@@ -651,13 +649,6 @@ function newNameKeyDown(e: KeyboardEvent) {
     newName.value = undefined;
   }
 }
-
-watch(
-  () => panelStore.draggingPanel,
-  () => {
-    emit("setLayerActive", false);
-  },
-);
 
 const debouncedStyleSpecUpdated = debounce(() => {
   if (!currentStyleSpec.value) return;

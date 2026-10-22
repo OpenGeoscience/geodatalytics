@@ -117,6 +117,9 @@ watch(filteredDatasets, expandAllGroups);
         v-else-if="projectStore.loadingDatasets"
         indeterminate
       ></v-progress-linear>
+      <v-card-text v-else-if="!projectStore.currentProject" class="help-text">
+        Select a project to view its Datasets.
+      </v-card-text>
       <v-card-text v-else class="help-text">No available Datasets.</v-card-text>
     </v-card>
   </div>

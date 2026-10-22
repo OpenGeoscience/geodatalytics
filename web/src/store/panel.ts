@@ -11,11 +11,10 @@ import type {
   Region,
 } from "@/types";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { getChart, getDataset, getNetwork } from "@/api/rest";
 
 import {
-  useAppStore,
   useLayerStore,
   useAnalysisStore,
   useProjectStore,
@@ -47,196 +46,189 @@ interface Showable {
   region?: Region;
 }
 
-function defaultPanelArrangement(): FloatingPanelConfig[] {
-  return [
-    {
-      id: "datasets",
-      label: "Datasets",
-      visible: true,
-      closeable: true,
-      dock: "left",
-      order: 1,
-    },
-    {
-      id: "layers",
-      label: "Selected Layers",
-      visible: true,
-      closeable: true,
-      dock: "left",
-      order: 2,
-    },
-    {
-      id: "legend",
-      label: "Legend",
-      visible: true,
-      closeable: true,
-      collapsed: true,
-      dock: "right",
-      order: 1,
-    },
-    {
-      id: "charts",
-      label: "Charts",
-      visible: true,
-      closeable: true,
-      collapsed: true,
-      dock: "right",
-      order: 2,
-    },
-    {
-      id: "networks",
-      label: "Networks",
-      visible: true,
-      closeable: true,
-      collapsed: true,
-      dock: "right",
-      order: 3,
-    },
-    {
-      id: "analytics",
-      label: "AI & Analytics",
-      visible: true,
-      closeable: true,
-      collapsed: true,
-      dock: "right",
-      order: 4,
-    },
-  ];
-}
+const defaultPanelArrangement: FloatingPanelConfig[] = [
+  {
+    id: "datasets",
+    label: "Datasets",
+    visible: true,
+    closeable: true,
+    dock: "left",
+  },
+  {
+    id: "layers",
+    label: "Selected Layers",
+    visible: true,
+    closeable: true,
+    dock: "left",
+  },
+  {
+    id: "legend",
+    label: "Legend",
+    visible: true,
+    closeable: true,
+    collapsed: true,
+    dock: "right",
+  },
+  {
+    id: "charts",
+    label: "Charts",
+    visible: true,
+    closeable: true,
+    collapsed: true,
+    dock: "right",
+  },
+  {
+    id: "networks",
+    label: "Networks",
+    visible: true,
+    closeable: true,
+    collapsed: true,
+    dock: "right",
+  },
+  {
+    id: "analytics",
+    label: "AI & Analytics",
+    visible: true,
+    closeable: true,
+    collapsed: true,
+    dock: "right",
+  },
+];
 
 export const usePanelStore = defineStore("panel", () => {
   const analysisStore = useAnalysisStore();
   const layerStore = useLayerStore();
-  const appStore = useAppStore();
   const projectStore = useProjectStore();
   const mapStore = useMapStore();
   const networkStore = useNetworkStore();
 
-  const panelArrangement = ref<FloatingPanelConfig[]>([]);
-  const draggingPanel = ref<string | undefined>();
-  const draggingFrom = ref<{ x: number; y: number } | undefined>();
-  const dragModes = ref<("position" | "height" | "width")[]>();
+  const leftPanels = ref<FloatingPanelConfig[]>([]);
+  const rightPanels = ref<FloatingPanelConfig[]>([]);
+  const floatingPanels = ref<FloatingPanelConfig[]>([]);
+  const allPanels = computed<FloatingPanelConfig[]>(() => {
+    return [
+      ...leftPanels.value.map((p) => ({ ...p, dock: "left" })),
+      ...rightPanels.value.map((p) => ({ ...p, dock: "right" })),
+      ...floatingPanels.value.map((p) => ({ ...p, dock: undefined })),
+    ] as FloatingPanelConfig[];
+  });
+  const dragPoint = ref<{ x: number; y: number }>();
 
   function resetPanels() {
-    panelArrangement.value = defaultPanelArrangement();
+    initPanelsFromArrangement(defaultPanelArrangement);
   }
 
-  function startDrag(
-    event: MouseEvent,
-    panel: FloatingPanelConfig | undefined,
-    modes: ("position" | "width" | "height")[],
-  ) {
-    if (panel) {
-      draggingPanel.value = panel.id;
-    }
-    draggingFrom.value = {
-      x: event.clientX,
-      y: event.clientY,
-    };
-    dragModes.value = modes;
+  function initPanelsFromArrangement(arrangement: FloatingPanelConfig[]) {
+    leftPanels.value = arrangement.filter((p) => p.dock === "left");
+    rightPanels.value = arrangement.filter((p) => p.dock === "right");
+    const floatingArea = document
+      .getElementById("floating-panel-set")
+      ?.getBoundingClientRect();
+    floatingPanels.value = arrangement
+      .filter((p) => p.dock === undefined)
+      .map((p) => {
+        // apply position and dimension proportions
+        if (p.position && floatingArea) {
+          // floating panel positions are relative to floating area
+          p.position = {
+            x: p.position.x * window.innerWidth - floatingArea.left,
+            y: p.position.y * window.innerHeight - floatingArea.top,
+          };
+        }
+        if (p.width) p.width *= window.innerWidth;
+        if (p.height) p.height *= window.innerHeight;
+        return p;
+      });
   }
 
-  function dragPanel(event: MouseEvent) {
-    let offsetX = -30;
-    const offsetY = 35;
-    const minHeight = 175;
-    const minWidth = 150;
+  function getCurrentPanelArrangement() {
+    return allPanels.value.map((p) => {
+      if (p.dock === undefined) {
+        const rect = p.element?.getBoundingClientRect();
+        if (rect) {
+          // use proportions instead of coordinates
+          // so that bookmarks look good with other window sizes
+          const position = {
+            x: rect.x / window.innerWidth,
+            y: rect.y / window.innerHeight,
+          };
+          const width = rect.width / window.innerWidth;
+          const height = rect.height / window.innerHeight;
+          return { ...p, position, width, height };
+        }
+      }
+      return p;
+    });
+  }
 
-    const panel = panelArrangement.value.find(
-      (p) => p.id === draggingPanel.value,
-    );
-    if (!panel) return undefined;
-    if (draggingFrom.value) {
-      const from: { x: number; y: number } = { ...draggingFrom.value };
+  function getPanel(panelId: string) {
+    return allPanels.value.find((p) => p.id === panelId);
+  }
 
-      if (panel.dock == "right") offsetX += document.body.clientWidth - 390;
-      const position = {
-        x: event.clientX - offsetX - (panel.element?.clientWidth || 0),
-        y: event.clientY - offsetY,
+  function updatePanel(panel: any) {
+    const panelLists = [
+      leftPanels.value,
+      rightPanels.value,
+      floatingPanels.value,
+    ];
+    panelLists.forEach((panelList) => {
+      panelList.forEach((p) => {
+        if (p.id === panel.id) {
+          Object.assign(p, panel);
+        }
+      });
+    });
+  }
+
+  function dragEnd(e: any) {
+    if (dragPoint.value && e.to?.id === "floating-panel-set") {
+      const panel = floatingPanels.value[e.newIndex];
+      panel.position = {
+        x: e.originalEvent.offsetX - dragPoint.value.x,
+        y: e.originalEvent.offsetY - dragPoint.value.y,
       };
-      if (dragModes.value?.includes("position")) {
-        const allowDock =
-          Math.abs(from.x - event.clientX) > 10 &&
-          Math.abs(from.y - event.clientY) > 10;
-        if (
-          allowDock &&
-          appStore.openSidebars.includes("left") &&
-          event.clientX < 350
-        ) {
-          // dock left
-          panel.dock = "left";
-          panel.position = undefined;
-          panel.width = undefined;
-          panel.height = undefined;
-          // determine order
-          const currentDocked = panelArrangement.value.filter(
-            (p) => p.dock === "left" && !p.position,
-          );
-          panel.order = Math.ceil(
-            event.clientY / (document.body.clientHeight / currentDocked.length),
-          );
-        } else if (
-          allowDock &&
-          appStore.openSidebars.includes("right") &&
-          event.clientX > document.body.clientWidth - 350
-        ) {
-          // dock right
-          panel.dock = "right";
-          panel.position = undefined;
-          panel.width = undefined;
-          panel.height = undefined;
-          // determine order
-          const currentDocked = panelArrangement.value.filter(
-            (p) => p.dock === "right" && !p.position,
-          );
-          panel.order = Math.ceil(
-            event.clientY / (document.body.clientHeight / currentDocked.length),
-          );
-        } else if (!panel.position) {
-          // float
-          panel.width = 300;
-          panel.height = 200;
-          panel.position = position;
-        } else {
-          panel.position = position;
-        }
-      }
-      if (dragModes.value?.includes("height")) {
-        if (!panel.height) {
-          panel.height = panel.element?.clientHeight;
-        }
-        if (panel.height) {
-          const heightDelta = event.clientY - draggingFrom.value.y;
-          if (panel.height + heightDelta > minHeight) {
-            panel.height = panel.height + heightDelta;
-            from.y = event.clientY;
-          }
-        }
-      }
-      if (dragModes.value?.includes("width") && panel.width) {
-        const widthDelta = event.clientX - draggingFrom.value.x;
-        if (panel.width + widthDelta > minWidth) {
-          panel.width = panel.width + widthDelta;
-          from.x = event.clientX;
-        }
-      }
-      draggingFrom.value = from;
+      updatePanel(panel);
     }
+    dragPoint.value = undefined;
   }
 
-  function stopDrag() {
-    draggingPanel.value = undefined;
-    draggingFrom.value = undefined;
-    dragModes.value = [];
+  function dragFloating(x: number, y: number, panelId: string) {
+    const floatingArea = document
+      .getElementById("floating-panel-set")
+      ?.getBoundingClientRect();
+    const panel = getPanel(panelId);
+    if (floatingArea && panel && dragPoint.value) {
+      const width = floatingArea.width;
+      const dockMargin = 20;
+      x += dragPoint.value.x;
+      if (x + dockMargin < 0) {
+        const panelsAbove = leftPanels.value.filter((p) => {
+          const box = p.element?.getBoundingClientRect();
+          return box && box.bottom < y;
+        });
+        leftPanels.value.splice(panelsAbove.length, 0, panel);
+        floatingPanels.value = floatingPanels.value.filter(
+          (p) => p.id !== panelId,
+        );
+      }
+      if (x - dockMargin > width) {
+        const panelsAbove = rightPanels.value.filter((p) => {
+          const box = p.element?.getBoundingClientRect();
+          return box && box.bottom < y;
+        });
+        rightPanels.value.splice(panelsAbove.length, 0, panel);
+        floatingPanels.value = floatingPanels.value.filter(
+          (p) => p.id !== panelId,
+        );
+      }
+    }
   }
 
   function isVisible(showable: Showable, nested: boolean = true): boolean {
     if (showable.region) {
       return mapStore.regionShownId === showable.region.id;
     } else if (showable.chart) {
-      const chartPanel = panelArrangement.value.find(
-        (panel) => panel.id === "charts",
-      );
+      const chartPanel = getPanel("charts");
       if (!chartPanel) return false;
       return (
         analysisStore.currentChart?.id == showable.chart.id &&
@@ -323,13 +315,11 @@ export const usePanelStore = defineStore("panel", () => {
         if (!chart.chart_data) {
           chart = await getChart(chart.id);
         }
-        const chartPanel = panelArrangement.value.find(
-          (panel) => panel.id === "charts",
-        );
-        if (chartPanel) {
-          chartPanel.visible = true;
-          chartPanel.collapsed = false;
-        }
+        updatePanel({
+          id: "charts",
+          visible: true,
+          collapsed: false,
+        });
       }
       analysisStore.currentChart = visible ? chart : undefined;
     } else if (showable.dataset) {
@@ -361,14 +351,11 @@ export const usePanelStore = defineStore("panel", () => {
         if (!network.nodes) {
           network = await getNetwork(network.id);
         }
-        const networkPanel = panelArrangement.value.find(
-          (panel) => panel.id === "networks",
-        );
-        if (networkPanel) {
-          networkPanel.visible = true;
-          networkPanel.collapsed = false;
-        }
-        networkStore.currentNetwork = network;
+        updatePanel({
+          id: "networks",
+          visible: true,
+          collapsed: false,
+        });
       }
       if (nested) {
         const dataset = projectStore.availableDatasets?.find(
@@ -415,13 +402,11 @@ export const usePanelStore = defineStore("panel", () => {
         }
       } else {
         if (visible) {
-          const analyticsPanel = panelArrangement.value.find(
-            (panel) => panel.id === "analytics",
-          );
-          if (analyticsPanel) {
-            analyticsPanel.visible = true;
-            analyticsPanel.collapsed = false;
-          }
+          updatePanel({
+            id: "analytics",
+            visible: true,
+            collapsed: false,
+          });
           analysisStore.currentAnalysisTab = "old";
           analysisStore.currentAnalysisType = taskType;
           await analysisStore.fetchResults();
@@ -443,14 +428,18 @@ export const usePanelStore = defineStore("panel", () => {
 
   return {
     showableTypes,
-    panelArrangement,
-    draggingPanel,
-    draggingFrom,
-    dragModes,
+    leftPanels,
+    rightPanels,
+    floatingPanels,
+    allPanels,
     resetPanels,
-    startDrag,
-    dragPanel,
-    stopDrag,
+    initPanelsFromArrangement,
+    getCurrentPanelArrangement,
+    getPanel,
+    updatePanel,
+    dragPoint,
+    dragEnd,
+    dragFloating,
     isVisible,
     setVisibility,
   };
