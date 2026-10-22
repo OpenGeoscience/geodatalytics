@@ -42,6 +42,7 @@ export const useProjectStore = defineStore("project", () => {
   const availableProjects = ref<Project[]>([]);
   const currentProject = ref<Project>();
   const projectConfigMode = ref<"new" | "existing">();
+  const showUserSelectDialog = ref<boolean>(false);
   const loadingDatasets = ref<boolean>(false);
   const allDatasets = ref<Dataset[]>();
   const availableDatasets = ref<Dataset[]>();
@@ -88,7 +89,9 @@ export const useProjectStore = defineStore("project", () => {
   }
 
   async function fetchAvailableDatasetTags() {
-    availableDatasetTags.value = await getDatasetTags();
+    if (!availableDatasetTags.value?.length) {
+      availableDatasetTags.value = await getDatasetTags();
+    }
   }
 
   async function fetchProjectBookmarks() {
@@ -363,6 +366,13 @@ export const useProjectStore = defineStore("project", () => {
   async function loadProjects() {
     clearState();
     availableProjects.value = await getProjects();
+    if (!availableProjects.value.length) {
+      tutorialStore.showOneTimeInstruction(
+        appStore.authenticated
+          ? "no_projects_authenticated"
+          : "no_projects_unauthenticated",
+      );
+    }
     loadingProjects.value = false;
   }
 
@@ -371,6 +381,7 @@ export const useProjectStore = defineStore("project", () => {
     availableProjects,
     currentProject,
     projectConfigMode,
+    showUserSelectDialog,
     loadingDatasets,
     allDatasets,
     availableDatasets,

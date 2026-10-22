@@ -146,14 +146,6 @@ function selectProject(project: Project) {
   }
 }
 
-async function loadSelectedProject() {
-  await projectStore.loadProjects();
-  projectStore.currentProject = projectStore.availableProjects.find(
-    (p) => p.id === selectedProject.value?.id,
-  );
-  projectStore.projectConfigMode = undefined;
-}
-
 function addDatasetToProject(dataset: Dataset) {
   savingId.value = dataset.id;
   const projDatasetIds = projDatasets.value?.map((d) => d.id);
@@ -224,7 +216,11 @@ function datasetUploaded() {
 onMounted(() => {
   window.addEventListener("keydown", (e) => {
     if (e.key == "Escape" && projectStore.projectConfigMode) {
-      projectStore.projectConfigMode = undefined;
+      if (projectStore.showUserSelectDialog) {
+        projectStore.showUserSelectDialog = false;
+      } else {
+        projectStore.projectConfigMode = undefined;
+      }
     }
   });
 });
@@ -271,20 +267,6 @@ watch(selectedProject, resetProjectEdit);
         <v-icon icon="mdi-cog" size="large" color="primary" />
       </v-btn>
     </div>
-    <v-card
-      v-if="
-        !projectStore.loadingProjects &&
-        projectStore.availableProjects.length === 0
-      "
-      class="tutorial-popup"
-    >
-      <v-card-text v-if="appStore.authenticated">
-        To get started, create a project and add datasets to it.
-      </v-card-text>
-      <v-card-text v-else>
-        There are currently no projects that allow unauthenticated access.
-      </v-card-text>
-    </v-card>
     <div v-if="projectStore.currentProject" class="project-row text-body-small">
       <v-btn
         flat
@@ -446,32 +428,25 @@ watch(selectedProject, resetProjectEdit);
               <v-icon icon="mdi-arrow-right" />
             </v-btn>
           </div>
-          <v-btn
-            v-else
-            variant="tonal"
-            width="100%"
-            @click="projectStore.projectConfigMode = 'new'"
-            >+ New</v-btn
-          >
-          <v-btn
-            v-if="selectedProject"
-            class="options"
-            color="primary"
-            @click="loadSelectedProject"
-          >
-            Load Project
-          </v-btn>
         </div>
         <div v-if="selectedProject" class="tab-content">
-          <v-alert v-if="selectedProject.allow_unauthenticated" class="mr-16">
-            <v-icon icon="mdi-alert-box-outline" color="error"></v-icon>
-            This project allows unauthenticated view access.
-          </v-alert>
           <v-tabs v-model="currentTab" color="primary">
             <v-tab value="datasets">Dataset Selection</v-tab>
             <v-tab value="users">Access Control</v-tab>
           </v-tabs>
+          <v-alert
+            v-if="selectedProject.allow_unauthenticated"
+            class="mr-16 mb-2"
+          >
+            <v-icon icon="mdi-alert-box-outline" color="error"></v-icon>
+            This project allows unauthenticated view access.
+          </v-alert>
           <div v-if="currentTab === 'datasets'">
+            <v-alert class="mr-16">
+              <v-icon icon="mdi-information-outline" color="primary"></v-icon>
+              Add datasets with the + buttons in the "All Datasets" list. Remove
+              datasets with the X buttons in the "Project Datasets" list.
+            </v-alert>
             <v-progress-linear
               v-if="
                 projectStore.loadingDatasets ||

@@ -493,3 +493,11 @@ export interface Bookmark {
   map_center: number[];
   map_zoom: number;
 }
+
+export interface TutorialInstruction {
+  id?: string;
+  arrow?: "up" | "left";
+  message: string;
+  position: [string, string];
+  proceed?: () => void;
+}
