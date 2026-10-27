@@ -53,7 +53,9 @@ const projectStore = useProjectStore();
       </v-card>
     </v-dialog>
     <div
-      v-if="tutorialStore.currentTutorialStep"
+      v-if="
+        tutorialStore.currentTutorialStep && !tutorialStore.currentInstruction
+      "
       class="tutorial-message"
       :style="{
         top: tutorialStore.currentTutorialStep.position[0],
