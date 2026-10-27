@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import type { Ref } from "vue";
 import DatasetSelect from "@/components/projects/DatasetSelect.vue";
 import DatasetUpload from "@/components/projects/DatasetUpload.vue";
@@ -213,16 +213,22 @@ function datasetUploaded() {
   refreshProjectDatasets(null);
 }
 
-onMounted(() => {
-  window.addEventListener("keydown", (e) => {
-    if (e.key == "Escape" && projectStore.projectConfigMode) {
-      if (projectStore.showUserSelectDialog) {
-        projectStore.showUserSelectDialog = false;
-      } else {
-        projectStore.projectConfigMode = undefined;
-      }
+function keyDown(e: KeyboardEvent) {
+  if (e.key == "Escape" && projectStore.projectConfigMode) {
+    if (projectStore.showUserSelectDialog) {
+      projectStore.showUserSelectDialog = false;
+    } else {
+      projectStore.projectConfigMode = undefined;
     }
-  });
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", keyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", keyDown);
 });
 
 watch(selectedProject, resetProjectEdit);
