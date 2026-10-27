@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
+import osmnx
 import pytest
 from pytest_lazy_fixtures import lf
+import requests
 
 from uvdat.core.models import Chart, Dataset, Network, TaskResult
 from uvdat.core.tasks.analytics import (
@@ -75,14 +77,17 @@ def test_rest_run_analysis_task_no_inputs(authenticated_api_client, user, projec
 @pytest.mark.django_db
 def test_rest_run_analysis_task_creator(client, expected_status, user, project):
     project.set_collaborators([user])
-    resp = client.post(
-        f"/api/v1/analytics/project/{project.id}/types/create_road_network/run/",
-        # Smallest town in America, only 7 nodes
-        {"location": "Monowi, Nebraska"},
-    )
-    assert resp.status_code == expected_status
-    if expected_status == 200:
-        assert resp.json()["creator"] == user.id
+    try:
+        resp = client.post(
+            f"/api/v1/analytics/project/{project.id}/types/create_road_network/run/",
+            # Smallest town in America, only 7 nodes
+            {"location": "Monowi, Nebraska"},
+        )
+        assert resp.status_code == expected_status
+        if expected_status == 200:
+            assert resp.json()["creator"] == user.id
+    except (osmnx._errors.ResponseStatusCodeError, requests.exceptions.ConnectionError):
+        pytest.skip("Skipping create road network test due to unavailable Overpass API.")
 
 
 @pytest.mark.parametrize(

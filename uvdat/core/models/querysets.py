@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Self
 
 from django.db import models
+from rest_framework.permissions import SAFE_METHODS
 
 if TYPE_CHECKING:
     from .project import Project
@@ -24,7 +25,7 @@ class ProjectQuerySet(models.QuerySet):
     only rows that have an associated Project are returned.
     """
 
-    def filter_by_projects(self, projects: models.QuerySet[Project]) -> Self:
+    def filter_by_projects(self, projects: models.QuerySet[Project], method="GET") -> Self:
         """Return rows visible to users who have access to *projects*."""
         path: str | None = self.model.project_filter_path
         allow_null: bool = getattr(self.model, "project_filter_allow_null", False)
@@ -39,6 +40,6 @@ class ProjectQuerySet(models.QuerySet):
                 query = q
             else:
                 query |= q
-        if allow_null:
+        if allow_null and method in SAFE_METHODS:
             query |= models.Q(**{f"{path}__isnull": True})
         return self.filter(query).distinct()

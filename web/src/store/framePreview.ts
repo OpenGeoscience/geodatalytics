@@ -439,7 +439,28 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
     if (!previews?.length) {
       return;
     }
-    prefetchFramePreviewUrls(previews.map((preview) => preview?.url));
+
+    // Prefer the current frame so it is warm before background batches run.
+    // Frames may not be loaded yet on addLayer; fall back to array position
+    // (previews are ordered with raster frames) then the first preview.
+    const rasterFrames = orderedRasterFrames(layerStore.layerFrames(layer));
+    const currentFrameIndex = layer.current_frame_index;
+    const previewForCurrentFrame = previewAtFrameIndex(
+      previews,
+      rasterFrames,
+      currentFrameIndex,
+    );
+    const previewByArrayPosition = previews[currentFrameIndex];
+    const firstPreview = previews[0];
+    const priorityUrl =
+      previewForCurrentFrame?.url ??
+      previewByArrayPosition?.url ??
+      firstPreview?.url;
+
+    void prefetchFramePreviewUrls(
+      previews.map((preview) => preview?.url),
+      { priorityUrls: [priorityUrl] },
+    );
   }
 
   function hasReadyPreviewForCurrentFrame(layer: Layer) {
@@ -524,7 +545,9 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       currentFrameIndex,
     );
     urlsToPrefetch.push(currentPreview?.url);
-    prefetchFramePreviewUrls(urlsToPrefetch);
+    void prefetchFramePreviewUrls(urlsToPrefetch, {
+      priorityUrls: [currentPreview?.url],
+    });
   }
 
   function hidePreviousPreview(
@@ -597,9 +620,29 @@ export const useFramePreviewStore = defineStore("framePreview", () => {
       return;
     }
 
-    await waitForRasterSourceLoaded(map, tileSourceId);
+    // Tiles are not ready yet: keep the preview on screen and retry this
+    // handoff later (still generation-guarded, so scrubbing cancels it).
+    const retryTransition = () => {
+      scheduleTileLoadAfterSettle(layerKeyValue, generation, () => {
+        void transitionToTiles(
+          layer,
+          frameIndex,
+          layerKeyValue,
+          generation,
+          targetOpacity,
+          tileLayerId,
+          tileSourceId,
+        );
+      });
+    };
+
+    const sourceLoaded = await waitForRasterSourceLoaded(map, tileSourceId);
 
     if (transitionGenerationByLayerKey.get(layerKeyValue) !== generation) {
+      return;
+    }
+    if (!sourceLoaded) {
+      retryTransition();
       return;
     }
 

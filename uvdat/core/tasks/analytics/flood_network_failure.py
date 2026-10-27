@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import math
 from typing import TYPE_CHECKING, Any
 
@@ -132,9 +131,8 @@ def flood_network_failure(result_id):
     source = tilesource.get_tilesource_from_path(raster_path)
     metadata = source.getMetadata()
 
-    now = datetime.now(tz=UTC).strftime("%Y-%m-%d %I:%M %p UTC")
     animation = NetworkAnimation.objects.create(
-        name=f"Flood Failure {now}",
+        name=f"Flood Failure {result.id}",
         network=network,
         project=result.project,
         task_result=result,
