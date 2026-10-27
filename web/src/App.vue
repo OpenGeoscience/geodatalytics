@@ -62,13 +62,14 @@ watch(() => appStore.currentUser, onReady);
             <span v-if="typeof appStore.currentError === 'string'">
               {{ appStore.currentError }}
             </span>
-            <div
-              v-for="[key, value] in Object.entries(appStore.currentError)"
-              v-else-if="typeof appStore.currentError === 'object'"
-              :key="key"
-            >
-              <span class="capitalize">{{ key }}:</span>
-              {{ value }}
+            <div v-else-if="typeof appStore.currentError === 'object'">
+              <div
+                v-for="[key, value] in Object.entries(appStore.currentError)"
+                :key="key"
+              >
+                <span class="capitalize">{{ key }}:</span>
+                {{ value }}
+              </div>
             </div>
           </v-card-text>
         </v-card>
