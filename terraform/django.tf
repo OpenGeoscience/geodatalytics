@@ -49,6 +49,8 @@ module "django" {
   heroku_web_dyno_size = "standard-2x"
   # If one dyno is beyond basic, all must be beyond basic even though worker is scaled to 0
   heroku_worker_dyno_size = "standard-1x"
+
+  heroku_postgresql_plan = "essential-1"
 }
 
 resource "heroku_addon" "redis" {

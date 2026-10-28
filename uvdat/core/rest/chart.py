@@ -14,14 +14,6 @@ class ChartViewSet(ModelViewSet):
     queryset = Chart.objects.all()
     serializer_class = ChartSerializer
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        project_id: str | None = self.request.query_params.get("project")
-        if project_id is None or not project_id.isdigit():
-            return qs
-
-        return qs.filter(project=int(project_id))
-
     @action(detail=True, methods=["get"])
     def files(self, request, **kwargs):
         chart = self.get_object()

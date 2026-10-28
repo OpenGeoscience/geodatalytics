@@ -43,7 +43,7 @@ class GuardianPermission(BasePermission):
 
         # If the object remains in the queryset after this function filters it, then the user has
         # the required permission on at least one associated project
-        return queryset.filter_by_projects(permitted_projects).exists()
+        return queryset.filter_by_projects(permitted_projects, request.method).exists()
 
 
 class DatasetGuardianPermission(GuardianPermission):
@@ -89,4 +89,4 @@ class GuardianFilter(BaseFilterBackend):
             ) | permitted_projects.filter(allow_unauthenticated=True)
 
         # Return queryset filtered by objects that are within these projects
-        return queryset.filter_by_projects(permitted_projects)
+        return queryset.filter_by_projects(permitted_projects, request.method)
