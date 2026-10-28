@@ -13,7 +13,6 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(["updateSelectedProject"]);
 const allUsers: Ref<User[]> = ref([]);
-const showUserSelectDialog: Ref<boolean> = ref(false);
 const userSelectDialogMode: Ref<"add" | "transfer"> = ref("add");
 const selectedUsers: Ref<User[]> = ref([]);
 type PermissionLevel = "follower" | "collaborator";
@@ -77,7 +76,7 @@ function savePermissions() {
       emit("updateSelectedProject", project);
       selectedUsers.value = [];
       selectedPermissionLevel.value = "follower";
-      showUserSelectDialog.value = false;
+      projectStore.showUserSelectDialog = false;
       userToRemove.value = undefined;
       getUsers().then((data) => {
         allUsers.value = data.filter((user) => user.id !== project.owner.id);
@@ -110,7 +109,7 @@ onMounted(() => {
             v-tooltip="'Transfer ownership'"
             icon="mdi-pencil"
             @click="
-              showUserSelectDialog = true;
+              projectStore.showUserSelectDialog = true;
               userSelectDialogMode = 'transfer';
             "
           />
@@ -173,13 +172,13 @@ onMounted(() => {
       v-if="editMode"
       color="primary"
       @click="
-        showUserSelectDialog = true;
+        projectStore.showUserSelectDialog = true;
         userSelectDialogMode = 'add';
       "
     >
       Add Users
     </v-btn>
-    <v-dialog v-model="showUserSelectDialog" width="500">
+    <v-dialog v-model="projectStore.showUserSelectDialog" width="500">
       <v-card color="background">
         <v-card-title class="pa-3">
           {{
@@ -189,7 +188,7 @@ onMounted(() => {
             class="close-button transparent"
             variant="flat"
             icon
-            @click="showUserSelectDialog = false"
+            @click="projectStore.showUserSelectDialog = false"
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>

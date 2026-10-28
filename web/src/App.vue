@@ -59,7 +59,18 @@ watch(() => appStore.currentUser, onReady);
           </v-btn>
           <v-card-title> Error: </v-card-title>
           <v-card-text>
-            {{ appStore.currentError }}
+            <span v-if="typeof appStore.currentError === 'string'">
+              {{ appStore.currentError }}
+            </span>
+            <div v-else-if="typeof appStore.currentError === 'object'">
+              <div
+                v-for="[key, value] in Object.entries(appStore.currentError)"
+                :key="key"
+              >
+                <span class="capitalize">{{ key }}:</span>
+                {{ value }}
+              </div>
+            </div>
           </v-card-text>
         </v-card>
       </v-overlay>
@@ -129,7 +140,7 @@ scrollbar changes disables default styling and rounding so corners appear square
   padding: 8px;
   border-radius: 4px;
   width: 200px;
-  background-color: rgb(var(--v-theme-on-surface-variant));
-  color: rgb(var(--v-theme-surface-variant));
+  background-color: rgb(var(--v-theme-surface-variant));
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 </style>

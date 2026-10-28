@@ -53,7 +53,10 @@ class FloodNetworkFailure(AnalysisType):
     def get_input_options(self):
         return {
             "network": Network.objects.all(),
-            "flood_simulation": TaskResult.objects.filter(task_type=FloodSimulation().db_value),
+            "flood_simulation": TaskResult.objects.filter(
+                task_type=FloodSimulation().db_value,
+                outputs__isnull=False,
+            ),
             "depth_tolerance_meters": [0.1, 0.5, 1, 2, 3],
             "station_radius_meters": [10, 15, 20, 25, 30, 35, 40, 45, 50],
         }
