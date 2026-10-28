@@ -7,7 +7,6 @@ import SliderNumericInput from "../SliderNumericInput.vue";
 
 import {
   useStyleStore,
-  usePanelStore,
   useLayerStore,
   useMapStore,
   useProjectStore,
@@ -15,7 +14,6 @@ import {
 import { cloneDeep } from "lodash";
 import { useMapCompareStore } from "@/store/compare";
 const styleStore = useStyleStore();
-const panelStore = usePanelStore();
 const mapStore = useMapStore();
 const layerStore = useLayerStore();
 const compareStore = useMapCompareStore();
@@ -151,13 +149,6 @@ function selectStyle(style: LayerStyle, panel: "A" | "B") {
     }
   });
 }
-
-watch(
-  () => panelStore.draggingPanel,
-  () => {
-    emit("setLayerActive", false);
-  },
-);
 
 function cancel() {
   emit("setLayerActive", false);

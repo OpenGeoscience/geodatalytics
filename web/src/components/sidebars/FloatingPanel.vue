@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { useAppStore, usePanelStore, useProjectStore } from "@/store";
 import { useMapCompareStore } from "@/store/compare";
@@ -12,90 +12,50 @@ const props = defineProps<{
   id: string;
 }>();
 
-const startDrag = panelStore.startDrag;
-const panel = computed(() =>
-  panelStore.panelArrangement.find((p) => p.id === props.id),
-);
+const panel = computed(() => panelStore.getPanel(props.id));
 
 const element = ref();
 
-function getPanelContainerClass() {
-  let classString = "";
-  if (panel.value?.collapsed) classString += " closed";
-  if (!panel.value?.position) classString += "panel-container";
-  return classString;
-}
-
-function getPanelContainerStyle() {
-  const styleObj: Record<string, string> = {};
-  styleObj.order = panel.value?.order.toString() || "0";
-  if (!panel.value?.position) {
-    if (panel.value?.height && !panel.value.collapsed) {
-      styleObj.height = panel.value?.height + "px";
-      styleObj.flex = "unset";
-    }
-  }
-  return styleObj;
-}
-
-function getPanelStyle() {
-  const styleObj: Record<string, string> = {};
-  if (panel.value?.position) {
-    styleObj["z-index"] = "2"; // above vuetify navigation drawer
-    styleObj.visibility = "visible"; // prevent hiding when sidebar closes
-    styleObj.position = "absolute";
-    styleObj.top = panel.value.position.y + "px";
-    styleObj.left = panel.value.position.x + "px";
-    if (panel.value?.width) {
-      styleObj.width = panel.value?.width + "px";
-    }
-  }
-  if (panel.value?.height && !panel.value.collapsed) {
-    styleObj.height = panel.value?.height + "px";
-  }
-  return styleObj;
-}
-
 function togglePanelCollapsed() {
   if (panel.value) {
-    panel.value.collapsed = !panel.value.collapsed;
-    panelUpdated();
+    panelStore.updatePanel({
+      id: props.id,
+      collapsed: !panel.value.collapsed,
+    });
   }
 }
 
 function closePanel() {
   if (panel.value) {
-    panel.value.visible = false;
-    panelUpdated();
+    panelStore.updatePanel({
+      id: props.id,
+      visible: false,
+    });
   }
 }
 
 function updatePanelElement() {
-  if (panel.value) {
-    panel.value.element = element.value;
-    panelUpdated();
-  }
+  panelStore.updatePanel({
+    id: props.id,
+    element: element.value,
+  });
 }
 
-function panelUpdated() {
-  if (panel.value) {
-    panelStore.panelArrangement = [
-      panel.value,
-      ...panelStore.panelArrangement.filter((p) => p.id !== props.id),
-    ];
-  }
-}
+onMounted(updatePanelElement);
 </script>
 
 <template>
   <div
     v-if="panel && panel.visible"
-    :class="getPanelContainerClass()"
-    :style="getPanelContainerStyle()"
+    class="panel-container"
+    :style="{
+      height: panel.collapsed ? '50px' : '100%',
+      flex: panel.collapsed ? 'unset' : 1,
+    }"
   >
-    <div ref="element" class="panel" :style="getPanelStyle()">
+    <div ref="element" class="panel">
       <v-card class="fill-height">
-        <div style="display: flex; align-items: center">
+        <div class="panel-title">
           <v-card-text class="pa-3" style="font-size: 18px">{{
             panel.label
           }}</v-card-text>
@@ -183,16 +143,6 @@ function panelUpdated() {
               @mousedown="togglePanelCollapsed"
             ></v-icon>
             <v-icon
-              icon="mdi-drag"
-              class="draggable"
-              @mousedown="
-                (e: any) => {
-                  updatePanelElement();
-                  startDrag(e, panel, ['position']);
-                }
-              "
-            ></v-icon>
-            <v-icon
               v-if="panel.closeable"
               v-tooltip="'Close Panel'"
               icon="mdi-close"
@@ -203,37 +153,8 @@ function panelUpdated() {
         </div>
         <v-card-text v-if="!panel.collapsed" class="pa-2 panel-content">
           <slot></slot>
-          <v-icon
-            v-if="panel.position"
-            icon="mdi-resize-bottom-right"
-            class="right mr-2 draggable-corner"
-            @mousedown="
-              (e: any) => {
-                updatePanelElement();
-                startDrag(e, panel, ['width', 'height']);
-              }
-            "
-          ></v-icon>
         </v-card-text>
       </v-card>
-    </div>
-    <div
-      v-if="!panel.position && !panel.collapsed"
-      class="draggable-divider"
-      @mousedown="
-        (e) => {
-          updatePanelElement();
-          startDrag(e, panel, ['height']);
-        }
-      "
-    >
-      <v-divider></v-divider>
-      <v-icon
-        icon="mdi-drag-horizontal-variant"
-        size="x-small"
-        class="mx-2"
-      ></v-icon>
-      <v-divider></v-divider>
     </div>
   </div>
 </template>
@@ -245,17 +166,83 @@ function panelUpdated() {
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  margin-bottom: 10px;
 }
 .panel {
   position: relative;
-  margin: 6px;
-  border-radius: 10px;
+  margin: 0px 6px;
   flex: 1;
   min-height: 50px;
+  height: 100%;
   overflow: auto;
+  border: 1px solid rgb(var(--v-theme-border));
+  border-radius: 10px;
 }
 .panel.closed {
   flex: 0;
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  cursor: move;
+  user-select: none;
+}
+.panel-border {
+  position: absolute;
+  user-select: none;
+  z-index: 1;
+}
+.panel-border-tl,
+.panel-border-tr,
+.panel-border-bl,
+.panel-border-br {
+  height: 10px;
+  width: 10px;
+  z-index: 2;
+}
+.panel-border-tl {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+.panel-border-tr {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+.panel-border-bl {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+.panel-border-br {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+.panel-border-tm,
+.panel-border-bm {
+  height: 10px;
+  width: 100%;
+  cursor: ns-resize;
+}
+.panel-border-tm {
+  top: 0;
+}
+.panel-border-bm {
+  bottom: 0;
+}
+.panel-border-ml,
+.panel-border-mr {
+  height: 100%;
+  width: 10px;
+  cursor: ew-resize;
+}
+.panel-border-ml {
+  left: 0;
+}
+.panel-border-mr {
+  right: 0;
 }
 .panel-content {
   overflow: auto;
@@ -263,9 +250,6 @@ function panelUpdated() {
 }
 .pointer {
   cursor: pointer;
-}
-.draggable {
-  cursor: move;
 }
 .draggable-divider {
   display: flex;
@@ -288,6 +272,8 @@ function panelUpdated() {
   overflow: auto !important;
   height: calc(100% - 45px);
   background-color: rgb(var(--v-theme-background)) !important;
+  border: 1px solid rgb(var(--v-theme-border));
+  box-shadow: none;
 }
 .help-text {
   color: rgb(var(--v-theme-helper-text));
