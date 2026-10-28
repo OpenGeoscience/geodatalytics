@@ -18,7 +18,7 @@ from uvdat.core.models import RasterData, Region, TaskResult
 
 from .analysis_type import AnalysisInputError, AnalysisTask, AnalysisType
 
-MODEL_CARD_URL = "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF"
+MODEL_CARD_URL = "https://deepinfra.com/Qwen/Qwen3.5-9B"
 SYSTEM_PROMPT = (
     "You are an urban planning and geospatial analysis expert specializing in "
     "land use patterns, hydrology, transportation networks, and municipal policy. "
@@ -29,7 +29,6 @@ SYSTEM_PROMPT = (
 TOKEN_RANGE = {"min": 1000, "max": 10000, "step": 1000}
 MAX_PROMPT_LENGTH = 4000
 THUMBNAIL_SIZE = 2000
-MAX_STARTUP_WAIT = 300
 
 
 class ImageryAskQwen(AnalysisType):
@@ -38,8 +37,7 @@ class ImageryAskQwen(AnalysisType):
         self.name = "Imagery: Ask Qwen"
         self.description = "Select an imagery layer and ask Qwen 3.5 about it."
         self.details = (
-            "Inferencing with unsloth/Qwen3.5-9B-GGUF provided by a "
-            "Kitware-hosted Huggingface Inference Endpoint. "
+            "Inferencing with Qwen3.5-9B provided by deepinfra. "
             f"See the model card at {MODEL_CARD_URL}. "
             "Responses may cut off mid-sentence if max_tokens is reached."
         )
@@ -63,9 +61,7 @@ class ImageryAskQwen(AnalysisType):
     def is_enabled(cls) -> bool:
         return (
             settings.UVDAT_ENABLE_IMAGERY_ASK_QWEN
-            and settings.UVDAT_HF_TOKEN is not None
-            and settings.UVDAT_HF_NAMESPACE is not None
-            and settings.UVDAT_HF_ENDPOINT_NAMES.get("qwen") is not None
+            and settings.UVDAT_DEEPINFRA_TOKEN is not None
         )
 
     def get_input_options(self):
@@ -121,21 +117,11 @@ class ImageryAskQwen(AnalysisType):
 @shared_task(base=AnalysisTask)
 def imagery_ask_qwen(result_id):
     # Only available with [tasks] extra
-    from huggingface_hub import (  # noqa: PLC0415
-        InferenceEndpointTimeoutError,
-        get_inference_endpoint,
-    )
+    from openai import OpenAI  # noqa: PLC0415
 
     result = TaskResult.objects.get(id=result_id)
-    if any(
-        setting == "changeme"
-        for setting in [
-            settings.UVDAT_HF_ENDPOINT_NAMES,
-            settings.UVDAT_HF_NAMESPACE,
-            settings.UVDAT_HF_TOKEN,
-        ]
-    ):
-        result.write_outputs({"response": "Huggingface configuration not set; not running task."})
+    if settings.UVDAT_DEEPINFRA_TOKEN == "changeme":  # noqa: S105
+        result.write_outputs({"response": "Deepinfra token not set; not running task."})
         return
 
     imagery = RasterData.objects.get(id=result.inputs.get("imagery"))
@@ -204,20 +190,11 @@ def imagery_ask_qwen(result_id):
     thumbnail_b64 = base64.b64encode(byte_stream.getvalue()).decode("utf-8")
     thumbnail_uri = f"data:image/jpeg;base64,{thumbnail_b64}"
 
-    result.write_status("Starting inference endpoint...")
-    endpoint = get_inference_endpoint(
-        name=settings.UVDAT_HF_ENDPOINT_NAMES["qwen"],
-        namespace=settings.UVDAT_HF_NAMESPACE,
-        token=settings.UVDAT_HF_TOKEN,
-    )
-    endpoint.resume()
-    try:
-        endpoint.wait(timeout=MAX_STARTUP_WAIT)
-    except InferenceEndpointTimeoutError:
-        result.write_error("Endpoint failed to start in 5 minutes. Try again later.")
-        return
-
     result.write_status("Sending question to Qwen...")
+    client = OpenAI(
+        api_key=settings.UVDAT_DEEPINFRA_TOKEN,
+        base_url="https://api.deepinfra.com/v1/openai",
+    )
     messages = [
         {
             "role": "system",
@@ -233,17 +210,10 @@ def imagery_ask_qwen(result_id):
     ]
 
     result.write_status("Awaiting Qwen's response...")
-    chat = endpoint.client.chat_completion(
-        model="unsloth/Qwen3.5-9B-GGUF",
+    chat = client.chat.completions.create(
+        model="Qwen/Qwen3.5-9B",
         messages=messages,
         max_tokens=max_tokens,
         frequency_penalty=0.5,
     )
-    response = ""
-    for choice in chat.choices:
-        if choice.finish_reason == "length":
-            # max tokens exceeded, use reasoning content
-            response += choice.message.reasoning_content
-        else:
-            response += choice.message.content
-    result.write_outputs({"response": response})
+    result.write_outputs({"response": chat.choices[0].message.content})
