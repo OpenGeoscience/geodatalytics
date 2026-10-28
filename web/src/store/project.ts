@@ -161,6 +161,7 @@ export const useProjectStore = defineStore("project", () => {
   }
 
   function navigateToBookmark(bookmark: Bookmark) {
+    if (!bookmark) return;
     currentBookmarkLoaded.value = false;
     router.push(`/bookmark/${bookmark.id}`);
   }
