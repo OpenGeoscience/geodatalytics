@@ -61,7 +61,10 @@ class NetworkRecovery(AnalysisType):
 
     def get_input_options(self):
         return {
-            "network_failure": TaskResult.objects.filter(task_type="flood_network_failure"),
+            "network_failure": TaskResult.objects.filter(
+                task_type="flood_network_failure",
+                outputs__isnull=False,
+            ),
             "recovery_mode": RECOVERY_MODES,
         }
 
