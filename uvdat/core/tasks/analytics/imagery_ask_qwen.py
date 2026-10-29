@@ -215,5 +215,6 @@ def imagery_ask_qwen(result_id):
         messages=messages,
         max_tokens=max_tokens,
         frequency_penalty=0.5,
+        temperature=1,
     )
     result.write_outputs({"response": chat.choices[0].message.content})
