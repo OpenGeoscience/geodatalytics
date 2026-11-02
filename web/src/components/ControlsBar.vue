@@ -311,9 +311,9 @@ function showTutorial() {
 }
 
 function togglePanelVisibility(id: string) {
-  panelStore.panelArrangement = panelStore.panelArrangement.map((p) => {
-    if (p.id == id) p.visible = !p.visible;
-    return p;
+  panelStore.updatePanel({
+    id,
+    visible: !panelStore.getPanel(id)?.visible,
   });
 }
 
@@ -484,9 +484,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
           <div class="control-menu-title">Panel Visibility</div>
           <v-card-text class="pa-3">
             <div
-              v-for="item in panelStore.panelArrangement.filter(
-                (p) => p.closeable,
-              )"
+              v-for="item in panelStore.allPanels.filter((p) => p.closeable)"
               :key="item.id"
               class="control-menyu-row"
               @click="togglePanelVisibility(item.id)"
@@ -791,6 +789,7 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
   left: 250px;
   background-color: rgb(var(--v-theme-surface-bright));
   display: flex;
+  border: 1px solid rgb(var(--v-theme-border));
   border-radius: 8px;
   z-index: 3;
 }

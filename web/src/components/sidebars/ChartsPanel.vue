@@ -14,9 +14,10 @@ import {
 import type { ChartOptions } from "@/types";
 import DetailView from "../DetailView.vue";
 
-import { useAnalysisStore } from "@/store";
+import { useAnalysisStore, useProjectStore } from "@/store";
 import SliderNumericInput from "../SliderNumericInput.vue";
 const analysisStore = useAnalysisStore();
+const projectStore = useProjectStore();
 
 ChartJS.register(
   CategoryScale,
@@ -226,6 +227,9 @@ const downloadReady = computed(() => {
         v-else-if="analysisStore.loadingCharts"
         indeterminate
       ></v-progress-linear>
+      <v-card-text v-else-if="!projectStore.currentProject" class="help-text">
+        Select a project to view its Charts.
+      </v-card-text>
       <v-card-text v-else class="help-text">No available Charts.</v-card-text>
     </v-card>
   </div>

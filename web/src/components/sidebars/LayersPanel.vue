@@ -268,7 +268,9 @@ function setLayerActive(layer: Layer, active: boolean) {
           </template>
         </draggable>
       </v-list>
-      <v-card-text v-else class="help-text">No selected layers.</v-card-text>
+      <v-card-text v-else class="help-text">
+        Add layers from the Datasets panel.
+      </v-card-text>
     </v-card>
   </div>
 </template>

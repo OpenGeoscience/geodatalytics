@@ -2,6 +2,10 @@
 import { ref } from "vue";
 import type { Ref } from "vue";
 import { logout } from "@/api/auth";
+import draggable from "vuedraggable";
+
+// @ts-ignore: this library lacks types
+import draggableResizable from "vue-draggable-resizable";
 
 import ProjectConfig from "@/components/projects/ProjectConfig.vue";
 import FloatingPanel from "@/components/sidebars/FloatingPanel.vue";
@@ -90,24 +94,36 @@ function toggleSidebar(sidebar: "left" | "right") {
         ></v-icon>
       </v-toolbar>
       <ProjectConfig />
-      <div class="panel-set">
-        <FloatingPanel
-          v-for="panel in panelStore.panelArrangement.filter(
-            (p) => p.dock == 'left',
-          )"
-          :id="panel.id"
-          :key="panel.id"
+      <div class="panel-set pt-2">
+        <draggable
+          v-model="panelStore.leftPanels"
+          item-key="id"
+          group="panels"
+          class="panel-container"
+          handle=".panel-title"
+          @start="
+            (e: any) =>
+              (panelStore.dragPoint = {
+                x: e.originalEvent.layerX,
+                y: e.originalEvent.layerY,
+              })
+          "
+          @end="panelStore.dragEnd"
         >
-          <DatasetsPanel
-            v-if="panel.id === 'datasets'"
-            :datasets="projectStore.availableDatasets"
-          />
-          <LayersPanel v-else-if="panel.id === 'layers'" />
-          <LegendPanel v-else-if="panel.id === 'legend'" />
-          <ChartsPanel v-else-if="panel.id === 'charts'" />
-          <NetworksPanel v-else-if="panel.id === 'networks'" />
-          <AnalyticsPanel v-else-if="panel.id === 'analytics'" />
-        </FloatingPanel>
+          <template #item="{ element }">
+            <FloatingPanel :id="element.id">
+              <DatasetsPanel
+                v-if="element.id === 'datasets'"
+                :datasets="projectStore.availableDatasets"
+              />
+              <LayersPanel v-else-if="element.id === 'layers'" />
+              <LegendPanel v-else-if="element.id === 'legend'" />
+              <ChartsPanel v-else-if="element.id === 'charts'" />
+              <NetworksPanel v-else-if="element.id === 'networks'" />
+              <AnalyticsPanel v-else-if="element.id === 'analytics'" />
+            </FloatingPanel>
+          </template>
+        </draggable>
       </div>
     </v-navigation-drawer>
 
@@ -145,35 +161,107 @@ function toggleSidebar(sidebar: "left" | "right") {
           ></v-icon>
         </div>
       </v-toolbar>
-      <div class="panel-set">
-        <FloatingPanel
-          v-for="panel in panelStore.panelArrangement.filter(
-            (p) => p.dock == 'right',
-          )"
-          :id="panel.id"
-          :key="panel.id"
+
+      <div class="panel-set pt-2">
+        <draggable
+          v-model="panelStore.rightPanels"
+          item-key="id"
+          group="panels"
+          class="panel-container"
+          handle=".panel-title"
+          @start="
+            (e: any) =>
+              (panelStore.dragPoint = {
+                x: e.originalEvent.layerX,
+                y: e.originalEvent.layerY,
+              })
+          "
+          @end="panelStore.dragEnd"
         >
-          <DatasetsPanel
-            v-if="panel.id === 'datasets'"
-            :datasets="projectStore.availableDatasets"
-          />
-          <LayersPanel v-else-if="panel.id === 'layers'" />
-          <LegendPanel v-else-if="panel.id === 'legend'" />
-          <ChartsPanel v-else-if="panel.id === 'charts'" />
-          <NetworksPanel v-else-if="panel.id === 'networks'" />
-          <AnalyticsPanel v-else-if="panel.id === 'analytics'" />
-        </FloatingPanel>
+          <template #item="{ element }">
+            <FloatingPanel :id="element.id">
+              <DatasetsPanel
+                v-if="element.id === 'datasets'"
+                :datasets="projectStore.availableDatasets"
+              />
+              <LayersPanel v-else-if="element.id === 'layers'" />
+              <LegendPanel v-else-if="element.id === 'legend'" />
+              <ChartsPanel v-else-if="element.id === 'charts'" />
+              <NetworksPanel v-else-if="element.id === 'networks'" />
+              <AnalyticsPanel v-else-if="element.id === 'analytics'" />
+            </FloatingPanel>
+          </template>
+        </draggable>
       </div>
     </v-navigation-drawer>
+
+    <draggable
+      id="floating-panel-set"
+      v-model="panelStore.floatingPanels"
+      item-key="id"
+      group="panels"
+      handle=".panel-title"
+      filter=".vdr"
+      :prevent-on-filter="false"
+      :style="{
+        left: appStore.openSidebars.includes('left') ? '360px' : '0px',
+        right: appStore.openSidebars.includes('right') ? '360px' : '0px',
+      }"
+    >
+      <template #item="{ element }">
+        <div>
+          <draggable-resizable
+            class="floating-panel"
+            active
+            prevent-deactivation
+            drag-handle=".panel-title"
+            :handles="
+              element.collapsed
+                ? ['ml', 'mr']
+                : ['tl', 'tm', 'tr', 'ml', 'mr', 'bl', 'bm', 'br']
+            "
+            class-name-handle="panel-border"
+            :x="element.position?.x || 0"
+            :y="element.position?.y || 0"
+            :w="element.width || 300"
+            :h="element.height || (element.collapsed ? 50 : 200)"
+            :min-width="300"
+            :min-height="200"
+            :on-drag-start="
+              (e: any) => (panelStore.dragPoint = { x: e.layerX, y: e.layerY })
+            "
+            :on-drag-end="panelStore.dragEnd"
+            @dragging="
+              (x: number, y: number) =>
+                panelStore.dragFloating(x, y, element.id)
+            "
+          >
+            <FloatingPanel :id="element.id">
+              <DatasetsPanel
+                v-if="element.id === 'datasets'"
+                :datasets="projectStore.availableDatasets"
+              />
+              <LayersPanel v-else-if="element.id === 'layers'" />
+              <LegendPanel v-else-if="element.id === 'legend'" />
+              <ChartsPanel v-else-if="element.id === 'charts'" />
+              <NetworksPanel v-else-if="element.id === 'networks'" />
+              <AnalyticsPanel v-else-if="element.id === 'analytics'" />
+            </FloatingPanel>
+          </draggable-resizable>
+        </div>
+      </template>
+    </draggable>
   </div>
 </template>
 
 <style>
 .sidebar {
   margin: 10px;
+  border: 1px solid rgb(var(--v-theme-border));
   border-radius: 10px;
   width: 350px !important;
   max-height: calc(100% - 20px);
+  z-index: 2 !important;
 }
 
 .sidebar > .v-navigation-drawer__content {
@@ -185,6 +273,9 @@ function toggleSidebar(sidebar: "left" | "right") {
 
 .sidebar.closed {
   max-height: 0;
+  border: none;
+  /* Must be above floating panels */
+  z-index: 5 !important;
 }
 
 .toolbar {
@@ -202,6 +293,7 @@ function toggleSidebar(sidebar: "left" | "right") {
   border-radius: 10px !important;
   width: fit-content !important;
   position: absolute !important;
+  border: 1px solid rgb(var(--v-theme-border));
 }
 
 .sidebar.closed
@@ -231,15 +323,38 @@ function toggleSidebar(sidebar: "left" | "right") {
   min-height: 0;
 }
 
-.right .panel-set {
-  max-height: calc(100% - 100px);
-}
-
 .v-text-field {
   background-color: rgb(var(--v-theme-background));
 }
 
 .v-checkbox-btn .v-label {
   margin-left: 5px;
+}
+
+#floating-panel-set {
+  position: absolute;
+  top: 0;
+  height: 100vh !important;
+  z-index: 2 !important;
+}
+
+.floating-panel {
+  position: absolute;
+  z-index: 2 !important;
+}
+
+.sortable-drag {
+  max-width: 300px;
+  max-height: 200px;
+  visibility: visible;
+}
+
+#floating-panel-set .sortable-ghost {
+  visibility: hidden;
+}
+
+.v-tooltip {
+  /* on top of floating panels */
+  z-index: 5 !important;
 }
 </style>

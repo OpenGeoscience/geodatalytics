@@ -254,9 +254,9 @@ export const useNetworkStore = defineStore("network", () => {
       }
     });
     if (availableNetworks.value.length) {
-      panelStore.panelArrangement = panelStore.panelArrangement.map((panel) => {
-        if (panel.id === "networks") panel.visible = true;
-        return panel;
+      panelStore.updatePanel({
+        id: "networks",
+        visible: true,
       });
     }
     currentNetwork.value = network;

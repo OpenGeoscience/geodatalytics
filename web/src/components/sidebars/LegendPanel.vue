@@ -196,6 +196,9 @@ function getColorPropsCoverage(layer: Layer) {
           </div>
         </v-list-item>
       </v-list>
+      <v-card-text v-else class="help-text">
+        Add layers from the Datasets Panel.
+      </v-card-text>
     </v-card>
   </div>
 </template>

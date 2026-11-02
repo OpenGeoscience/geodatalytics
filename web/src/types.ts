@@ -447,8 +447,7 @@ export interface FloatingPanelConfig {
   visible: boolean;
   closeable: boolean;
   collapsed?: boolean;
-  dock: "left" | "right";
-  order: number;
+  dock: "left" | "right" | undefined;
   position?: { x: number; y: number } | undefined;
   width?: number | undefined;
   height?: number | undefined;

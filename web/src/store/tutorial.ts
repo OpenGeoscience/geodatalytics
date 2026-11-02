@@ -54,9 +54,9 @@ export const useTutorialStore = defineStore("tutorial", () => {
         "The Selected Layers panel shows the layers added to the map. You can reorder layers by dragging them in this list, toggle layer visibility with the checkboxes, and open the layer style menu with the gear icon.",
       position: ["60%", "370px"],
       proceed: () => {
-        panelStore.panelArrangement = panelStore.panelArrangement.map((p) => {
-          if (p.id === "legend") p.collapsed = false;
-          return p;
+        panelStore.updatePanel({
+          id: "legend",
+          collapsed: false,
         });
       },
     },
@@ -65,10 +65,13 @@ export const useTutorialStore = defineStore("tutorial", () => {
         "The Legend panel is a visual summary of the layer configuration applied in the Selected Layers panel. This can be helpful to include in saved views and screenshots.",
       position: ["100px", "calc(100% - 570px)"],
       proceed: () => {
-        panelStore.panelArrangement = panelStore.panelArrangement.map((p) => {
-          if (p.id === "legend") p.collapsed = true;
-          if (p.id === "charts") p.collapsed = false;
-          return p;
+        panelStore.updatePanel({
+          id: "legend",
+          collapsed: true,
+        });
+        panelStore.updatePanel({
+          id: "charts",
+          collapsed: false,
         });
         if (
           analysisStore.availableCharts?.length &&
@@ -84,10 +87,13 @@ export const useTutorialStore = defineStore("tutorial", () => {
       position: ["200px", "calc(100% - 570px)"],
       proceed: () => {
         analysisStore.currentChart = undefined;
-        panelStore.panelArrangement = panelStore.panelArrangement.map((p) => {
-          if (p.id === "charts") p.collapsed = true;
-          if (p.id === "networks") p.collapsed = false;
-          return p;
+        panelStore.updatePanel({
+          id: "charts",
+          collapsed: true,
+        });
+        panelStore.updatePanel({
+          id: "networks",
+          collapsed: false,
         });
         if (
           networkStore.availableNetworks?.length &&
@@ -103,10 +109,13 @@ export const useTutorialStore = defineStore("tutorial", () => {
       position: ["300px", "calc(100% - 570px)"],
       proceed: () => {
         networkStore.currentNetwork = undefined;
-        panelStore.panelArrangement = panelStore.panelArrangement.map((p) => {
-          if (p.id === "networks") p.collapsed = true;
-          if (p.id === "analytics") p.collapsed = false;
-          return p;
+        panelStore.updatePanel({
+          id: "networks",
+          collapsed: true,
+        });
+        panelStore.updatePanel({
+          id: "analytics",
+          collapsed: false,
         });
         if (
           analysisStore.availableAnalysisTypes?.length &&
@@ -122,9 +131,9 @@ export const useTutorialStore = defineStore("tutorial", () => {
         "The Analytics panel allows you view the results of tasks run on the data. These tasks can be simulations, AI inferences, or computational analytics. Contact Kitware to implement a custom task. You must be logged in to run new tasks.",
       position: ["400px", "calc(100% - 570px)"],
       proceed: () => {
-        panelStore.panelArrangement = panelStore.panelArrangement.map((p) => {
-          if (p.id === "analytics") p.collapsed = true;
-          return p;
+        panelStore.updatePanel({
+          id: "analytics",
+          collapsed: true,
         });
       },
     },

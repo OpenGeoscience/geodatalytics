@@ -4,9 +4,10 @@ import DetailView from "../DetailView.vue";
 import ColormapSelect from "./ColormapSelect.vue";
 import ColormapPreview from "./ColormapPreview.vue";
 
-import { useNetworkStore, usePanelStore } from "@/store";
+import { useNetworkStore, usePanelStore, useProjectStore } from "@/store";
 const networkStore = useNetworkStore();
 const panelStore = usePanelStore();
+const projectStore = useProjectStore();
 
 const searchText = ref<string | undefined>();
 const currentMode = ref();
@@ -621,6 +622,9 @@ function rewind() {
         v-else-if="networkStore.loadingNetworks"
         indeterminate
       ></v-progress-linear>
+      <v-card-text v-else-if="!projectStore.currentProject" class="help-text">
+        Select a project to view its Networks.
+      </v-card-text>
       <v-card-text v-else class="help-text">No available Networks.</v-card-text>
     </v-card>
   </div>

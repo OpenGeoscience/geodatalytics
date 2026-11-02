@@ -103,19 +103,6 @@ export const useProjectStore = defineStore("project", () => {
   function getCurrentBookmark(): Bookmark | undefined {
     if (!currentProject.value) return undefined;
     const mapPosition = mapStore.getCurrentMapPosition();
-    // use proportions instead of coordinates
-    // so that the bookmark looks good with other window sizes
-    const panelArrangement = panelStore.panelArrangement.map((panelConfig) => {
-      const copyConfig = { ...panelConfig };
-      delete copyConfig.element;
-      if (copyConfig.position) {
-        copyConfig.position = {
-          x: copyConfig.position.x / window.innerWidth,
-          y: copyConfig.position.y / window.innerHeight,
-        };
-      }
-      return copyConfig;
-    });
     const includeLayers = layerStore.selectedLayers.filter(
       (layer) => layer.visible,
     );
@@ -145,7 +132,7 @@ export const useProjectStore = defineStore("project", () => {
       ),
       left_sidebar_open: appStore.openSidebars.includes("left"),
       right_sidebar_open: appStore.openSidebars.includes("right"),
-      panel_arrangement: panelArrangement,
+      panel_arrangement: panelStore.getCurrentPanelArrangement(),
       theme: appStore.theme,
       map_center: mapPosition.center,
       map_zoom: Math.round(mapPosition.zoom),
@@ -180,17 +167,6 @@ export const useProjectStore = defineStore("project", () => {
     if (bookmark) {
       currentBookmark.value = bookmark;
       // Set some state attrs that don't require the project to be loaded first
-      panelStore.panelArrangement = bookmark.panel_arrangement.map(
-        (panelConfig) => {
-          if (panelConfig.position) {
-            panelConfig.position = {
-              x: panelConfig.position.x * window.innerWidth,
-              y: panelConfig.position.y * window.innerHeight,
-            };
-          }
-          return panelConfig;
-        },
-      );
       appStore.openSidebars = [];
       if (bookmark.left_sidebar_open) appStore.openSidebars.push("left");
       if (bookmark.right_sidebar_open) appStore.openSidebars.push("right");
@@ -211,6 +187,7 @@ export const useProjectStore = defineStore("project", () => {
     const bookmark = currentBookmark.value;
     if (bookmark && !currentBookmarkLoaded.value && mapStore.map) {
       appStore.theme = bookmark.theme;
+      panelStore.initPanelsFromArrangement(bookmark.panel_arrangement);
       analysisStore.currentChart = analysisStore.availableCharts?.find(
         (c) => c.id === bookmark.current_chart,
       );
@@ -326,11 +303,7 @@ export const useProjectStore = defineStore("project", () => {
     clearProjectState();
     mapStore.setBasemapToDefault();
     appStore.currentError = undefined;
-
     panelStore.resetPanels();
-    panelStore.draggingPanel = undefined;
-    panelStore.draggingFrom = undefined;
-    panelStore.dragModes = [];
   }
 
   function clearProjectState() {
