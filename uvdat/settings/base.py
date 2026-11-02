@@ -8,6 +8,9 @@ from typing import Any
 import django_stubs_ext
 from environ import Env
 import osgeo.gdal
+from redis.asyncio.retry import Retry
+from redis.backoff import ExponentialWithJitterBackoff
+import redis.exceptions
 
 from resonant_settings.allauth import *
 from resonant_settings.celery import *
@@ -158,6 +161,11 @@ CHANNEL_LAYERS: dict[str, dict[str, Any]] = {
                     # No "db" is set: the pub/sub layer only issues PUBLISH/SUBSCRIBE,
                     # which are global to the Redis server and ignore the selected
                     # logical database.
+                    "retry_on_error": [
+                        redis.exceptions.ConnectionError,
+                        redis.exceptions.TimeoutError,
+                    ],
+                    "retry": Retry(ExponentialWithJitterBackoff(base=0.1, cap=1), 3),
                 },
             ]
         },
