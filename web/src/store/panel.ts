@@ -266,31 +266,35 @@ export const usePanelStore = defineStore("panel", () => {
       if (taskType) {
         if (nested) {
           const showableChildren: Record<string, any>[] = [];
-          Object.entries(showable.taskresult.outputs).forEach(
-            ([outputKey, outputValue]) => {
-              const type = taskType?.output_types[outputKey].toLowerCase();
-              if (showableTypes.includes(type)) {
-                showableChildren.push({
-                  id: outputValue,
-                  type,
-                });
-              }
-            },
-          );
-          Object.entries(showable.taskresult.inputs).forEach(
-            ([inputKey, inputValue]) => {
-              const type = taskType?.input_types[inputKey].toLowerCase();
-              const value: Record<string, any> = taskType.input_options[
-                inputKey
-              ]?.find((o: any) => o.id === inputValue);
-              if (showableTypes.includes(type)) {
-                showableChildren.push({
-                  ...value,
-                  type,
-                });
-              }
-            },
-          );
+          if (showable.taskresult.outputs) {
+            Object.entries(showable.taskresult.outputs).forEach(
+              ([outputKey, outputValue]) => {
+                const type = taskType?.output_types[outputKey].toLowerCase();
+                if (showableTypes.includes(type)) {
+                  showableChildren.push({
+                    id: outputValue,
+                    type,
+                  });
+                }
+              },
+            );
+          }
+          if (showable.taskresult.inputs) {
+            Object.entries(showable.taskresult.inputs).forEach(
+              ([inputKey, inputValue]) => {
+                const type = taskType?.input_types[inputKey].toLowerCase();
+                const value: Record<string, any> = taskType.input_options[
+                  inputKey
+                ]?.find((o: any) => o.id === inputValue);
+                if (showableTypes.includes(type)) {
+                  showableChildren.push({
+                    ...value,
+                    type,
+                  });
+                }
+              },
+            );
+          }
           return showableChildren.every((o) => isVisible({ [o.type]: o }));
         } else {
           return (
@@ -401,6 +405,8 @@ export const usePanelStore = defineStore("panel", () => {
               }
             },
           );
+        }
+        if (taskType && showable.taskresult.inputs) {
           Object.entries(showable.taskresult.inputs).map(
             ([inputKey, inputValue]) => {
               const type = taskType.input_types[inputKey].toLowerCase();

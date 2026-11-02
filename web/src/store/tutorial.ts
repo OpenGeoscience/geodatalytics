@@ -7,6 +7,7 @@ import {
   useAnalysisStore,
   useNetworkStore,
 } from "@/store";
+import type { TutorialInstruction } from "@/types";
 
 export const useTutorialStore = defineStore("tutorial", () => {
   // Sibling store imports
@@ -18,7 +19,10 @@ export const useTutorialStore = defineStore("tutorial", () => {
 
   const showWelcomeMessage = ref(true);
   const showTutorialStep = ref(0);
-  const tutorialSteps = [
+  const currentInstruction = ref<TutorialInstruction>();
+  const shownInstructionIds = ref<string[]>([]);
+
+  const tutorialSteps: TutorialInstruction[] = [
     {
       message:
         "Projects are the top level of organization in GeoDatalytics. Selecting a project will populate the sidebar panels with related objects.",
@@ -132,9 +136,30 @@ export const useTutorialStore = defineStore("tutorial", () => {
       message:
         "The controls bar has a set of additional tools: basemap configuration, fitting to visible layers, screenshots, saved views, map controls, and a help menu. You can restart this tutorial from the help menu at any time.",
       position: ["70px", "400px"],
-      proceed: () => {},
     },
   ];
+  const oneTimeInstructions: TutorialInstruction[] = [
+    {
+      id: "panel_visibility",
+      message: "You can reopen panels from the panel visibility menu above.",
+      position: ["70px", "425px"],
+      arrow: "up",
+    },
+    {
+      id: "no_projects_authenticated",
+      message: "To get started, create a project and add datasets to it.",
+      position: ["70px", "370px"],
+      arrow: "left",
+    },
+    {
+      id: "no_projects_unauthenticated",
+      message:
+        "There are no projects that allow unauthenticated access. You must log in to see projects.",
+      position: ["70px", "370px"],
+      arrow: "left",
+    },
+  ];
+
   const numTutorialSteps = computed(() => {
     return tutorialSteps.length;
   });
@@ -148,8 +173,19 @@ export const useTutorialStore = defineStore("tutorial", () => {
   });
 
   function tutorialProceed() {
-    currentTutorialStep.value?.proceed();
+    if (currentTutorialStep.value?.proceed) {
+      currentTutorialStep.value?.proceed();
+    }
     showTutorialStep.value += 1;
+  }
+
+  function showOneTimeInstruction(instructionId: string) {
+    if (!shownInstructionIds.value.includes(instructionId)) {
+      shownInstructionIds.value.push(instructionId);
+      currentInstruction.value = oneTimeInstructions.find(
+        (instruction) => instruction.id === instructionId,
+      );
+    }
   }
 
   return {
@@ -158,5 +194,7 @@ export const useTutorialStore = defineStore("tutorial", () => {
     numTutorialSteps,
     currentTutorialStep,
     tutorialProceed,
+    currentInstruction,
+    showOneTimeInstruction,
   };
 });

@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
-import { useAppStore, usePanelStore, useProjectStore } from "@/store";
+import {
+  useAppStore,
+  usePanelStore,
+  useProjectStore,
+  useTutorialStore,
+} from "@/store";
 import { useMapCompareStore } from "@/store/compare";
 const appStore = useAppStore();
 const panelStore = usePanelStore();
 const projectStore = useProjectStore();
 const compareStore = useMapCompareStore();
+const tutorialStore = useTutorialStore();
 
 const props = defineProps<{
   id: string;
@@ -67,6 +73,7 @@ function closePanel() {
   if (panel.value) {
     panel.value.visible = false;
     panelUpdated();
+    tutorialStore.showOneTimeInstruction("panel_visibility");
   }
 }
 

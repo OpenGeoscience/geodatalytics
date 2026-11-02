@@ -541,9 +541,6 @@ export const useNetworkStore = defineStore("network", () => {
   }
 
   watch(currentNetwork, () => {
-    if (currentNetwork.value) {
-      panelStore.setVisibility({ network: currentNetwork.value }, true);
-    }
     availableAnimations.value = [];
     currentAnimation.value = undefined;
     currentAnimationTick.value = 0;

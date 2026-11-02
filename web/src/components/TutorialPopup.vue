@@ -53,7 +53,9 @@ const projectStore = useProjectStore();
       </v-card>
     </v-dialog>
     <div
-      v-if="tutorialStore.currentTutorialStep"
+      v-if="
+        tutorialStore.currentTutorialStep && !tutorialStore.currentInstruction
+      "
       class="tutorial-message"
       :style="{
         top: tutorialStore.currentTutorialStep.position[0],
@@ -66,7 +68,8 @@ const projectStore = useProjectStore();
         <v-btn
           v-if="tutorialStore.showTutorialStep < tutorialStore.numTutorialSteps"
           variant="text"
-          icon="mdi-arrow-right"
+          text="Next"
+          color="primary"
           size="sm"
           @click="tutorialStore.tutorialProceed"
         ></v-btn>
@@ -81,6 +84,29 @@ const projectStore = useProjectStore();
         "
       >
         Exit Tutorial
+      </v-btn>
+    </div>
+    <div
+      v-if="
+        (!tutorialStore.showWelcomeMessage || appStore.authenticated) &&
+        tutorialStore.currentInstruction
+      "
+      class="tutorial-message"
+      :style="{
+        top: tutorialStore.currentInstruction.position[0],
+        left: tutorialStore.currentInstruction.position[1],
+      }"
+    >
+      <v-icon
+        v-if="tutorialStore.currentInstruction.arrow"
+        :icon="'mdi-arrow-' + tutorialStore.currentInstruction.arrow"
+      ></v-icon>
+      <div>{{ tutorialStore.currentInstruction?.message }}</div>
+      <v-btn
+        color="primary"
+        @click="tutorialStore.currentInstruction = undefined"
+      >
+        Dismiss
       </v-btn>
     </div>
   </div>

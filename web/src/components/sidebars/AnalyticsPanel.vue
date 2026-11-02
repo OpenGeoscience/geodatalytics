@@ -41,7 +41,7 @@ const filteredAnalysisTypes = computed(() => {
   });
 });
 const newestFirstResults = computed(() => {
-  return analysisStore.availableResults.toSorted((a, b) => {
+  return analysisStore.availableResults?.toSorted((a, b) => {
     const aCreated = new Date(a.created);
     const bCreated = new Date(b.created);
     return bCreated.getTime() - aCreated.getTime();
