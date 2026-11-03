@@ -12,8 +12,9 @@ const searchText = ref<string | undefined>();
 const filteredLegend = computed(() => {
   return layerStore.selectedLayers?.filter((layer) => {
     return (
-      !searchText.value ||
-      layer.name.toLowerCase().includes(searchText.value.toLowerCase())
+      (!searchText.value ||
+      layer.name.toLowerCase().includes(searchText.value.toLowerCase())) &&
+      layer.visible
     );
   });
 });
