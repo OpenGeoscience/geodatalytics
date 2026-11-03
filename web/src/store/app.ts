@@ -5,6 +5,7 @@ import { computed, ref, watch } from "vue";
 export const useAppStore = defineStore("app", () => {
   const theme = ref<"dark" | "light">("light");
   const openSidebars = ref<("left" | "right")[]>(["left", "right"]);
+  const loadingAuth = ref<boolean>(true);
   const currentUser = ref<User>();
   const currentError = ref<string>();
   const themeManager = ref();
@@ -31,6 +32,7 @@ export const useAppStore = defineStore("app", () => {
     theme,
     themeManager,
     openSidebars,
+    loadingAuth,
     currentUser,
     currentError,
     authenticated,

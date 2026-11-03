@@ -31,11 +31,13 @@ export async function restoreLogin() {
   if (!oauthClient) {
     return;
   }
+  const appStore = useAppStore();
   await oauthClient.maybeRestoreLogin();
   if (oauthClient.isLoggedIn) {
     apiClient.get("/users/me/").then((response) => {
       if (response.data) {
-        useAppStore().currentUser = response.data;
+        appStore.currentUser = response.data;
+        appStore.loadingAuth = false;
       }
     });
     s3ffClient = new S3FileFieldClient({
@@ -44,6 +46,8 @@ export async function restoreLogin() {
         headers: oauthClient.authHeaders,
       },
     });
+  } else {
+    appStore.loadingAuth = false;
   }
 }
 

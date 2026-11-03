@@ -37,7 +37,7 @@ watch(() => appStore.currentUser, onReady);
 </script>
 
 <template>
-  <v-app>
+  <v-app v-if="!appStore.loadingAuth">
     <SplashPage v-if="!appStore.currentUser" />
     <div v-else>
       <tutorial-popup />
