@@ -13,7 +13,7 @@ const filteredLegend = computed(() => {
   return layerStore.selectedLayers?.filter((layer) => {
     return (
       (!searchText.value ||
-      layer.name.toLowerCase().includes(searchText.value.toLowerCase())) &&
+        layer.name.toLowerCase().includes(searchText.value.toLowerCase())) &&
       layer.visible
     );
   });
@@ -93,6 +93,13 @@ function getColormapPreviews(layer: Layer) {
   });
 }
 
+function getAppliedFilters(layer: Layer) {
+  const styleKey = styleStore.layerStyleKey(layer);
+  const currentStyleSpec = styleStore.selectedLayerStyles[styleKey].style_spec;
+  if (!currentStyleSpec) return [];
+  return currentStyleSpec.filters.filter((f) => f.filter_by);
+}
+
 function getColorPropsCoverage(layer: Layer) {
   const frame_coverages = layerStore
     .layerFrames(layer)
@@ -118,6 +125,13 @@ function getColorPropsCoverage(layer: Layer) {
       <v-list v-if="filteredLegend?.length" density="compact">
         <v-list-item v-for="layer in filteredLegend" :key="layer.id">
           {{ layer.name }}
+          <v-icon
+            v-if="getAppliedFilters(layer).length"
+            v-tooltip="
+              `${getAppliedFilters(layer).length} filter${getAppliedFilters(layer).length > 1 ? 's' : ''} applied to this layer'`
+            "
+            icon="mdi-filter"
+          />
           <v-icon
             v-if="framePreviewStore.iconState(layer).visible"
             v-tooltip="framePreviewStore.iconState(layer).tooltip"
