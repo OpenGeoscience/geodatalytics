@@ -215,6 +215,9 @@ export const useLayerStore = defineStore("layer", () => {
     }
 
     selectedLayers.value = [newLayer, ...selectedLayers.value];
+
+    // Dismiss map tooltip when adding a layer on top
+    mapStore.clickedFeature = undefined;
   }
 
   function setLayerVisibility(layers: Layer[], visible = true) {
