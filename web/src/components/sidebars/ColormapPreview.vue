@@ -89,7 +89,7 @@ watch(hoverMarker, () => {
 <template>
   <div
     ref="tooltipActivator"
-    style="width: 100%"
+    class="preview-container"
     @mousemove="(e) => (hoverXProportion = e.offsetX / canvas.clientWidth)"
     @mouseleave="(e) => (hoverXProportion = undefined)"
   >
@@ -103,6 +103,11 @@ watch(hoverMarker, () => {
 </template>
 
 <style scoped>
+.preview-container {
+  width: 100%;
+  display: flex;
+  column-gap: 5px;
+}
 .colormap-canvas {
   border: 1px solid rgb(var(--v-theme-on-surface-variant));
   height: 20px;

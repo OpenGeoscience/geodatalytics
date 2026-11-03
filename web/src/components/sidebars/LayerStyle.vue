@@ -422,6 +422,7 @@ function setGroupColormap(groupName: string, colormap: Colormap) {
           id: colormap.id,
         },
         single_color: undefined,
+        use_feature_props: false,
       };
     }
     return c;
@@ -759,7 +760,7 @@ onMounted(resetCurrentStyle);
           class="d-flex mb-1 mt-4 mx-2"
           style="align-items: center; column-gap: 5px"
         >
-          <v-select
+          <v-autocomplete
             :model-value="currentLayerStyle"
             :items="availableStyles"
             item-value="id"
@@ -775,7 +776,7 @@ onMounted(resetCurrentStyle);
             return-object
             hide-details
             @update:model-value="selectStyle"
-          ></v-select>
+          ></v-autocomplete>
           <v-menu
             v-if="editMode"
             v-model="showEditOptions"
@@ -925,13 +926,13 @@ onMounted(resetCurrentStyle);
                         class="d-flex"
                         style="align-items: center; column-gap: 10px"
                       >
-                        <v-select
+                        <v-autocomplete
                           v-model="currentGroups['color']"
                           :items="availableGroups"
                           density="compact"
                           variant="outlined"
                           hide-details
-                        ></v-select>
+                        ></v-autocomplete>
                         <v-icon
                           v-tooltip="'Toggle Visibility For Band'"
                           :icon="
@@ -1224,13 +1225,13 @@ onMounted(resetCurrentStyle);
                         class="d-flex"
                         style="align-items: center; column-gap: 10px"
                       >
-                        <v-select
+                        <v-autocomplete
                           v-model="currentGroups['color']"
                           :items="availableGroups"
                           density="compact"
                           variant="outlined"
                           hide-details
-                        ></v-select>
+                        ></v-autocomplete>
                         <v-icon
                           v-tooltip="'Toggle Visibility For Feature Type'"
                           :icon="
@@ -1334,7 +1335,7 @@ onMounted(resetCurrentStyle);
                           >
                         </td>
                         <td>
-                          <v-select
+                          <v-autocomplete
                             v-if="vectorProperties"
                             v-model="group.colormap.color_by"
                             :items="vectorProperties"
@@ -1369,7 +1370,7 @@ onMounted(resetCurrentStyle);
                                 </template>
                               </v-list-item>
                             </template>
-                          </v-select>
+                          </v-autocomplete>
                         </td>
                       </tr>
                       <tr>
@@ -1579,13 +1580,13 @@ onMounted(resetCurrentStyle);
                   <tr v-if="currentGroups['size'] !== 'all'">
                     <td><v-label>Feature Type</v-label></td>
                     <td>
-                      <v-select
+                      <v-autocomplete
                         v-model="currentGroups['size']"
                         :items="availableGroups"
                         density="compact"
                         variant="outlined"
                         hide-details
-                      ></v-select>
+                      ></v-autocomplete>
                     </td>
                   </tr>
                   <tr v-if="currentGroups['size'] !== 'all'">
@@ -1655,9 +1656,9 @@ onMounted(resetCurrentStyle);
                         <v-label>Size by Property</v-label>
                       </td>
                       <td>
-                        <v-select
+                        <v-autocomplete
                           v-model="group.size_range.size_by"
-                          :items="vectorProperties"
+                          :items="vectorProperties?.filter((p) => p.range)"
                           item-title="name"
                           item-value="name"
                           density="compact"
@@ -1667,10 +1668,7 @@ onMounted(resetCurrentStyle);
                           hide-details
                         >
                           <template #item="{ props: itemProps, item }">
-                            <v-list-item
-                              v-bind="itemProps"
-                              :disabled="!(item as any).range"
-                            >
+                            <v-list-item v-bind="itemProps">
                               <template #append>
                                 <v-chip
                                   v-if="(item as any).sample_label"
@@ -1681,7 +1679,7 @@ onMounted(resetCurrentStyle);
                               </template>
                             </v-list-item>
                           </template>
-                        </v-select>
+                        </v-autocomplete>
                       </td>
                     </tr>
                     <tr v-if="group.size_range">
@@ -1832,7 +1830,7 @@ onMounted(resetCurrentStyle);
                   class="d-flex"
                   style="justify-content: space-between; align-items: center"
                 >
-                  <v-select
+                  <v-autocomplete
                     v-if="focusedFilterId === filter.id"
                     v-model="filter.filter_by"
                     :items="vectorProperties"
@@ -1857,7 +1855,7 @@ onMounted(resetCurrentStyle);
                         </template>
                       </v-list-item>
                     </template>
-                  </v-select>
+                  </v-autocomplete>
                   <span
                     v-else
                     :class="filter.apply ? '' : 'helper-text'"
@@ -1953,7 +1951,7 @@ onMounted(resetCurrentStyle);
                             @update="(v: number) => (filter.list = [v])"
                           />
                         </template>
-                        <v-select
+                        <v-autocomplete
                           v-else
                           v-model="filter.list"
                           :items="findVectorProperty(filter)?.value_set"

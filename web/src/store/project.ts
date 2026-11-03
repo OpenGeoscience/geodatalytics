@@ -266,6 +266,7 @@ export const useProjectStore = defineStore("project", () => {
         analysisStore.availableAnalysisTypes?.find(
           (a) => a.db_value === bookmark.current_analysis_type,
         );
+      analysisStore.selectedInputs = {};
       analysisStore.initSelectedInputs();
       if (analysisStore.currentAnalysisType && currentProject.value) {
         await analysisStore.initResults(
@@ -376,6 +377,12 @@ export const useProjectStore = defineStore("project", () => {
     }
     loadingProjects.value = false;
   }
+
+  watch(projectConfigMode, () => {
+    if (!projectConfigMode.value && currentProject.value) {
+      fetchProjectDatasets();
+    }
+  });
 
   return {
     loadingProjects,
