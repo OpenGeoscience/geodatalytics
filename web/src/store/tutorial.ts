@@ -158,6 +158,13 @@ export const useTutorialStore = defineStore("tutorial", () => {
       position: ["70px", "370px"],
       arrow: "left",
     },
+    {
+      id: "layer_shown",
+      message:
+        "This layer has been added to your selected layers; manage it here.",
+      position: ["calc(100% - 270px)", "370px"],
+      arrow: "left",
+    },
   ];
 
   const numTutorialSteps = computed(() => {

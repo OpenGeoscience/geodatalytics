@@ -21,6 +21,7 @@ import {
   useProjectStore,
   useMapStore,
   useNetworkStore,
+  useTutorialStore,
 } from ".";
 
 const showableTypes = [
@@ -111,6 +112,7 @@ export const usePanelStore = defineStore("panel", () => {
   const projectStore = useProjectStore();
   const mapStore = useMapStore();
   const networkStore = useNetworkStore();
+  const tutorialStore = useTutorialStore();
 
   const panelArrangement = ref<FloatingPanelConfig[]>([]);
   const draggingPanel = ref<string | undefined>();
@@ -358,6 +360,7 @@ export const usePanelStore = defineStore("panel", () => {
       });
       if (add) {
         await layerStore.addLayer(showable.layer, undefined, frame);
+        tutorialStore.showOneTimeInstruction("layer_shown");
       }
     } else if (showable.network) {
       if (visible && networkStore.currentNetwork?.id !== showable.network.id) {
