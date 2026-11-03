@@ -748,7 +748,7 @@ watch(() => layerStore.selectedLayers, updateObjectVisibility, { deep: true });
                       "
                       @click="subscribe"
                     >
-                      Notify Me Once Completed
+                      Email Me Once Completed
                     </v-btn>
                   </div>
                 </v-expansion-panel-text>
