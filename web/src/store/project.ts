@@ -378,6 +378,12 @@ export const useProjectStore = defineStore("project", () => {
     loadingProjects.value = false;
   }
 
+  watch(projectConfigMode, () => {
+    if (!projectConfigMode.value && currentProject.value) {
+      fetchProjectDatasets();
+    }
+  });
+
   return {
     loadingProjects,
     availableProjects,
