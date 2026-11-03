@@ -165,11 +165,7 @@ function rewind() {
             </v-list-item>
           </template>
           <template #append>
-            <v-menu
-              location="bottom end"
-              :close-on-content-click="false"
-              open-on-hover
-            >
+            <v-menu location="bottom end" :close-on-content-click="false">
               <template #activator="{ props: activatorProps }">
                 <v-icon
                   v-bind="activatorProps"
