@@ -422,6 +422,7 @@ function setGroupColormap(groupName: string, colormap: Colormap) {
           id: colormap.id,
         },
         single_color: undefined,
+        use_feature_props: false,
       };
     }
     return c;
