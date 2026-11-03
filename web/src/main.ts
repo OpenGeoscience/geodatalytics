@@ -39,6 +39,9 @@ const vuetify = createVuetify({
         color: "inherit",
       },
     },
+    VTooltip: {
+      contentClass: "tooltip-container",
+    },
   },
 });
 app.use(vuetify);

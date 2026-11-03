@@ -134,6 +134,10 @@ scrollbar changes disables default styling and rounding so corners appear square
   --v-input-control-height: 32px;
 }
 
+.tooltip-container {
+  max-width: 300px !important;
+}
+
 .tutorial-message {
   position: absolute;
   z-index: 2000;
