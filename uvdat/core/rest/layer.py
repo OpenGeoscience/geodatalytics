@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django.db import transaction
 import jsonschema
+from rest_framework import mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -30,7 +31,7 @@ class LayerViewSet(ReadOnlyModelViewSet):
         return Response(serializer.data, status=200)
 
 
-class LayerFrameViewSet(ReadOnlyModelViewSet):
+class LayerFrameViewSet(ReadOnlyModelViewSet, mixins.CreateModelMixin):
     queryset = LayerFrame.objects.all()
     serializer_class = LayerFrameSerializer
 
