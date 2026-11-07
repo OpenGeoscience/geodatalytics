@@ -84,28 +84,28 @@ dev = [
   # The "dev" dependency group is installed by default,
   # so use this to install "development" extras by default too
   "geodatalytics[development]",
-  "pre-commit==4.6.2",
-  "tox==4.61.5",
-  "tox-uv==1.36.0",
+  "pre-commit==4.7.0",
+  "tox==4.67.9",
+  "tox-uv==1.37.5",
 ]
 lint = [
-  "ruff==0.16.8",
+  "ruff==0.17.3",
 ]
 type = [
   "mypy==2.3.1",
   "celery-types==0.26.0",
   "django-stubs[compatible-mypy]==6.1.1",
   "djangorestframework-stubs[compatible-mypy]==3.18.1",
-  "pandas-stubs==3.0.5.260914",
+  "pandas-stubs==3.1.0.261029",
   "types-channels==4.3.0.20260518",
 ]
 test = [
   "django-s3-file-field-client==1.1.0",
   "factory-boy==3.3.3",
-  "pytest==9.1.1",
+  "pytest==9.2.0",
   "pytest-django==4.14.0",
   "pytest-lazy-fixtures==1.4.1",
-  "pytest-mock==3.15.1",
+  "pytest-mock==3.17.0",
   # Enable with "pytest --random-order ..."
   "pytest-random-order==1.2.0",
   # Enable with "pytest --count=... ..."
