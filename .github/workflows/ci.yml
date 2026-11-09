@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   lint-client:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install npm
@@ -23,7 +23,7 @@ jobs:
         working-directory: web
 
   test-server:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     services:
       postgres:
         image: postgis/postgis:18-3.6
