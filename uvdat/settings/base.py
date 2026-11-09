@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import logging
 from pathlib import Path
 from typing import Any
@@ -185,7 +185,7 @@ CACHES = {
             "db": 0,
         },
         # TTL of 4 weeks (an arbitrarily long time)
-        "TIMEOUT": int(datetime.timedelta(weeks=4).total_seconds()),
+        "TIMEOUT": int(dt.timedelta(weeks=4).total_seconds()),
     },
 }
 
