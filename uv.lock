@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.15' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
@@ -1489,15 +1489,15 @@ wheels = [
 
 [[package]]
 name = "django-resonant-settings"
-version = "0.53.0"
+version = "0.53.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "django-environ" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0c/85/3b532ab0bdc02596e1dba461e2c813e8f4c0c7ca5a630664b1492d934b3e/django_resonant_settings-0.53.0.tar.gz", hash = "sha256:4f1471d3c9971cb885d80a689ecec073ff75869ccfad289f9874672ab2ef81d0", size = 20437, upload-time = "2026-10-20T14:31:24.91Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5a/f8/ae89d7e30b2ea7614cefcbfb0a19c3f52ed4b7b1cb1fee577d03d52d5b0f/django_resonant_settings-0.53.1.tar.gz", hash = "sha256:1ba62e3804feb25ef8ed219d3d546da4d3972832d5267d2f0f0660cb5511a9ea", size = 20436, upload-time = "2026-10-29T03:57:56.488Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/d7/e7daa30ee92a8747e2e90d50cf2aab7e4c488ed202eb7fee91518426025d/django_resonant_settings-0.53.0-py3-none-any.whl", hash = "sha256:2c7aaa1415049786d1e129f56968795f3b476255688c8645a819de1bdc416e39", size = 27171, upload-time = "2026-10-20T14:31:23.943Z" },
+    { url = "https://files.pythonhosted.org/packages/79/58/f4b026561a3f60ce10f8ef2c6b58135d943c0b546865030fa352a0a1f6ea/django_resonant_settings-0.53.1-py3-none-any.whl", hash = "sha256:ec34dc5671966423bc4607f22b6a23d0e30d56a12ee5b5c99e9453037258daf7", size = 27172, upload-time = "2026-10-29T03:57:55.442Z" },
 ]
 
 [package.optional-dependencies]
@@ -2163,7 +2163,7 @@ requires-dist = [
     { name = "django-large-image", specifier = "==0.10.5" },
     { name = "django-minio-storage", marker = "extra == 'development'", specifier = "==0.5.9" },
     { name = "django-oauth-toolkit", specifier = "==3.4.1" },
-    { name = "django-resonant-settings", extras = ["allauth", "celery"], specifier = "==0.53.0" },
+    { name = "django-resonant-settings", extras = ["allauth", "celery"], specifier = "==0.53.1" },
     { name = "django-resonant-utils", extras = ["allauth", "s3-storage"], specifier = "==0.20.0" },
     { name = "django-resonant-utils", extras = ["minio-storage"], marker = "extra == 'development'", specifier = "==0.20.0" },
     { name = "django-s3-file-field", extras = ["minio"], marker = "extra == 'development'", specifier = "==1.1.0" },
