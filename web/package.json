@@ -64,7 +64,6 @@
     "vue-tsc": "3.3.11"
   },
   "allowScripts": {
-    "@sentry/cli": false,
     "vue-demi": false
   }
 }
