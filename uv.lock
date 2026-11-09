@@ -1460,15 +1460,15 @@ wheels = [
 
 [[package]]
 name = "django-minio-storage"
-version = "0.5.9"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "minio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/c3/451548ed0bc26f3b50784c1b6696c14fc83cf12a94990c0b3f4c355c7716/django_minio_storage-0.5.9.tar.gz", hash = "sha256:86f823690ed18049b2dae6450498caf86215f3d44f85e0264094968ee1ad7af4", size = 118486, upload-time = "2025-11-24T18:33:57.702Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2a/e2/7c05d3a7cfe84b0904604a62ad1bc9d5ded26d435b3cfb7aec712a327c09/django_minio_storage-0.6.0.tar.gz", hash = "sha256:2587411862f14f8cfe3b20fb94b61704fb784c0e618d2f6bbc504c11874ca75c", size = 16274, upload-time = "2026-10-19T00:04:46.389Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c1/a4/3d4c7c54fdcd718554dd3f19e95db362f02c332f51dd8facdf6ca1a96154/django_minio_storage-0.5.9-py3-none-any.whl", hash = "sha256:c6045fb598f6f924aaecbe02de423c584b23912725ab4d03115bc37214bd93ef", size = 17970, upload-time = "2025-11-24T18:33:56.679Z" },
+    { url = "https://files.pythonhosted.org/packages/a7/60/87cc4f2b64d0fd0ad17d17334e2dda2d5f9bee8535d8be98f2974f1bbf5a/django_minio_storage-0.6.0-py3-none-any.whl", hash = "sha256:76b2b4c7f3f8d392c3828a5913059f7950712dfa17c027bb6973b924157a12e2", size = 18106, upload-time = "2026-10-19T00:04:45.124Z" },
 ]
 
 [[package]]
@@ -1533,15 +1533,16 @@ s3-storage = [
 
 [[package]]
 name = "django-s3-file-field"
-version = "1.1.0"
+version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "djangorestframework" },
+    { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/94/c8/97674eefea66c69246a792f9b698d1a3e2a1ed37843045f27763788ef2e9/django_s3_file_field-1.1.0.tar.gz", hash = "sha256:d3f9f9492875c6725433cc2ba21f1d8c24605eec968cbf33f7c14815388901db", size = 36241, upload-time = "2025-05-30T10:34:22.264Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/24/98ab36f8c29cf3f923878c3ccc77eff09bbc24d24e435cf067b7c0b2ade5/django_s3_file_field-2.0.2.tar.gz", hash = "sha256:1cdd7e1e05286b18cff89853f3459df10aa99b7a75cacf1c7d437affb2f97924", size = 74911, upload-time = "2026-11-09T18:37:10.321Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/04/1a5d8b6172e0e0016eabfbb7cd725e04082a1891e6f2a9ae110c54dc9fa7/django_s3_file_field-1.1.0-py3-none-any.whl", hash = "sha256:655957fee0fd026eacdb03e75a333a615559f2ae32441fa69070e1ce55c0061b", size = 39518, upload-time = "2025-05-30T10:34:19.376Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/10/146a0c88ae516e36486e4fa6b7c27a1177d9473223519f65613571528188/django_s3_file_field-2.0.2-py3-none-any.whl", hash = "sha256:ac4df9acf47d2679a90c419b6ffcf404185825a98c0bd4d7d08a6e4edbb8d83c", size = 71973, upload-time = "2026-11-09T18:37:09.14Z" },
 ]
 
 [package.optional-dependencies]
@@ -1552,18 +1553,6 @@ minio = [
 s3 = [
     { name = "boto3" },
     { name = "django-storages", extra = ["s3"] },
-]
-
-[[package]]
-name = "django-s3-file-field-client"
-version = "1.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/00/51a13a70b0fde0b58b0bf3ca53adc23a7e4fc179791aa56856bd3244a34c/django_s3_file_field_client-1.1.0.tar.gz", hash = "sha256:7313b1e5147b3aa199916586daf07c82ef93dc3aef44e539c311efa2b1edd518", size = 4612, upload-time = "2025-05-30T10:34:23.651Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/60/88/19b97746251647fd1287d58a013647a3ed03ab6c6e2d7bf26fd13c2a287a/django_s3_file_field_client-1.1.0-py3-none-any.whl", hash = "sha256:a44512995ff69c2f687d31bed3d92f340123b56930de32e78f9db671b39faf64", size = 3203, upload-time = "2025-05-30T10:34:20.638Z" },
 ]
 
 [[package]]
@@ -2125,7 +2114,6 @@ lint = [
     { name = "ruff" },
 ]
 test = [
-    { name = "django-s3-file-field-client" },
     { name = "factory-boy" },
     { name = "pytest" },
     { name = "pytest-django" },
@@ -2161,13 +2149,13 @@ requires-dist = [
     { name = "django-filter", specifier = "==26.1" },
     { name = "django-guardian", specifier = "==3.5.0" },
     { name = "django-large-image", specifier = "==0.10.5" },
-    { name = "django-minio-storage", marker = "extra == 'development'", specifier = "==0.5.9" },
+    { name = "django-minio-storage", marker = "extra == 'development'", specifier = "==0.6.0" },
     { name = "django-oauth-toolkit", specifier = "==3.4.1" },
     { name = "django-resonant-settings", extras = ["allauth", "celery"], specifier = "==0.53.1" },
     { name = "django-resonant-utils", extras = ["allauth", "s3-storage"], specifier = "==0.20.0" },
     { name = "django-resonant-utils", extras = ["minio-storage"], marker = "extra == 'development'", specifier = "==0.20.0" },
-    { name = "django-s3-file-field", extras = ["minio"], marker = "extra == 'development'", specifier = "==1.1.0" },
-    { name = "django-s3-file-field", extras = ["s3"], specifier = "==1.1.0" },
+    { name = "django-s3-file-field", extras = ["minio"], marker = "extra == 'development'", specifier = "==2.0.2" },
+    { name = "django-s3-file-field", extras = ["s3"], specifier = "==2.0.2" },
     { name = "django-storages", extras = ["s3"], specifier = "==1.14.6" },
     { name = "django-stubs-ext", specifier = "==6.1.1" },
     { name = "djangorestframework", specifier = "==3.18.1" },
@@ -2211,7 +2199,6 @@ dev = [
 ]
 lint = [{ name = "ruff", specifier = "==0.17.4" }]
 test = [
-    { name = "django-s3-file-field-client", specifier = "==1.1.0" },
     { name = "factory-boy", specifier = "==3.3.3" },
     { name = "pytest", specifier = "==9.2.0" },
     { name = "pytest-django", specifier = "==4.14.0" },
@@ -3625,7 +3612,7 @@ wheels = [
 
 [[package]]
 name = "minio"
-version = "7.2.18"
+version = "7.2.20"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argon2-cffi" },
@@ -3634,9 +3621,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/71/99/1ad8733fa3f2fa82726e470f8c321e17f9321083b234ab45ad6b59d80d9f/minio-7.2.18.tar.gz", hash = "sha256:173402a5716099159c5659f9de75be204ebe248557b9f1cc9cf45aa70e9d3024", size = 135544, upload-time = "2025-09-29T17:00:28.238Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/df/6dfc6540f96a74125a11653cce717603fd5b7d0001a8e847b3e54e72d238/minio-7.2.20.tar.gz", hash = "sha256:95898b7a023fbbfde375985aa77e2cd6a0762268db79cf886f002a9ea8e68598", size = 136113, upload-time = "2025-11-27T00:37:15.569Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7d/ae/f32695da4f93de50dd7075100dab8cf689a9d96270f58ce6f940fd044a3e/minio-7.2.18-py3-none-any.whl", hash = "sha256:f23a6edbff8d0bc4b5c1a61b2628a01c5a3342aefc613ff9c276012e6321108f", size = 93120, upload-time = "2025-09-29T17:00:26.86Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/9a/b697530a882588a84db616580f2ba5d1d515c815e11c30d219145afeec87/minio-7.2.20-py3-none-any.whl", hash = "sha256:eb33dd2fb80e04c3726a76b13241c6be3c4c46f8d81e1d58e757786f6501897e", size = 93751, upload-time = "2025-11-27T00:37:13.993Z" },
 ]
 
 [[package]]
