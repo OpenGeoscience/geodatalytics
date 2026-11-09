@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 from pathlib import Path
 import tempfile
 
@@ -154,7 +154,7 @@ def flood_simulation(result_id):
                 "gw_percentile": gw_percentile,
                 "annual_probability": annual_probability,
             },
-            "uploaded": datetime.datetime.now(datetime.UTC).isoformat(),
+            "uploaded": dt.datetime.now(dt.UTC).isoformat(),
         }
         name_match = Dataset.objects.filter(name__icontains=name)
         if name_match.count() > 0:
