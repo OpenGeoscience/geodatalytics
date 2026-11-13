@@ -244,6 +244,7 @@ onMounted(() => {
             v-model="selectedPermissionLevel"
             :items="permissionLevels"
             item-title="label"
+            item-value="value"
             label="Permission Level"
           />
           <v-card-actions>
