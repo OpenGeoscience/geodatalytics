@@ -90,7 +90,7 @@ export const useAnalysisStore = defineStore("analysis", () => {
     const type = currentAnalysisType.value;
     if (type && type.input_types && type.input_options) {
       Object.keys(type.input_types).forEach((key) => {
-        if (selectedInputs.value[key]) {
+        if (selectedInputs.value[key] !== undefined) {
           // Input already selected, don't overwrite
         } else if (type.input_defaults[key]) {
           selectedInputs.value[key] = type.input_defaults[key];
