@@ -31,19 +31,22 @@ export async function restoreLogin() {
   if (!oauthClient) {
     return;
   }
+  const appStore = useAppStore();
   await oauthClient.maybeRestoreLogin();
   if (oauthClient.isLoggedIn) {
-    apiClient.get("/users/me/").then((response) => {
-      if (response.data) {
-        useAppStore().currentUser = response.data;
-      }
-    });
+    const response = await apiClient.get("/users/me/");
+    if (response.data) {
+      appStore.currentUser = response.data;
+      appStore.loadingAuth = false;
+    }
     s3ffClient = new S3FileFieldClient({
       baseUrl: baseURL + "s3-upload/",
       apiConfig: {
         headers: oauthClient.authHeaders,
       },
     });
+  } else {
+    appStore.loadingAuth = false;
   }
 }
 

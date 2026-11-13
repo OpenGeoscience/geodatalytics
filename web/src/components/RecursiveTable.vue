@@ -58,5 +58,6 @@ function formatIfDate(key: string, value: string) {
 }
 .v-table--density-default {
   --v-table-row-height: 24px !important;
+  word-break: keep-all;
 }
 </style>

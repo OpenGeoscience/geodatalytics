@@ -16,7 +16,16 @@ const allUsers: Ref<User[]> = ref([]);
 const userSelectDialogMode: Ref<"add" | "transfer"> = ref("add");
 const selectedUsers: Ref<User[]> = ref([]);
 type PermissionLevel = "follower" | "collaborator";
-const permissionLevels: PermissionLevel[] = ["follower", "collaborator"];
+const permissionLevels: { value: PermissionLevel; label: string }[] = [
+  {
+    value: "follower",
+    label: "Follower (read-only)",
+  },
+  {
+    value: "collaborator",
+    label: "Collaborator (read & write)",
+  },
+];
 const selectedPermissionLevel: Ref<PermissionLevel> = ref("follower");
 const userToRemove: Ref<User | undefined> = ref();
 const editMode = computed(
@@ -234,6 +243,8 @@ onMounted(() => {
             v-if="userSelectDialogMode === 'add'"
             v-model="selectedPermissionLevel"
             :items="permissionLevels"
+            item-title="label"
+            item-value="value"
             label="Permission Level"
           />
           <v-card-actions>

@@ -268,7 +268,7 @@ const panels = ref(["A", "B"] as const);
                   class="d-flex"
                   style="align-items: center; column-gap: 5px"
                 >
-                  <v-select
+                  <v-autocomplete
                     :model-value="currentLayerStyles[panel].style"
                     :items="availableStyles"
                     item-value="id"
@@ -286,7 +286,7 @@ const panels = ref(["A", "B"] as const);
                     return-object
                     hide-details
                     @update:model-value="selectStyle($event, panel)"
-                  ></v-select>
+                  ></v-autocomplete>
                 </div>
                 <v-label class="mt-2 help-text">Opacity</v-label>
                 <SliderNumericInput
@@ -321,7 +321,7 @@ const panels = ref(["A", "B"] as const);
                     class="d-flex"
                     style="align-items: center; column-gap: 5px"
                   >
-                    <v-select
+                    <v-autocomplete
                       :model-value="currentLayerStyles[panel].style"
                       :items="availableStyles"
                       item-value="id"
@@ -339,7 +339,7 @@ const panels = ref(["A", "B"] as const);
                       return-object
                       hide-details
                       @update:model-value="selectStyle($event, panel)"
-                    ></v-select>
+                    ></v-autocomplete>
                   </div>
                   <v-label class="mt-2 help-text">Opacity</v-label>
                   <SliderNumericInput

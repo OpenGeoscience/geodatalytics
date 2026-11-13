@@ -88,10 +88,11 @@ export const useAnalysisStore = defineStore("analysis", () => {
 
   function initSelectedInputs() {
     const type = currentAnalysisType.value;
-    selectedInputs.value = {};
     if (type && type.input_types && type.input_options) {
       Object.keys(type.input_types).forEach((key) => {
-        if (type.input_defaults[key]) {
+        if (selectedInputs.value[key] !== undefined) {
+          // Input already selected, don't overwrite
+        } else if (type.input_defaults[key]) {
           selectedInputs.value[key] = type.input_defaults[key];
         } else if (inputIsNumeric(key)) {
           selectedInputs.value[key] = type.input_options[key][0].min;
@@ -325,6 +326,7 @@ export const useAnalysisStore = defineStore("analysis", () => {
 
   watch(currentAnalysisType, () => {
     fetchResults();
+    selectedInputs.value = {};
     initSelectedInputs();
     initInputOptionFiltering();
   });

@@ -237,7 +237,7 @@ watch(selectedProject, resetProjectEdit);
 <template>
   <div>
     <div class="project-row">
-      <v-select
+      <v-autocomplete
         v-model="projectStore.currentProject"
         placeholder="Select a Project"
         no-data-text="No available projects."
@@ -249,7 +249,7 @@ watch(selectedProject, resetProjectEdit);
         variant="outlined"
         hide-details
         return-object
-      ></v-select>
+      ></v-autocomplete>
       <v-btn
         v-if="appStore.authenticated"
         v-tooltip="'Create New Project'"

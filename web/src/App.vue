@@ -37,7 +37,7 @@ watch(() => appStore.currentUser, onReady);
 </script>
 
 <template>
-  <v-app>
+  <v-app v-if="!appStore.loadingAuth">
     <SplashPage v-if="!appStore.currentUser" />
     <div v-else>
       <tutorial-popup />
@@ -132,6 +132,10 @@ scrollbar changes disables default styling and rounding so corners appear square
 
 .v-input {
   --v-input-control-height: 32px;
+}
+
+.tooltip-container {
+  max-width: 300px !important;
 }
 
 .tutorial-message {

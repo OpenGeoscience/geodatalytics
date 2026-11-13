@@ -140,7 +140,7 @@ function rewind() {
             </v-btn>
           </div>
         </div>
-        <v-select
+        <v-autocomplete
           v-model="networkStore.currentAnimation"
           :items="networkStore.availableAnimations"
           label="Select Animation"
@@ -165,11 +165,7 @@ function rewind() {
             </v-list-item>
           </template>
           <template #append>
-            <v-menu
-              location="bottom end"
-              :close-on-content-click="false"
-              open-on-hover
-            >
+            <v-menu location="bottom end" :close-on-content-click="false">
               <template #activator="{ props: activatorProps }">
                 <v-icon
                   v-bind="activatorProps"
@@ -362,7 +358,7 @@ function rewind() {
               </v-card>
             </v-menu>
           </template>
-        </v-select>
+        </v-autocomplete>
         <div class="px-2 mt-2">
           <colormap-preview
             v-if="networkStore.nodeGroupColorMarkers.length"
