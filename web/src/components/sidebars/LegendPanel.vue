@@ -128,7 +128,7 @@ function getColorPropsCoverage(layer: Layer) {
           <v-icon
             v-if="getAppliedFilters(layer).length"
             v-tooltip="
-              `${getAppliedFilters(layer).length} filter${getAppliedFilters(layer).length > 1 ? 's' : ''} applied to this layer'`
+              `${getAppliedFilters(layer).length} filter${getAppliedFilters(layer).length > 1 ? 's' : ''} applied to this layer`
             "
             icon="mdi-filter"
           />
