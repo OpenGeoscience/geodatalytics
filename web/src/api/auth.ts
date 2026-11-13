@@ -34,12 +34,11 @@ export async function restoreLogin() {
   const appStore = useAppStore();
   await oauthClient.maybeRestoreLogin();
   if (oauthClient.isLoggedIn) {
-    apiClient.get("/users/me/").then((response) => {
-      if (response.data) {
-        appStore.currentUser = response.data;
-        appStore.loadingAuth = false;
-      }
-    });
+    const response = await apiClient.get("/users/me/");
+    if (response.data) {
+      appStore.currentUser = response.data;
+      appStore.loadingAuth = false;
+    }
     s3ffClient = new S3FileFieldClient({
       baseUrl: baseURL + "s3-upload/",
       apiConfig: {
