@@ -6,8 +6,12 @@ from django.core.files.base import File
 import pytest
 from pytest_lazy_fixtures import lf
 
+from uvdat.core.models import FileItem
+
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from s3_file_field import S3FileField
 
 
 @pytest.mark.parametrize(
@@ -20,10 +24,13 @@ def test_upload_and_create_file_item(
     dataset,
     client,
     expected_status,
-    s3ff_field_value_factory: Callable[[File[bytes]], str],
+    s3ff_field_value_factory: Callable[[File[bytes], S3FileField], str],
 ):
     with multiframe_vector_file["path"].open("rb") as f:
-        s3ff_value = s3ff_field_value_factory(File(file=f, name=multiframe_vector_file["name"]))
+        s3ff_value = s3ff_field_value_factory(
+            File(file=f, name=multiframe_vector_file["name"]),
+            FileItem._meta.get_field("file"),
+        )
 
     fileitem_expected = {
         "name": "multiframe_vector.geojson",

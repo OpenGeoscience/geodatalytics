@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from django.core import signing
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -25,18 +23,6 @@ class FileItemViewSet(ModelViewSet):
             return qs
 
         return qs.filter(project=int(project_id))
-
-    def perform_create(self, serializer):
-        data = self.request.data
-        if not isinstance(data, dict):
-            raise ValidationError("Expected a JSON object")
-        file_key = data.get("file")
-        try:
-            file_key_data = signing.loads(file_key)
-            file_key = file_key_data.get("object_key")
-        except (signing.BadSignature, TypeError) as e:
-            raise ValidationError("Invalid file key") from e
-        serializer.save(file=file_key)
 
     @action(detail=True, methods=["get"])
     def data(self, request, **kwargs):
