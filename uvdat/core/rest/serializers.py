@@ -299,12 +299,24 @@ class RasterDataSerializer(serializers.ModelSerializer):
 
 
 class LayerFrameSerializer(serializers.ModelSerializer):
-    vector = VectorDataSerializer()
-    raster = RasterDataSerializer()
+    vector = serializers.PrimaryKeyRelatedField(
+        queryset=VectorData.objects.all(), allow_null=True, required=False
+    )
+    raster = serializers.PrimaryKeyRelatedField(
+        queryset=RasterData.objects.all(), allow_null=True, required=False
+    )
 
     class Meta:
         model = LayerFrame
         fields = "__all__"
+
+    # creating a layer frame requires IDs for `vector` and `raster`
+    # but when retrieving a layer frame you will get the full objects
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret["vector"] = VectorDataSerializer(instance.vector).data if instance.vector else None
+        ret["raster"] = RasterDataSerializer(instance.raster).data if instance.raster else None
+        return ret
 
 
 class RegionSerializer(serializers.ModelSerializer):
