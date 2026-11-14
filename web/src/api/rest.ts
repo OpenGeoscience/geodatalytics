@@ -1,4 +1,6 @@
+import { S3FileFieldError } from "django-s3-file-field";
 import { apiClient, s3ffClient } from "./auth";
+import { useAppStore } from "@/store";
 import type {
   User,
   Project,
@@ -157,8 +159,15 @@ export async function getFileDataObjects(
   return (await apiClient.get(`files/${fileId}/data/`)).data;
 }
 
-export async function uploadFile(file: File): Promise<string> {
-  return await s3ffClient.uploadFile(file, "core.FileItem.file");
+export async function uploadFile(file: File, fieldId: string): Promise<string> {
+  try {
+    return await s3ffClient.uploadFile(file, fieldId);
+  } catch (error) {
+    if (error instanceof S3FileFieldError) {
+      useAppStore().currentError = error.message;
+    }
+    throw error;
+  }
 }
 
 export async function createFileItem(data: any): Promise<FileItem> {

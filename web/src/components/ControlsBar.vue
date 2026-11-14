@@ -264,7 +264,7 @@ function cancelCreateBookmark() {
   showBookmarkCreation.value = false;
 }
 
-function submitNewBookmark() {
+async function submitNewBookmark() {
   if (!appStore.authenticated) return;
   if (newBookmarkValid.value && newBookmarkThumbnail.value) {
     const thumbnailFile = new File(
@@ -272,18 +272,20 @@ function submitNewBookmark() {
       "thumbnail.png",
       { type: "image/png" },
     );
-    uploadFile(thumbnailFile).then((thumbnailURL) => {
-      const bookmark = projectStore.getCurrentBookmark();
-      if (bookmark) {
-        bookmark.name = newBookmarkName.value;
-        bookmark.thumbnail = thumbnailURL;
-        createBookmark(bookmark).then((createdBookmark) => {
-          cancelCreateBookmark();
-          projectStore.fetchProjectBookmarks();
-          projectStore.navigateToBookmark(createdBookmark);
-        });
-      }
-    });
+    const thumbnailValue = await uploadFile(
+      thumbnailFile,
+      "core.Bookmark.thumbnail",
+    );
+    const bookmark = projectStore.getCurrentBookmark();
+    if (bookmark) {
+      bookmark.name = newBookmarkName.value;
+      bookmark.thumbnail = thumbnailValue;
+      createBookmark(bookmark).then((createdBookmark) => {
+        cancelCreateBookmark();
+        projectStore.fetchProjectBookmarks();
+        projectStore.navigateToBookmark(createdBookmark);
+      });
+    }
   }
 }
 

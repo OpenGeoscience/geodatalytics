@@ -145,7 +145,7 @@ function submit() {
     const layerOptions = await Promise.all(
       layers.value.map(async (l) => {
         const fileValues = await Promise.all(
-          l.files.map(async (f) => await uploadFile(f)),
+          l.files.map(async (f) => await uploadFile(f, "core.FileItem.file")),
         );
         const fileItems = await Promise.all(
           l.files.map(
