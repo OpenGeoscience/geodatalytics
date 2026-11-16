@@ -1,20 +1,67 @@
-# Setup Guide
-This guide walks you through setting up GeoDatalytics for local development using Dev Containers.
+[TOC]
 
-## Setup
+# Prerequisites
+
+For local development, it is recommended that you run containerized services with [VS Code Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers) or [Docker Compose](https://docs.docker.com/compose/).
+
+## Dev Containers
+
 1. Install [VS Code with dev container support](https://code.visualstudio.com/docs/devcontainers/containers#_installation).
-1. Open the project in VS Code, then run `Dev Containers: Reopen in Container`
-   from the Command Palette (`Ctrl+Shift+P`).
-1. Once the container is ready, open a terminal and run:
-   ```sh
-   ./manage.py migrate
-   ./manage.py createsuperuser
-   ```
 
-### Load Sample Data (Optional)
+2. Open the project in VS Code, then run `Dev Containers: Reopen in Container`
+   from the Command Palette (`Ctrl+Shift+P`).
+
+3. Run services with the `Django + Celery + Vite` Run Configuration in the VS Code `Run and Debug` panel.
+
+4. Run tests either via command line with `tox` (see [Testing](#testing)) or in the VS Code `Testing` panel.
+
+5. Rebuild after any changes to the Dockerfile, Docker Compose files, or `devcontainer.json`. Run `Dev Containers: Rebuild Container` from the Command Palette (`Ctrl+Shift+P`).
+
+6. Manage dependencies with [`uv`](https://docs.astral.sh/uv/). Sync dependencies with `uv sync --all-extras --all-groups`.
+
+## Docker Compose
+
+Run services with `docker compose up`, using `Ctrl+C` to stop them gracefully. Or, to run them in the background, use `docker compose up -d` and `docker compose stop` to stop them gracefully.
+
+To run celery worker with GPU access, use the `gpu` profile:
+
+```
+docker compose --profile gpu up --scale celery=0
+```
+
+!!! note
+    GPU mode requires NVIDIA drivers and [nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) runtime.
+
+To run commands in a service container, use `docker compose run`:
+
+```
+docker compose run --rm django ./manage.py migrate
+docker compose run --rm django uv run tox
+```
+
+# Initialization
+
+Run the following commands in the Django context (VS Code terminal if using Dev Containers, Django container if using docker compose).
+
+```
+./manage.py migrate
+./manage.py createsuperuser
+```
+
+# Access Points
+
+Log in using the credentials you created with `createsuperuser`.
+
+| Service           | URL                                     |
+| ----------------- | --------------------------------------- |
+| User Interface    | http://localhost:8080/                  |
+| Admin Panel       | http://localhost:8000/admin/            |
+| API Documentation | http://localhost:8000/api/docs/swagger/ |
+
+# Load Sample Data (Optional)
 The ingest command loads datasets, charts, and project configuration from an ingestion file:
 
-```sh
+```
 ./manage.py ingest {JSON_FILE}
 ```
 
@@ -25,94 +72,14 @@ Available ingest options (paths relative to `sample_data/`):
 - `la_wildfires.json`
 - `new_york_energy/data.json`
 
-## Run
-Open the **Run and Debug** panel (`Ctrl+Shift+D`) and select a launch configuration:
+# Testing
 
-* **Django: Server** - Starts the development server at <http://localhost:8000/>
-* **Django: Server (eager Celery)** - Same, but Celery tasks run synchronously
-  in the web process (useful for debugging task code without a worker)
-* **Celery: Worker** - Starts only the Celery worker
-* **Vite: Dev Server** - Starts the frontend development server at <http://localhost:8080/>
-* **Django: Management Command** - Pick and run any management command
-* **Django + Celery + Vite** - Starts the server, a Celery worker, and the frontend
-
-## Test
-Run the full test suite from a terminal: `tox`
-
-Auto-format code: `tox -e format`
-
-Run and debug individual tests from the **Testing** panel (`Ctrl+Shift+;`).
-
-## Rebuild
-After changes to the Dockerfile, Docker Compose files, or `devcontainer.json`,
-run `Dev Containers: Rebuild Container` from the Command Palette (`Ctrl+Shift+P`).
-
-For dependency changes in `pyproject.toml`, just run `uv sync --all-extras --all-groups`.
-
-
-
-
-
-
-
-
-
----
-
-## Running the Application
-
-### Start the Services
-
-**Default (CPU-only):**
-
-```bash
-docker compose up
-```
-
-**With GPU acceleration (NVIDIA systems only):**
-
-```bash
-docker compose --profile gpu up --scale celery=0
-```
-
-> **Note:** GPU mode requires NVIDIA drivers and [nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) runtime.
-
-### Access Points
-
-| Service           | URL                                     |
-| ----------------- | --------------------------------------- |
-| User Interface    | http://localhost:8080/                  |
-| Admin Panel       | http://localhost:8000/admin/            |
-| API Documentation | http://localhost:8000/api/docs/swagger/ |
-
-Log in using the credentials you created with `createsuperuser`.
-
-### Stop the Services
-
-Press `Ctrl+C` in the terminal running `docker compose up`, or run:
-
-```bash
-docker compose stop
-```
-
-## Troubleshooting
-
-### Port Conflicts
-
-If ports 8000, 8080, 5432, or 9000 are in use, modify the port mappings in `docker-compose.override.yml`.
-
-### GPU Not Available
-
-If you see an error like:
+Run test suite with [`tox`](https://tox.wiki/en/4.67.13/). `tox` is installed automatically with the `dev` package extra. Pass an environment name to perform specific tests.
 
 ```
-Error response from daemon: could not select device driver "nvidia" with capabilities: [[gpu]]
+tox -e lint
+tox -e format
+tox -e test
+tox -e type
+tox -e check-migrations
 ```
-
-This means GPU mode was requested but NVIDIA drivers aren't available. Use the default CPU mode instead:
-
-```bash
-docker compose up
-```
-
-GPU acceleration is optional and only needed for accelerated inferencing.
