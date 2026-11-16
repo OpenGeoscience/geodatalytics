@@ -53,6 +53,7 @@ dependencies = [
   "sentry-sdk[celery,django,pure_eval]==2.69.2",
   "uvicorn==0.53.0",
   "websockets==17.1",
+  "mkdocs>=1.6.1",
 ]
 
 [project.optional-dependencies]
