@@ -1,4 +1,5 @@
 site_name: GeoDatalytics Documentation
+site_url: https://opengeoscience.github.io/geodatalytics/
 repo_url: https://github.com/OpenGeoscience/geodatalytics
 theme: 'readthedocs'
 nav:
