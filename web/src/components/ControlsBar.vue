@@ -79,6 +79,12 @@ const editMode = computed(() => {
   }
   return false;
 });
+// Declare these outside of template to avoid this bug:
+// https://github.com/vuejs/language-tools/issues/6237
+const jsonEditorMode = Mode.text;
+const jsonEditorClass = computed(() =>
+  appStore.theme === "dark" ? "jse-theme-dark" : "",
+);
 
 function createBasemapPreviews() {
   if (basemapList.value) {
@@ -680,12 +686,12 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
               </div>
               <json-editor-vue
                 v-model="newBasemapStyleJSON"
-                :mode="Mode.text"
+                :mode="jsonEditorMode"
+                :class="jsonEditorClass"
                 :stringified="false"
                 :main-menu-bar="false"
                 :ask-to-format="false"
                 :indentation="4"
-                :class="appStore.theme === 'dark' ? 'jse-theme-dark' : ''"
               />
             </v-window-item>
           </v-window>
