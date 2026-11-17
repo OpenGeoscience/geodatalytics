@@ -1,6 +1,6 @@
 GeoDatalytics is a web-based platform designed to enable AI-driven analytics and simulation in urban environments. It empowers analysts, planners, and data scientists with the tools they need to ingest, explore, simulate, transform, and visualize complex urban data—all in one integrated environment.
 
-![Application Overview](./assets/home_01.png)
+![Flood Network Failure Result Animation](./assets/analytics_31.gif)
 
 GeoDatalytics can support diverse use cases related to urban environments, enabling comprehensive data visualization and simulation capabilities that enhance the resilience of infrastructure and foster sustainable urban solutions.
 
