@@ -560,6 +560,16 @@ watch(newBasemapStyleJSON, debounce(createNewBasemapPreview, 1000));
         <v-card class="control-menu">
           <div class="control-menu-title">Help</div>
           <v-card-text class="pa-3">
+            <v-btn
+              block
+              class="mb-2"
+              prepend-icon="mdi-open-in-new"
+              href="https://opengeoscience.github.io/geodatalytics/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open User Docs
+            </v-btn>
             <v-btn block @click="showTutorial"> Show Tutorial </v-btn>
             <table class="map-controls-table">
               <thead>
