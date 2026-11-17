@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Project Configuration - GeoDatalytics Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/styles.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Project Configuration";
+        var mkdocs_page_input_path = "projects.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GeoDatalytics Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Project Configuration</a>
+    <ul class="current">
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../upload/">Dataset Upload</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../controls/">Map Controls</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Panels</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../panels/">Panel Controls</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../datasets/">Datasets Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../layers/">Selected Layers Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../legend/">Legend Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../charts/">Charts Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../networks/">Networks Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../analytics/">Analytics Panel</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_analytics/">Custom Analytics</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GeoDatalytics Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+      <li class="breadcrumb-item active">Project Configuration</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenGeoscience/geodatalytics/edit/master/docs/projects.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="toc">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#basic-project-controls">Basic Project Controls</a></li>
+<li><a href="#project-management-interface-structure">Project Management Interface Structure</a></li>
+<li><a href="#project-list">Project List</a></li>
+<li><a href="#dataset-selection">Dataset Selection</a></li>
+<li><a href="#access-control">Access Control</a><ul>
+<li><a href="#permissions-table">Permissions Table</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="introduction">Introduction</h2>
+<p>Projects are the top-level structure for organizing data in GeoDatalytics. In order to start exploring data, you need to select a project. The project management interface allows you to create and configure projects. Project configuration involves dataset selection and access control. This guide will explain the features available in the project management interface so that you can get started with your own project in GeoDatalytics.</p>
+<p><img alt="Project Configuration Menu" src="../assets/projects_01.png" /></p>
+<h2 id="basic-project-controls">Basic Project Controls</h2>
+<p>When you first access GeoDatalytics, no project has been selected yet, so the map shows the whole world and the panels in the sidebars are empty. At the top of the left sidebar, just below the app title, there is a set of project controls.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are not logged in, you will not have access to the project management interface, so some of the controls shown in these screenshots will not be available to you.</p>
+</div>
+<p><img alt="Project Selection Control" src="../assets/projects_02.png" /></p>
+<p>The project selection dropdown controls the current project. If you already have access to one or more projects, the options in this dropdown will be populated with those project names. Selecting a project from the list will activate that project; the panels in the sidebars will be populated with objects in that project, and the map will zoom to the project’s default map position.</p>
+<p>If you do not have access to any projects yet, the project selection dropdown will display “No available projects.” You will need to create a new project in order to start exploring data on the map. To help new users, an informational tooltip is displayed when no projects are available in the project selection dropdown.</p>
+<p><img alt="No Projects Exist Tooltip" src="../assets/projects_03.png" /></p>
+<p>To the right of the project selection, there are two icon buttons. The first button has a plus icon; when clicked, this button opens the project management interface and focuses the portion for creating a new project. The second button has a gear icon; when clicked, this button opens the same project management interface for general project configuration.</p>
+<p>If a current project is selected, an additional row will appear below the basic project controls. Two text buttons offer controls related to the project’s default map position. The first control, when clicked, will zoom and pan the map view to the default map position. The second control, when clicked, will set the project’s default map position to match the current map view. The latter control will only appear if you have write permission on the project.</p>
+<p><img alt="Selected Project" src="../assets/projects_04.png" /></p>
+<h2 id="project-management-interface-structure">Project Management Interface Structure</h2>
+<p>The project management interface has a list of all projects (that you have access to) along the left side. Once you select a project to configure from that list, then the main content of this interface is shown. The main content is organized into two tabs: Dataset Selection and Access Control. The following sections will explain each of these areas in detail.</p>
+<p><img alt="New Project Dataset Selection" src="../assets/projects_05.png" /></p>
+<h2 id="project-list">Project List</h2>
+<p>The left side of the project configuration interface displays a list of all projects to which you have at least read access. If you have many projects, there is a search bar at the top of the list to filter the projects by name. Each project in the list can be clicked to select that project for configuration. In the screenshot below, the project called “My New Project” has been selected and is shown with a highlight.</p>
+<p><img alt="Project Primary Controls" src="../assets/projects_06.png" /></p>
+<p>For each project in the list for which you are the owner, two icons are shown to the right of the project name. The pencil icon, when clicked, allows you to edit the name of the project. The trash icon, when clicked, will open a dialog asking you to confirm whether you want to delete the project. If you confirm, the project will be deleted.</p>
+<p><img alt="Delete Project Confirmation" src="../assets/projects_07.png" /></p>
+<p>At the end of the list of available projects, there is a “+ New” button. When clicked, the button will be replaced with an input to specify a name for the new project. If you had opened the project management interface by clicking on the plus button instead of the gear button (see <a href="#basic-project-controls">Basic Project Controls</a>), this input would already be visible and focused. Once you input a valid and unique project name, clicking the blue arrow button next to the input or pressing the “Enter” key will create the new project with you as the owner. That new project will automatically be selected for configuration, and the main content of the interface will show the Dataset Selection tab.</p>
+<p><img alt="Project Name Input" src="../assets/projects_08.png" /></p>
+<h2 id="dataset-selection">Dataset Selection</h2>
+<p>The Dataset Selection tab in the project management interface shows two columns: Project Datasets and All Datasets. This tab allows you to explore all the datasets available in the GeoDatalytics database and select relevant datasets for your project.</p>
+<p><img alt="Dataset Selection Tab" src="../assets/projects_09.png" /></p>
+<p>After a new project has been created, it doesn’t have any datasets in it yet, so the left dataset list will be empty, as shown in the screenshot above. The screenshot below shows a project that has already been configured to include several datasets.</p>
+<p><img alt="Dataset Selection Complete" src="../assets/projects_10.png" /></p>
+<p>Both columns show a list of datasets. Each dataset list has the same structure as the list in the Datasets panel. See the <a href="../datasets/"><strong>Datasets Panel</strong></a> documentation for a description of the basic dataset list controls. In addition to those basic controls, these dataset lists have a few more features.</p>
+<p>Any datasets that appear in the “Project Datasets” list on the left will show a blue “X” button to the left of the dataset name; clicking this button will remove the dataset from the project (and therefore remove it from that list).</p>
+<p>Any datasets that appear in the “All Datasets” list on the right will show at least one icon to the left of the dataset name, depending on the ownership of the dataset and whether it is included in the current project.</p>
+<p>Any datasets that you own will show a red trash icon which, when clicked, will show a dialog asking to confirm whether you want to delete the dataset. That dialog will also tell you which projects are currently using that dataset. If you confirm the deletion of that dataset, it will be removed from all of those projects and completely removed from the database.</p>
+<p><img alt="Delete Dataset Confirmation" src="../assets/projects_11.png" /></p>
+<p>Every dataset that appears in the “All Datasets” list will show either a green checkmark icon if it has already been added to the current project or a blue plus button if not. Clicking on the blue plus button will add that dataset to the current project, and it will appear in the “Project Datasets” list.</p>
+<p>If you cannot find a dataset you need among the “All Datasets” list, there is also a blue “Upload New Dataset” button at the top of that list. If you do decide to upload your own dataset to GeoDatalytics, please use caution; all datasets are public and can be used by anyone. Visit the <a href="../upload/"><strong>Dataset Upload</strong></a> documentation to learn more.</p>
+<p>Once you have added one or more datasets to your project, you are ready to start exploring and visualizing in the main interface. Or, if you would like to collaborate with other users on your project, you can complete the optional access control step.</p>
+<h2 id="access-control">Access Control</h2>
+<p>By default, a project can only be seen by its owner (and any site administrators). The access control tab in the project management interface allows you to grant permissions to other users. There are three tiers of access: owner, collaborator, and follower. For more details on which privileges are granted to each tier, see the <a href="#permissions-table"><strong>Permissions Table</strong></a> at the end of this section.</p>
+<p><img alt="Access Control Tab" src="../assets/projects_12.png" /></p>
+<p>There can only be one owner of the project, typically the person who created it. The owner has read-write access and is the only one (besides site administrators) who can delete the project and assign access control.</p>
+<p>If you are the owner of a project, you will see a blue “Add Users” button at the bottom of the access control list. Clicking on this button will open a dialog to select users and specify the permission level for that set of users.</p>
+<p><img alt="Add Followers Dialog" src="../assets/projects_13.png" /></p>
+<p>You cannot add followers and collaborators at the same time; you must open the dialog again and specify a separate set of users at the other permission level. This constraint is in place to help users avoid accidental permission grants. If you add a user that already exists at another permission level, that user will simply be moved to the new permission level you specify.</p>
+<p><img alt="Add Collaborators Dialog" src="../assets/projects_14.png" /></p>
+<p>After submitting the permission assignments, the access control tab will show the users at each permission level.</p>
+<p><img alt="Access Control Complete" src="../assets/projects_15.png" /></p>
+<p>If you are the owner, you will also see trash icons to the right of each user which, when clicked, will show a dialog asking to confirm whether you want to remove that user from the project. If you confirm, that user will no longer have any access to the project, and it will not show up in the project list for them anymore.</p>
+<p><img alt="Remove User Confirmation" src="../assets/projects_16.png" /></p>
+<p>In rare cases, a project owner may wish to transfer ownership of the project to another user. The pencil icon to the right of the owner section allows the current owner to specify a new owner. Use caution when transferring ownership; you cannot undo this action. Only the new owner (or a site administrator) would be able to transfer ownership back to you. Once you transfer ownership, you will be demoted to collaborator on the project.</p>
+<p><img alt="Transfer Ownership Dialog" src="../assets/projects_17.png" /></p>
+<h3 id="permissions-table">Permissions Table</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Action</th>
+<th style="text-align: left;">Follower</th>
+<th style="text-align: left;">Collaborator</th>
+<th style="text-align: left;">Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">View project configuration, including current dataset selection and access control</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Explore datasets in the project, visualize their layers on the map, and temporarily customize layer styles</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Create, update, and delete saved layer styles</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Create, update, and delete custom colormaps that can be used in layer styles within the project</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Load saved views belonging to the project</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Create and delete saved views belonging to the project</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">View charts in the project</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">View networks in the project and make ephemeral state changes such as node deactivation</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">View previous Analytics task runs belonging to the project and visualize the results on the map</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Create new Analytics task runs belonging to the project</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Add datasets to the project or remove them</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Change project name</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Modify project access control</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Delete project</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+</tr>
+<tr>
+<td style="text-align: left;">Transfer ownership</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">X</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../upload/" class="btn btn-neutral float-right" title="Dataset Upload">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenGeoscience/geodatalytics" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../upload/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Networks Panel - GeoDatalytics Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/styles.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Networks Panel";
+        var mkdocs_page_input_path = "networks.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GeoDatalytics Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../projects/">Project Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../upload/">Dataset Upload</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../controls/">Map Controls</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Panels</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../panels/">Panel Controls</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../datasets/">Datasets Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../layers/">Selected Layers Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../legend/">Legend Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../charts/">Charts Panel</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Networks Panel</a>
+    <ul class="current">
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../analytics/">Analytics Panel</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_analytics/">Custom Analytics</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GeoDatalytics Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+          <li class="breadcrumb-item">Panels</li>
+      <li class="breadcrumb-item active">Networks Panel</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenGeoscience/geodatalytics/edit/master/docs/networks.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="toc">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#example-networks">Example Networks</a></li>
+<li><a href="#basic-controls">Basic Controls</a></li>
+<li><a href="#animation-configuration-menu">Animation Configuration Menu</a></li>
+<li><a href="#manual-animation-creation">Manual Animation Creation</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+<h2 id="introduction">Introduction</h2>
+<p>GeoDatalytics is focused on modeling urban systems, so networks are essential to understanding the connectedness of infrastructure. Urban lifeline systems for water, electricity, transportation, etc. are spatially distributed across a set of connectors that can be represented as network edges and access points that can be represented as network nodes. Representing these systems with nodes and edges allows us to apply graph topology concepts for analysis and identify opportunities for improved connectivity that serves the community equitably.</p>
+<p>A network representation can be created for certain kinds of vector data; nodes are created for point features and edges are created for the line features that intersect those points. A separate edge is created for each segment of a line between two points.</p>
+<p>The Networks panel offers animation features that allow you to explore how the connectivity of a network is affected when some nodes go out of service. In the screenshot below, a network animation, generated by an analytics task, shows how the Boston subway system becomes disconnected when nodes are affected by an extreme flood event.</p>
+<p><img alt="Networks Overview" src="../assets/networks_01.png" /></p>
+<h2 id="example-networks">Example Networks</h2>
+<p>GeoDatalytics has a few built-in examples of transportation networks. The Boston subway system in the MBTA Rapid Transit dataset has a network representation (shown in the screenshot above), and this acts as a good example of a relatively sparse network for basic analysis.</p>
+<p>You can also create a more dense transportation network via the “Create Road Network” task, which takes a city name as input and will generate a network as output where intersections are nodes and the road segments between them are edges. These networks are much more complex, with a greater number of nodes and edges compared to the subway system. Road networks are also far more resilient because they have a greater degree of redundancy. The screenshot below shows only a portion of the road network created for Boston.</p>
+<p><img alt="Network Example" src="../assets/networks_02.png" /></p>
+<p>These transportation examples demonstrate the basic network analysis capabilities, which can be applied to other interconnected urban systems. If your use case is focused on other types of urban systems and you would like help creating network representations of those systems, <a href="https://www.kitware.com/contact/">Contact Kitware</a> so we can support your use case.</p>
+<p>Currently, creation of a network is only supported through the <a href="../api/"><strong>API</strong></a> or <a href="../custom_analytics/"><strong>Analytics tasks</strong></a>.</p>
+<h2 id="basic-controls">Basic Controls</h2>
+<p>In the Network panel’s initial state, a list of available networks is displayed. A search bar allows you to filter the networks by name. Each network shows a vertical three-dots icon on the right.</p>
+<p><img alt="Networks Panel" src="../assets/networks_03.png" /></p>
+<p>Clicking the dots icon will open the details dialog for that network, which will display some basic information and metadata.</p>
+<p><img alt="Networks Details Dialog" src="../assets/networks_04.png" /></p>
+<p>Clicking on the name of a network will add the network to the map (if not already shown) and show the main panel view. In the title section of the main panel view, the network’s name is displayed above a set of chips that provide an overview of the network. The first chip displays the network category, the second chip displays the number of nodes in the network, and the third chip displays the number of edges.</p>
+<p><img alt="Network Select Animation" src="../assets/networks_05.png" /></p>
+<p>Below the title section are the animation controls. If you have write access on the current project, then a button for creating an animation will be available. We’ll explore the controls for manual animation creation in the following subsection. For now, we’ll view an existing animation that was generated by the “Flood Network Failure” Analytics task (see <a href="../analytics/"><strong>Analytics Panel</strong></a> for more context.).</p>
+<p>The animation selection control offers a list of animations created for the current network. Once an animation is selected, additional controls appear and the network shown on the map will be recolored to visualize the first tick of the selected animation. In the screenshot below, the first tick of this animation only has 5 deactivated nodes (shown in red by the coast, where the flood intersects the network in the first hour of the flood event). Most other nodes in the network are all still connected, forming a single network component (shown in purple). There is one node that is not deactivated but it is surrounded by deactivated nodes so it is not connected to any other active nodes; this node is shown in black.</p>
+<p><img alt="Network Animation State 0" src="../assets/networks_06.png" /></p>
+<p>When an animation has been selected, additional controls appear in the Networks panel. The first of these controls is a color bar that provides an overview of how nodes in the network are colored on the map. The sections of the color bar are sized proportionally to how many nodes are in that group. Hovering over a section of the colorbar will highlight that node group on the map and display a tooltip with the group name and node count.</p>
+<p><img alt="Network Animation Hightlight Component" src="../assets/networks_07.png" /></p>
+<p>Below the color bar, an animation timeline slider is shown. You can jump to any animation tick using this slider. Or, you can use the set of play, pause, and rewind buttons that appear below the animation slider to automatically step through the animation at a regular interval.</p>
+<p>The network colors on the map and the color bar will update with each animation tick. As the network becomes more segmented by the deactivation of more nodes, each connected component will be assigned a color. The component groups are ordered by size in the color bar.</p>
+<p><img alt="Network Animation State 8" src="../assets/networks_08.png" /></p>
+<p>Lastly, an expandable section of related objects is shown at the bottom of the animation controls (if the selected animation has any related objects). For animations generated by the “Flood Network Failure” task, the task result that generated it and the flood layer used are included as related objects.</p>
+<p>Each related object has a show/hide button next to it. If the related flood layer is shown on the map while viewing the network animation (like in the screenshots above), the flood frame will automatically be updated as the animation tick updates.</p>
+<p><img alt="Network Animation Related Objects" src="../assets/networks_09.png" /></p>
+<h2 id="animation-configuration-menu">Animation Configuration Menu</h2>
+<p>The palette icon next to the animation selection control provides a menu with some options to configure how the animation is visualized.</p>
+<p><img alt="Network Animation Config Menu" src="../assets/networks_10.png" /></p>
+<p>The time visualization mode control allows you to toggle how time is represented in your visualization. By default, time is visualized with the slider; you can move through time by manipulating the slider, and you can only ever see a single time step at once.</p>
+<p>If you switch to colormap time mode, then the slider will disappear. Some of the configuration options are not applicable in this mode, so those controls will disappear as well. In this mode, time is mapped to color, so all timesteps are represented with a static visualization.</p>
+<p><img alt="Network Animation Time Colormap Mode" src="../assets/networks_11.png" /></p>
+<p>The node colors no longer represent connected components for a single time step; instead, a node is colored according to which timestep it goes out of service. If a node never goes out of service, then it will use the default node color.</p>
+<p>The colorbar still shows proportions of node colors, but now a color represents a state in the animation timeline. Color groups are not ordered by size, but by timestep index. Hovering over a color in the color bar will still highlight the nodes in that group and display a tooltip with the group name and number of nodes.</p>
+<p><img alt="Network Animation Highlight State Outages" src="../assets/networks_12.png" /></p>
+<p>The other controls in the animation configuration menu are as follows:</p>
+<ul>
+<li>Animation Interval (not applicable when mapping time to color). Interval in seconds between ticks when using the play or rewind buttons. Minimum 0.5 seconds and maximum 5 seconds.</li>
+<li>Colormap. Used to represent timesteps when mapping time to color, otherwise used to represent separate network components.</li>
+<li>Default node color. Used to represent nodes that never go out of service when mapping time to color, otherwise used to represent nodes that are not deactivated and not part of a component (single disconnected nodes).</li>
+<li>Highlighted node color. Used to highlight nodes in a group when hovering over a section of the color bar.</li>
+<li>Deactivated node color (not applicable when mapping time to color). Color used to represent deactivated nodes.</li>
+<li>Deactivated node opacity (not applicable when mapping time to color). Opacity of deactivated nodes.</li>
+</ul>
+<h2 id="manual-animation-creation">Manual Animation Creation</h2>
+<p>While generated network animations are helpful for exploring simulated network conditions, it can also be helpful to manually specify network outages in a custom animation. Manual animation creation allows you to freely explore a network’s topology and present your discoveries to collaborators as an animated visualization.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you do not have write access on the current project, you will not be able to create network animations. The “+ Create Network Animation” button will not be visible to you.</p>
+</div>
+<p><img alt="Network Animation Creation Button" src="../assets/networks_13.png" /></p>
+<p>When the “+ Create Network Animation” button is clicked, an input will appear for you to enter the new animation’s name. The name must be unique among other animations for the same network in the same project. To submit, click the blue arrow button next to the input or press the “Enter” key.</p>
+<p><img alt="Network Animation Name Input" src="../assets/networks_14.png" /></p>
+<p>Once the animation has been created, it will be selected in the animation selection control. The animation will have a single state with no deactivated nodes, so the color bar will appear as all one color (since all nodes are included in a single connected component).</p>
+<p>The animation slider will only appear when the animation has at least two states. Buttons to “Delete State” and “Add State” will be available among the animation controls.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Anyone with write access on the current project will be able to make changes to this animation.</p>
+</div>
+<p><img alt="New Animation One State" src="../assets/networks_15.png" /></p>
+<p>After clicking the “Add State” button, the slider will appear with two ticks. The new state will automatically be active.</p>
+<p><img alt="New Animation Two States" src="../assets/networks_16.png" /></p>
+<p>An instructive label at the bottom of the animation controls informs that you can “click any node on the map to find a button for toggling that node’s state”. Clicking on a node on the map will cause a tooltip to appear. As with any vector feature, the tooltip will display a table of properties. Below the properties table, a button to deactivate/reactivate the node is shown.</p>
+<p><img alt="New Animation Map Tooltip Deactivate Node Button" src="../assets/networks_17.png" /></p>
+<p>Clicking the “Deactivate Node” button will cause the node and its connected edges to change color, using the deactivated node color selected in the animation configuration options. In the screenshot below, the deactivated node is shown in red.</p>
+<p><img alt="New Animation One Deactivated Node" src="../assets/networks_18.png" /></p>
+<p>Additionally, after at least one node has changed state, the instructional label at the bottom of the animation controls will be replaced by a “Save &amp; compute components” button. We’ll click this button after we deactivate a few more nodes.</p>
+<p><img alt="Animation Save And Compute Components Button" src="../assets/networks_19.png" /></p>
+<p>Once the “Save &amp; compute components” button is clicked, the server will take a moment to compute the network’s connected components with the specified outage state. Once a response is received from the server, the visualization will update to color the remaining active nodes according to their component groups. The color bar will also be updated to reflect these node groups.</p>
+<p><img alt="Animation State Components Computed" src="../assets/networks_20.png" /></p>
+<p>The next time we add a state to the animation, the new state will be a copy of the current state. We can continue to add states, toggle nodes, and save changes to see the connected components.</p>
+<p><img alt="Animation State Copy To New State" src="../assets/networks_21.png" /></p>
+<p>The “Delete State” button will show a confirmation dialog before deleting the current state from your animation.</p>
+<p><img alt="Delete Animation State Confirmation" src="../assets/networks_22.png" /></p>
+<p>With these controls, you can manually create an animation with many timesteps to illustrate how the connectivity of a given network is affected by different outage states. Anyone else with read permission on the project will be able to view your animation and customize the visualization colors.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>This concludes the explanation of the Network panel controls. While manually creating a network animation can provide some insight, a network animation can also be generated by an Analytics task. Tasks like these can be used to explore how a network would be affected by a particular scenario. Continue to the <a href="../analytics/"><strong>Analytics Panel</strong></a> section to see an example exploring how the connectivity of the Boston subway system would be affected during a simulated flood event.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../charts/" class="btn btn-neutral float-left" title="Charts Panel"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../analytics/" class="btn btn-neutral float-right" title="Analytics Panel">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenGeoscience/geodatalytics" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../charts/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../analytics/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

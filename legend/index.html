@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Legend Panel - GeoDatalytics Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/styles.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Legend Panel";
+        var mkdocs_page_input_path = "legend.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GeoDatalytics Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../projects/">Project Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../upload/">Dataset Upload</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../controls/">Map Controls</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Panels</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../panels/">Panel Controls</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../datasets/">Datasets Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../layers/">Selected Layers Panel</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Legend Panel</a>
+    <ul class="current">
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../charts/">Charts Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../networks/">Networks Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../analytics/">Analytics Panel</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_analytics/">Custom Analytics</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GeoDatalytics Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+          <li class="breadcrumb-item">Panels</li>
+      <li class="breadcrumb-item active">Legend Panel</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenGeoscience/geodatalytics/edit/master/docs/legend.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="toc">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#legend-structure">Legend Structure</a></li>
+</ul>
+</div>
+<h2 id="introduction">Introduction</h2>
+<p>The legend panel provides a visual overview of the current styles applied to your selected layers. This is a helpful panel to include in screenshots and bookmarks that you intend to send to others. The legend summary helps the viewer quickly understand what the layer styles convey about the data, without needing to inspect the style configuration menu for every layer.</p>
+<p>The legend is a read-only summary; see the <a href="../layers/"><strong>Selected Layers</strong></a> panel to make changes to your selected layers and their applied styles.</p>
+<p><img alt="Legend Panel" src="../assets/legend_01.png" /></p>
+<h2 id="legend-structure">Legend Structure</h2>
+<p>The legend mirrors the current state of the configuration you specify in the <a href="../layers/"><strong>Selected Layers</strong></a> panel. The legend contains a list of layer style summaries, matching the order of the layers list in the selected layers panel.</p>
+<p>Each layer style summary is labelled with the layer name (and copy number if more than one instance exists). These labels match the labels in the selected layers panel, and they will appear in the same order.</p>
+<p>Each layer style summary illustrates the color configuration of the layer’s current style. Size and filter configurations are not included in the legend. Color configurations vary in complexity, so there are several variations of how a layer style summary is depicted.</p>
+<ol>
+<li>
+<p>Single color applied to all features/bands</p>
+<p><img alt="Single Color Legend" src="../assets/legend_02.png" /></p>
+</li>
+<li>
+<p>Continuous colormap applied all features/bands. A label displays the name of the color-by property. If the color-by property is numeric, the colormap range will be displayed on either side of the color scale.</p>
+<p><img alt="Continuous Colormap Legend" src="../assets/legend_03.png" /></p>
+<p><img alt="Continuous Colormap With Range Legend" src="../assets/legend_04.png" /></p>
+</li>
+<li>
+<p>Discrete colormap applied to all features/bands. A label displays the name of the color-by property. If applied to a categorical property, the color scale can be expanded to show the list of values that exist on the data and the color applied to each one.</p>
+<p><img alt="Discrete Colormap Legend" src="../assets/legend_05.png" /></p>
+<p>If applied to a numeric property, the colormap range will be displayed on either side of the color scale.</p>
+<p><img alt="Discrete Colormap With Range Legend" src="../assets/legend_06.png" /></p>
+</li>
+<li>
+<p>(Vector only) Enable “Prioritize feature color properties” option. When this option is enabled in the color configuration, features with “fill” and “stroke” properties will be colored according to those property values. If some features lack those properties, they will be colored according to the rest of the color configuration, and the legend panel will display a label of “Use color properties; default to” above the color summary. If all the features in that layer have fill and/or stroke properties, the legend panel will only display the “Use color properties” label.</p>
+<p><img alt="Use Feature Properties With Default Color" src="../assets/legend_07.png" /></p>
+</li>
+<li>
+<p>Multiple color configurations (different configurations for each feature type on vector data and for each band on raster data). For each color configuration, the name will be displayed in bold, followed by the color summary, which can appear as any of the above variations.</p>
+<p><img alt="Mulitple Configs Legend" src="../assets/legend_08.png" /></p>
+</li>
+</ol>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../layers/" class="btn btn-neutral float-left" title="Selected Layers Panel"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../charts/" class="btn btn-neutral float-right" title="Charts Panel">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenGeoscience/geodatalytics" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../layers/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../charts/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

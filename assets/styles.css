@@ -1,0 +1,4 @@
+td, th {
+    padding: 8px 16px !important;
+    white-space: unset !important;
+}

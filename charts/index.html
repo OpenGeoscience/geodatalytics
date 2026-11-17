@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Charts Panel - GeoDatalytics Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/styles.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Charts Panel";
+        var mkdocs_page_input_path = "charts.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GeoDatalytics Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../projects/">Project Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../upload/">Dataset Upload</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../controls/">Map Controls</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Panels</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../panels/">Panel Controls</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../datasets/">Datasets Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../layers/">Selected Layers Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../legend/">Legend Panel</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Charts Panel</a>
+    <ul class="current">
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../networks/">Networks Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../analytics/">Analytics Panel</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_analytics/">Custom Analytics</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GeoDatalytics Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+          <li class="breadcrumb-item">Panels</li>
+      <li class="breadcrumb-item active">Charts Panel</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenGeoscience/geodatalytics/edit/master/docs/charts.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="toc">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#creating-new-charts-via-api">Creating New Charts via API</a></li>
+</ul>
+</div>
+<h2 id="introduction">Introduction</h2>
+<p>While GeoDatalytics is primarily focused on visualizing geospatial data on a map, the Charts panel also allows you to visualize tabular data with line charts. Chart data can be created during an <a href="../analytics/"><strong>Analytics</strong></a> task or uploaded via the API. Currently, chart creation via the user interface is not yet supported. The Charts panel is a read-only view of charts in the current project.</p>
+<p><img alt="Chart Example 1" src="../assets/charts_01.png" /></p>
+<p>In its default state, the Charts panel shows a list of all Chart objects included in the current project. Each item shows the chart name, followed by two icons. The information icon shows the chart’s description when the mouse hovers over it. The vertical three dots icon, when clicked, will open the details dialog for that chart.</p>
+<p><img alt="Charts Panel" src="../assets/charts_02.png" /></p>
+<p>The details dialog for any given chart will show the name, id, description, metadata, and related objects like files. If there are any related files, you can download them from this dialog.</p>
+<p><img alt="Chart Details Dialog" src="../assets/charts_03.png" /></p>
+<p>Clicking on any chart in the Charts panel will display an interactive visualization of the chart data. You can hover over any data point to see its value. In the top right corner of the chart display, there are two icons. The download icon will initiate a download of the chart data, formatted as JSON. The X button will close the chart visualization and return to the list of charts.</p>
+<p>Note that if the chart was converted from a CSV, the download button in the top right will not download the original CSV file; it will download a version of the data formatted for visualization. The original CSV can only be downloaded from the details dialog.</p>
+<p><img alt="Chart Example 2" src="../assets/charts_04.png" /></p>
+<p>Note that some charts are more dense than others, and may require that you resize the Charts panel to see the data properly, since the Charts panel is relatively small by default. To learn more about resizing panels, see the <a href="../panels/"><strong>Panel Controls</strong></a> documentation.</p>
+<p>For chart data that is particularly dense, with more than 500 labels along the x-axis, only the first 500 labels will be shown by default and a range slider will appear below the chart to control the current x-axis window.</p>
+<p><img alt="Slice Dense Chart" src="../assets/charts_05.png" /></p>
+<h2 id="creating-new-charts-via-api">Creating New Charts via API</h2>
+<p>While creating a chart is not yet supported in the user interface, you can create new charts via the API. The API offers two modes of chart creation: direct data entry and file conversion. Direct data entry is recommended, as it is the simpler approach. File conversion is a more advanced approach with more steps.</p>
+<p>The following code example demonstrates chart creation with direct data entry:</p>
+<pre><code>import json
+import requests
+from datetime import datetime
+
+
+with requests.Session() as session:
+    token = session.post(f'{base_url}/api/v1/token/', dict(
+        username=username,
+        password=password,
+    )).json().get('token')
+    session.headers.update({
+        'Authorization': f'Token {token}',
+        'Accept': 'application/json',
+    })
+
+    my_new_chart = dict(
+        name='Example Chart',
+        description='Line chart with two datasets uploaded via API',
+        project=project_id,
+        metadata=json.dumps(dict(
+            uploaded=datetime.now().strftime('YYYY-mm-dd HH:MM:SS'),
+            nested=dict(
+                example=True,
+            ),
+        )),
+        chart_data=json.dumps(dict(
+            # Pass x-axis labels
+            labels=['Sunday', 'Monday', 'Tuesday',
+                    'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+            # Pass one or more datasets containing y-values
+            datasets=[
+                # One blue line for &quot;Focus Time&quot;
+                dict(
+                    data=[0.5, 3, 4, 5, 3, 1, 0],
+                    label='Focus Time',
+                    borderColor='#0000ff',
+                    backgroundColor='#0000ff',
+                ),
+                # One red line for &quot;Relaxation&quot;
+                dict(
+                    data=[7.5, 4, 3, 2, 4, 6, 8],
+                    label='Relaxation',
+                    borderColor='#ff0000',
+                    backgroundColor='#ff0000',
+                )
+            ],
+        )),
+        chart_options=json.dumps(dict(
+            x_title='Weekday',
+            y_title='Number of Hours',
+            chart_title='Weekly Time Management',
+        ))
+    )
+
+    r = session.post(f'{base_url}/api/v1/charts/', my_new_chart)
+    print(r.json())
+</code></pre>
+<p>The screenshot below shows the resulting chart object in the Charts panel.</p>
+<p><img alt="Chart Example 3" src="../assets/charts_06.png" /></p>
+<p>The next example shows chart creation with file conversion. The file conversion approach is more advanced, so the direct data entry approach is recommended for most use cases. However, this approach does have the advantage of creating a related file object, which can be downloaded from the details dialog. Use this approach if you would like to allow users to download the original CSV contents of the chart.</p>
+<p>This example references a file called <code>example_chart.csv</code>, which contains the following comma-separated values:</p>
+<pre><code>weekday,focus_time,relaxation
+Sunday,0.5,7.5
+Monday,3,4
+Tuesday,4,3
+Wednesday,5,2
+Thursday,3,4
+Friday,1,6
+Saturday,0,8
+</code></pre>
+<p>For this example, you will need to install the <code>django-s3-file-field-client</code> to complete the file upload process.</p>
+<pre><code>pip install django-s3-file-field-client
+</code></pre>
+<p>The code below will result in the creation of a new chart, identical to the one above. This process involves more steps than the previous example. First, the chart object is created without any <code>chart_data</code> specified. Second, the contents of the CSV file are uploaded via a specialized client from <code>django-s3-file-field-client</code>, and a file key is obtained from that upload. Third, a file object related to the chart is created with the file key. Fourth, a conversion task is spawned; that task will run asynchronously on the server, so a <code>TaskResult</code> object is returned in that response. You can track the progress of the conversion task by getting the status of that <code>TaskResult</code> object. The conversion task will parse the contents of the uploaded CSV to fill in the <code>chart_data</code> on the chart object. Once the conversion task is complete, you can view the chart in the Charts panel just as you would for the previous example.</p>
+<pre><code>import json
+import requests
+import mimetypes
+from datetime import datetime
+from pathlib import Path
+from s3_file_field_client import S3FileFieldClient
+
+
+with requests.Session() as session:
+    token = session.post(f'{base_url}/api/v1/token/', dict(
+        username=username,
+        password=password,
+    )).json().get('token')
+    session.headers.update({
+        'Authorization': f'Token {token}',
+        'Accept': 'application/json',
+    })
+
+    my_new_chart = dict(
+        name='Example Chart',
+        description='Line chart with two datasets uploaded via API',
+        project=project_id,
+        metadata=json.dumps(dict(
+            uploaded=datetime.now().strftime('YYYY-mm-dd HH:MM:SS'),
+            nested=dict(
+                example=True,
+            ),
+        )),
+        chart_options=json.dumps(dict(
+            x_title='Weekday',
+            y_title='Number of Hours',
+            chart_title='Weekly Time Management',
+        )),
+    )
+
+    r = session.post(f'{base_url}/api/v1/charts/', my_new_chart)
+    chart_id = r.json().get('id')
+
+    # Upload file contents to server
+    file_path = Path('example_chart.csv')
+    s3ff_client = S3FileFieldClient(
+        f'{base_url}/api/v1/s3-upload/',
+        session,
+    )
+    with file_path.open('rb') as f:
+        file_field_value = s3ff_client.upload_file(
+            file_stream=f,
+            file_name=file_path.name,
+            file_content_type=mimetypes.guess_type(file_path)[0],
+            field_id='core.FileItem.file',  # this value is the same for all file uploads
+        )
+
+    # Create File object
+    my_new_file = dict(
+        name=file_path.name,  # can match local file name but doesn't need to
+        chart=chart_id,
+        file=file_field_value,  # pass the value we got from the file content upload
+        file_type='csv',
+        file_size=file_path.stat().st_size,
+        metadata=json.dumps(dict(
+            uploaded=datetime.now().strftime('YYYY-mm-dd HH:MM:SS'),
+        )),
+    )
+    r = session.post(f'{base_url}/api/v1/files/', my_new_file)
+
+    # Spawn conversion task on the chart
+    r = session.post(f'{base_url}/api/v1/charts/{chart_id}/convert/', dict(
+        conversion_options=json.dumps(dict(
+            labels='weekday',
+            datasets=['focus_time', 'relaxation'],
+            palette=dict(
+                focus_time='blue',
+                relaxation='red',
+            ),
+        ))
+    ))
+    # response contains a task result object to track the progress of the conversion
+    print(r.json())
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../legend/" class="btn btn-neutral float-left" title="Legend Panel"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../networks/" class="btn btn-neutral float-right" title="Networks Panel">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenGeoscience/geodatalytics" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../legend/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../networks/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

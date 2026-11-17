@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Datasets Panel - GeoDatalytics Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/styles.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Datasets Panel";
+        var mkdocs_page_input_path = "datasets.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GeoDatalytics Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../projects/">Project Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../upload/">Dataset Upload</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../controls/">Map Controls</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Panels</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../panels/">Panel Controls</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Datasets Panel</a>
+    <ul class="current">
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../layers/">Selected Layers Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../legend/">Legend Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../charts/">Charts Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../networks/">Networks Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../analytics/">Analytics Panel</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_analytics/">Custom Analytics</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GeoDatalytics Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+          <li class="breadcrumb-item">Panels</li>
+      <li class="breadcrumb-item active">Datasets Panel</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenGeoscience/geodatalytics/edit/master/docs/datasets.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="toc">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#basic-controls">Basic Controls</a></li>
+<li><a href="#dataset-list-structure">Dataset List Structure</a></li>
+</ul>
+</div>
+<h2 id="introduction">Introduction</h2>
+<p>The Datasets panel provides a list of all the datasets included in the current project, organized by category. Each category is an expandable section with a list of datasets. Each dataset is an expandable section with a list of layers. Clicking on any layer in the Datasets panel will add that layer to the map, as well as the <a href="../layers/"><strong>Selected Layers</strong></a> panel for further configuration. This guide will explain the features available in the Datasets panel so you can explore the contents of your project.</p>
+<p><img alt="Datasets Panel" src="../assets/datasets_01.png" /></p>
+<h2 id="basic-controls">Basic Controls</h2>
+<p>The main content of the Datasets panel is a hierarchical list of your current project’s contents. If you do not have a project selected, this panel’s list will be empty, and some controls will be invisible. The only visible controls will be the common controls present on every panel (see <a href="../panels/"><strong>Panels</strong></a>). This includes an expand/collapse icon, a drag handle for repositioning the panel, and a basic search box.</p>
+<p><img alt="Datasets Panel Empty" src="../assets/datasets_02.png" /></p>
+<p>Once you select a project at the top of the left sidebar (see <a href="../projects/"><strong>Project Configuration</strong></a>), the Datasets panel will update. Even if the selected project does not contain any datasets, the Datasets panel will show an additional control once a project has been selected. A blue plus button will appear in the header of the panel. Once clicked, that button will open the Project Management interface for the selected project, where you can add new datasets to the project (either by selecting existing datasets or creating new ones). You can also open the Project Management interface with the buttons next to the project selection box.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are not logged in, you will not have access to the project management interface, so the blue plus button will not appear.</p>
+</div>
+<p><img alt="Datasets Panel Collapsed" src="../assets/datasets_03.png" /></p>
+<p>Once the selected project contains at least one dataset, another control will become visible below the basic search box. You can expand the “Filter by tag” section to show a tag selection box.</p>
+<p><img alt="Datasets Tag Filter Control" src="../assets/datasets_04.png" /></p>
+<p>The tag selection box, when clicked, will open a menu listing the tags on all the datasets in the project. You can select multiple tags. Once a tag is selected, it will appear as a chip in the filter input. Each chip has an “X” button on the right, which, when clicked, will deselect that tag.</p>
+<p><img alt="Datasets Tag Filter Selection" src="../assets/datasets_05.png" /></p>
+<p>When tags have been selected, the list of datasets shown in the Datasets panel will be filtered. Only datasets with matching tags will be shown. A dataset’s tags are shown as a list of chips under the dataset’s name when the dataset section has been expanded.</p>
+<p><img alt="Datasets Tag Filter Applied" src="../assets/datasets_06.png" /></p>
+<p>The tag filters can be used in combination with the search filter to further narrow down the results.</p>
+<p><img alt="Datasets Tag And Name Filters Applied" src="../assets/datasets_07.png" /></p>
+<h2 id="dataset-list-structure">Dataset List Structure</h2>
+<p>As stated in the introduction above, the dataset list has a hierarchical structure. At the top level are categories. These expandable sections contain datasets. In the screenshot below, the list shows the following top-level categories: transportation, elevation, imagery, region, amenities, and flood. Each category is displayed as a name and an up/down arrow indicating the expansion status of the category. The transportation, elevation, and imagery categories are expanded, each showing one or more datasets in that category. Each dataset is shown as a name, a set of icons, and an up/down arrow indicating the expansion status of the dataset.</p>
+<p><img alt="Datasets List" src="../assets/datasets_08.png" /></p>
+<p>The following icons are shown next to each dataset name:</p>
+<ol>
+<li>
+<p>A vertical three dots icon which, when clicked, opens a detail dialog. This dialog will display a table of basic information about the dataset, a list of related objects, and a table of metadata.</p>
+<p>a. Each item in the related objects list, when clicked, will show the details dialog for that related object.</p>
+<p>b. Downloadable items show a download icon; this icon will display a tooltip with the file size when the cursor hovers over it. Clicking the download icon will initiate a download of that file.</p>
+<p><img alt="Dataset Details Dialog" src="../assets/datasets_09.png" /></p>
+</li>
+<li>
+<p>A layers icon followed by a number indicating the number of layers the dataset has.</p>
+</li>
+<li>An expansion arrow that points down if the dataset has not been expanded and points up if it has been expanded.</li>
+</ol>
+<p>When expanded, a dataset will also display the list of tags and the list of layers. Tags are shown as rounded chips, and Layers are shown as rows containing a blue plus button, the layer name, and a vertical three dots icon (which opens a similar details dialog when clicked). When the blue plus button is clicked, the layer will be added to the map and shown in the Selected Layers panel. You can add the same layer multiple times; numbered copies will appear in the Selected Layers panel, and you can apply different styles to each copy in that panel. See the <a href="../layers/"><strong>Selected Layers Panel</strong></a> documentation for details.</p>
+<p><img alt="Dataset Layers List" src="../assets/datasets_10.png" /></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../panels/" class="btn btn-neutral float-left" title="Panel Controls"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../layers/" class="btn btn-neutral float-right" title="Selected Layers Panel">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenGeoscience/geodatalytics" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../panels/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../layers/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

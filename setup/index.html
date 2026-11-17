@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Setup - GeoDatalytics Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/styles.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Setup";
+        var mkdocs_page_input_path = "setup.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GeoDatalytics Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../projects/">Project Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../upload/">Dataset Upload</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../controls/">Map Controls</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Panels</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../panels/">Panel Controls</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../datasets/">Datasets Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../layers/">Selected Layers Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../legend/">Legend Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../charts/">Charts Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../networks/">Networks Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../analytics/">Analytics Panel</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_analytics/">Custom Analytics</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Setup</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#dev-containers">Dev Containers</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#docker-compose">Docker Compose</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GeoDatalytics Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer Guide</li>
+      <li class="breadcrumb-item active">Setup</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenGeoscience/geodatalytics/edit/master/docs/setup.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="toc">
+<ul>
+<li><a href="#prerequisites">Prerequisites</a><ul>
+<li><a href="#dev-containers">Dev Containers</a></li>
+<li><a href="#docker-compose">Docker Compose</a></li>
+</ul>
+</li>
+<li><a href="#initialization">Initialization</a></li>
+<li><a href="#access-points">Access Points</a></li>
+<li><a href="#load-sample-data-optional">Load Sample Data (Optional)</a></li>
+<li><a href="#testing">Testing</a></li>
+</ul>
+</div>
+<h1 id="prerequisites">Prerequisites</h1>
+<p>For local development, it is recommended that you run containerized services with <a href="https://code.visualstudio.com/docs/devcontainers/containers">VS Code Dev Containers</a> or <a href="https://docs.docker.com/compose/">Docker Compose</a>.</p>
+<h2 id="dev-containers">Dev Containers</h2>
+<ol>
+<li>
+<p>Install <a href="https://code.visualstudio.com/docs/devcontainers/containers#_installation">VS Code with dev container support</a>.</p>
+</li>
+<li>
+<p>Open the project in VS Code, then run <code>Dev Containers: Reopen in Container</code>
+   from the Command Palette (<code>Ctrl+Shift+P</code>).</p>
+</li>
+<li>
+<p>Run services with the <code>Django + Celery + Vite</code> Run Configuration in the VS Code <code>Run and Debug</code> panel.</p>
+</li>
+<li>
+<p>Run tests either via command line with <code>tox</code> (see <a href="#testing">Testing</a>) or in the VS Code <code>Testing</code> panel.</p>
+</li>
+<li>
+<p>Rebuild after any changes to the Dockerfile, Docker Compose files, or <code>devcontainer.json</code>. Run <code>Dev Containers: Rebuild Container</code> from the Command Palette (<code>Ctrl+Shift+P</code>).</p>
+</li>
+<li>
+<p>Manage dependencies with <a href="https://docs.astral.sh/uv/"><code>uv</code></a>. Sync dependencies with <code>uv sync --all-extras --all-groups</code>.</p>
+</li>
+</ol>
+<h2 id="docker-compose">Docker Compose</h2>
+<p>Run services with <code>docker compose up</code>, using <code>Ctrl+C</code> to stop them gracefully. Or, to run them in the background, use <code>docker compose up -d</code> and <code>docker compose stop</code> to stop them gracefully.</p>
+<p>To run celery worker with GPU access, use the <code>gpu</code> profile:</p>
+<pre><code>docker compose --profile gpu up --scale celery=0
+</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>GPU mode requires NVIDIA drivers and <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html">nvidia-docker</a> runtime.</p>
+</div>
+<p>To run commands in a service container, use <code>docker compose run</code>:</p>
+<pre><code>docker compose run --rm django ./manage.py migrate
+docker compose run --rm django uv run tox
+</code></pre>
+<h1 id="initialization">Initialization</h1>
+<p>Run the following commands in the Django context (VS Code terminal if using Dev Containers, Django container if using docker compose).</p>
+<pre><code>./manage.py migrate
+./manage.py createsuperuser
+</code></pre>
+<h1 id="access-points">Access Points</h1>
+<p>Log in using the credentials you created with <code>createsuperuser</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User Interface</td>
+<td>http://localhost:8080/</td>
+</tr>
+<tr>
+<td>Admin Panel</td>
+<td>http://localhost:8000/admin/</td>
+</tr>
+<tr>
+<td>API Documentation</td>
+<td>http://localhost:8000/api/docs/swagger/</td>
+</tr>
+</tbody>
+</table>
+<h1 id="load-sample-data-optional">Load Sample Data (Optional)</h1>
+<p>The ingest command loads datasets, charts, and project configuration from an ingestion file:</p>
+<pre><code>./manage.py ingest {JSON_FILE}
+</code></pre>
+<p>Available ingest options (paths relative to <code>sample_data/</code>):</p>
+<ul>
+<li><code>boston_floods/data.json</code></li>
+<li><code>multiframe_test.json</code></li>
+<li><code>la_wildfires.json</code></li>
+<li><code>new_york_energy/data.json</code></li>
+</ul>
+<h1 id="testing">Testing</h1>
+<p>Run test suite with <a href="https://tox.wiki/en/4.67.13/"><code>tox</code></a>. <code>tox</code> is installed automatically with the <code>dev</code> package extra. Pass an environment name to perform specific tests.</p>
+<pre><code>tox -e lint
+tox -e format
+tox -e test
+tox -e type
+tox -e check-migrations
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../custom_analytics/" class="btn btn-neutral float-left" title="Custom Analytics"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenGeoscience/geodatalytics" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../custom_analytics/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

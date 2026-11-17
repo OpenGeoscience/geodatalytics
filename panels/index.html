@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Panel Controls - GeoDatalytics Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/styles.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Panel Controls";
+        var mkdocs_page_input_path = "panels.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GeoDatalytics Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../projects/">Project Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../upload/">Dataset Upload</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../controls/">Map Controls</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" >Panels</a>
+    <ul class="current">
+                <li class="toctree-l2 current"><a class="reference internal current" href="#">Panel Controls</a>
+    <ul class="current">
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../datasets/">Datasets Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../layers/">Selected Layers Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../legend/">Legend Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../charts/">Charts Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../networks/">Networks Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../analytics/">Analytics Panel</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/">API Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_analytics/">Custom Analytics</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GeoDatalytics Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+          <li class="breadcrumb-item">Panels</li>
+      <li class="breadcrumb-item active">Panel Controls</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenGeoscience/geodatalytics/edit/master/docs/panels.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="toc">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#basic-controls">Basic Controls</a></li>
+</ul>
+</div>
+<h2 id="introduction">Introduction</h2>
+<p>The primary user interface of GeoDatalytics is organized into a set of six panels that are docked to the left and right sidebars by default. Other sections of this documentation will cover each panel in detail. This section will cover the basics of interacting with any of these panels.</p>
+<p><img alt="All Panels Open" src="../assets/panels_01.png" /></p>
+<h2 id="basic-controls">Basic Controls</h2>
+<p>The title section of each panel includes the name of the panel, three icons, and a search bar to filter the content of the panel. The three icons shown in the upper right hand corner next to the panel title offer some basic controls for the visibility and positioning of the panel.</p>
+<p><img alt="Panel Header" src="../assets/panels_02.png" /></p>
+<p>The caret icon allows you to collapse the panel to a minimum height. Clicking the caret again will expand the panel to its default height.</p>
+<p><img alt="Panel Collapsed" src="../assets/panels_03.png" /></p>
+<p>The dot grid icon is a handle to grab and drag the panel. Hovering over this icon will change the cursor to a repositioning icon.</p>
+<p><img alt="Panel Drag Control" src="../assets/panels_04.png" /></p>
+<p>Click and hold the icon to undock the panel from its current sidebar and move it anywhere on the screen. Panels may be positioned over the map and act as floating panels; collapsing the sidebars will no longer affect their visibility when floating.</p>
+<p><img alt="Panel Drag" src="../assets/panels_05.png" /></p>
+<p>When a panel is floating, an additional icon will appear in the bottom right corner. This triangular dot grid is another handle to grab the corner of the panel and drag to resize it. Hovering over this handle will change the cursor to a diagonal resize icon.</p>
+<p><img alt="Panel Resize" src="../assets/panels_06.png" /></p>
+<p>Dragging a panel into either the left or right sidebar will snap the panel position to an available space in that sidebar, docking it. You can move the panel up and down within the sidebar to reorder the panels.</p>
+<p><img alt="Panels Reorder" src="../assets/panels_07.png" /></p>
+<p>Lastly, the “X” icon in the top right corner of a panel will close the panel, completely removing it from the interface. You can bring the panel back via the panel visibility menu available in the controls bar.</p>
+<p><img alt="Panel Visibility Menu" src="../assets/panels_08.png" /></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../controls/" class="btn btn-neutral float-left" title="Map Controls"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../datasets/" class="btn btn-neutral float-right" title="Datasets Panel">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenGeoscience/geodatalytics" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../controls/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../datasets/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

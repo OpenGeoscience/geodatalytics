@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>API Usage - GeoDatalytics Documentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/styles.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "API Usage";
+        var mkdocs_page_input_path = "api.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GeoDatalytics Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../projects/">Project Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../upload/">Dataset Upload</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../controls/">Map Controls</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" >Panels</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../panels/">Panel Controls</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../datasets/">Datasets Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../layers/">Selected Layers Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../legend/">Legend Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../charts/">Charts Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../networks/">Networks Panel</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../analytics/">Analytics Panel</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Developer Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">API Usage</a>
+    <ul class="current">
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_analytics/">Custom Analytics</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GeoDatalytics Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Developer Guide</li>
+      <li class="breadcrumb-item active">API Usage</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenGeoscience/geodatalytics/edit/master/docs/api.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div class="toc">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#interactive-documentation">Interactive Documentation</a></li>
+<li><a href="#geodatalytics-models">GeoDatalytics Models</a></li>
+<li><a href="#python-example">Python Example</a></li>
+</ul>
+</div>
+<h2 id="introduction">Introduction</h2>
+<p>While the web user interface provides controls to accomplish basic tasks for common use cases, there are some actions that cannot be performed in the user interface. Similarly, some advanced use cases might call for automation of certain actions. For these circumstances, the application programming interface (API) can be leveraged to fetch, create, update, and delete objects in the database, as well as spawn analytics tasks and await their results.</p>
+<p>This guide is intended for Python developers with a basic understanding of requests.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please use caution when interacting with any API endpoints that perform database write operations. If you have any questions about the GeoDatalytics API, <a href="https://www.kitware.com/contact/">Contact Kitware</a> so we can help support your use case.</p>
+</div>
+<h2 id="interactive-documentation">Interactive Documentation</h2>
+<p>GeoDatalytics adheres to the <a href="https://openapis.org/">OpenAPI</a> specification and uses <a href="https://swagger.io/docs/">Swagger</a> for its API documentation. The full API documentation can be accessed at the <a href="https://api.geodatalytics.kitware.com/api/docs/swagger/">GeoDatalytics API Docs</a>, which shows a list of all endpoints. Expanding an endpoint will show the schema for any expected inputs and outputs.</p>
+<p><img alt="Endpoint Example" src="../assets/api_01.png" /></p>
+<p>The “Try It Out” button will enable form controls to create and send a request to that endpoint. Response bodies are displayed as formatted JSON and can be copied to the clipboard or downloaded.</p>
+<p><img alt="Endpoint Response" src="../assets/api_02.png" /></p>
+<p>This interactive documentation will use your authentication if you have signed in to GeoDatalytics in another tab. Otherwise, your API access will be anonymous and limited to only public projects.</p>
+<h2 id="geodatalytics-models">GeoDatalytics Models</h2>
+<p>The API endpoints are organized into groups by the model they pertain to. Before proceeding with API interactions, you should know how the GeoDatalytics models are organized. Each model has a unique purpose, attribute set, and relationships to other models.</p>
+<p><img alt="Models Diagram" src="../assets/models_diagram.svg" /></p>
+<p>Projects are the top level of organization. A project has a set of allowed users with different permission levels. A project can have zero or more datasets, charts, task results, bookmarks, and colormaps. Datasets and charts can have a relationship to a file item, which contains the original file content before conversion to a standard format. Some datasets can have a relationship to a network, which has relationships to network nodes and network edges.</p>
+<p>A dataset must have one or more layers to show on the map, and a layer style can be created for a particular layer to control how that layer is visualized. Each layer must have one or more layer frames. Each layer frame must have a related raster data or vector data, which contains the converted, standardized data that is optimized for visualization. For vector data, this includes one or more individual vector feature objects. Some vector data may also have related region objects, which represent polygon features with specialized behavior.</p>
+<p>The only model shown in the diagram above not related to any other models is the basemap. Basemaps are global objects containing a configuration for map tiles to show general geography. They are not constrained by the project.</p>
+<p>Only some of these models have dedicated API endpoints; other models are more hidden implementations. There are even more hidden models not present in this diagram. Some models that do have API endpoints are read-only. For example, the vector and raster data models have read only endpoints for visualization, but they can only be created during a dataset conversion task, so they do not have a creation endpoint.</p>
+<p>Most basic API use cases will only involve one or two models. If your use case is advanced and requires managing multiple model relationships, <a href="https://www.kitware.com/contact/">Contact Kitware</a> so we can help support your use case.</p>
+<h2 id="python-example">Python Example</h2>
+<p>Interacting with the API via python scripts can be especially useful for automating tasks. For example, if you have a source of continuously updating sensor data, you could write a script to update a particular chart with the latest data and schedule your script to run once a day. The following python example demonstrates such a use case.</p>
+<p>Your use case will likely require the use of other endpoints, but you will likely want all your requests to be authenticated, so at minimum you will need to use the token endpoint in a similar manner.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For the primary production server, the value for <code>base_url</code> would be <code>https://api.geodatalytics.kitware.com/api/v1</code>.</p>
+</div>
+<pre><code>import json
+import requests
+from datetime import datetime
+
+with requests.Session() as session:
+    token = session.post(f'{base_url}/token/', dict(
+        username=username,
+        password=password,
+    )).json().get('token')
+    session.headers.update({
+        'Authorization': f'Token {token}',
+        'Accept': 'application/json',
+    })
+
+    new_datum_label = datetime.now().strftime('%Y-%m-%d')
+    new_datum_values = (5.5, 2.5)
+
+    chart = session.get(f'{base_url}/charts/{chart_id}/').json()
+    chart_data = chart.get('chart_data')
+    chart_data['labels'].append(new_datum_label)
+    chart_data['datasets'][0]['data'].append(new_datum_values[0])
+    chart_data['datasets'][1]['data'].append(new_datum_values[1])
+    response = session.patch(
+        f'{base_url}/charts/{chart_id}/',
+        dict(chart_data=json.dumps(chart_data))
+    )
+    print(response)
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../analytics/" class="btn btn-neutral float-left" title="Analytics Panel"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../custom_analytics/" class="btn btn-neutral float-right" title="Custom Analytics">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenGeoscience/geodatalytics" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../analytics/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../custom_analytics/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
