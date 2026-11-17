@@ -21,6 +21,8 @@ GeoDatalytics can support diverse use cases related to urban environments, enabl
 
 GeoDatalytics is built with Kitware's [Resonant][resonant-cookiecutter-link] technology stack. This stack includes a Django Python server, PostgreSQL/PostGIS database, S3 object store, Vue web application, and Celery task service.
 
+Visit our primary production deployment at [geodatalytics.kitware.com][deployment-link].
+
 ## Key Capabilities
 
 - **Scenario-based analytics**: explore flood impact analysis, transportation disruption, infrastructure risk assessment, etc.
@@ -34,9 +36,9 @@ GeoDatalytics is built with Kitware's [Resonant][resonant-cookiecutter-link] tec
 - **Collaborative project management**: configure your projects to include relevant datasets, set permissions for your collaborators, and save informative views for others to see your results
 
 
-## Getting Started
+## Documentation
 
-To run GeoDatalytics locally with `docker-compose`, follow the instructions in the [Setup Guide](docs/setup.md).
+Reference our [documentation][docs-link] for user and developer guides.
 
 [apache-license-image]: https://img.shields.io/badge/license-Apache%202-blue.svg
 [license-link]: https://raw.githubusercontent.com/OpenGeoscience/geodatalytics/master/LICENSE
@@ -45,3 +47,5 @@ To run GeoDatalytics locally with `docker-compose`, follow the instructions in t
 [mass-mapper-link]: https://maps.massgis.digital.mass.gov/MassMapper/MassMapper.html
 [flood-sim-link]: https://github.com/OpenGeoscience/uvdat-flood-sim
 [resonant-cookiecutter-link]: https://github.com/kitware-resonant/cookiecutter-resonant
+[deployment-link]: https://www.geodatalytics.kitware.com/
+[docs-link]: https://opengeoscience.github.io/geodatalytics/
