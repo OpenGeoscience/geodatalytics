@@ -110,6 +110,7 @@ STORAGES: dict[str, dict[str, Any]] = {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
+S3_FILE_FIELD_MAX_SIZE = 5 * 1024 * 1024 * 1024  # 5 GB
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Django staticfiles auto-creates any intermediate directories, but do so here to prevent warnings.

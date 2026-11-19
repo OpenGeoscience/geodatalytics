@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.contrib.gis.serializers import geojson
@@ -33,6 +35,10 @@ from uvdat.core.models import (
     TaskResult,
     VectorData,
 )
+
+if TYPE_CHECKING:
+    from django.core.files import File
+    from rest_framework.request import Request
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -144,6 +150,16 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 
 class FileItemSerializer(serializers.ModelSerializer):
+    def validate_file(self, value: File) -> File:
+        request: Request = self.context["request"]
+        if not request.user.is_superuser and value.size > 2 * 1024 * 1024 * 1024:
+            raise serializers.ValidationError(
+                "Non-superusers are limited to a maximum of 2 GB for file uploads.",
+                code="too_large",
+            )
+
+        return value
+
     class Meta:
         model = FileItem
         fields = "__all__"
