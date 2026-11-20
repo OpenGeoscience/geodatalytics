@@ -1,6 +1,27 @@
 site_name: GeoDatalytics Documentation
-theme: 'material'
+site_url: https://opengeoscience.github.io/geodatalytics/
+repo_url: https://github.com/OpenGeoscience/geodatalytics
+theme: 'readthedocs'
 nav:
-  - Home: README.md
-  - Setup: setup.md
-  - Testing: testing.md
+  - Home: index.md
+  - User Guide:
+    - Project Configuration: projects.md
+    - Dataset Upload: upload.md
+    - Map Controls: controls.md
+    - Panels:
+      - Panel Controls: panels.md
+      - Datasets Panel: datasets.md
+      - Selected Layers Panel: layers.md
+      - Legend Panel: legend.md
+      - Charts Panel: charts.md
+      - Networks Panel: networks.md
+      - Analytics Panel: analytics.md
+  - Developer Guide:
+    - API Usage: api.md
+    - Custom Analytics: custom_analytics.md
+    - Setup: setup.md
+
+markdown_extensions:
+  - admonition
+extra_css:
+  - assets/styles.css
