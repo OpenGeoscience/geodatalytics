@@ -14,6 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from uvdat.core.models import RasterData, VectorData, VectorFeature
 from uvdat.core.rest.serializers import RasterDataSerializer, VectorDataSerializer
+from uvdat.core.tasks.data import create_vector_features
 
 VECTOR_TILE_SQL = """
 WITH
@@ -106,9 +107,13 @@ class RasterDataViewSet(GenericViewSet, mixins.RetrieveModelMixin, LargeImageVSI
         )
 
 
-class VectorDataViewSet(GenericViewSet, mixins.RetrieveModelMixin):
+class VectorDataViewSet(GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin):
     queryset = VectorData.objects.select_related("dataset").all()
     serializer_class = VectorDataSerializer
+
+    def perform_create(self, serializer):
+        vector_data = serializer.save()
+        create_vector_features(vector_data)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
