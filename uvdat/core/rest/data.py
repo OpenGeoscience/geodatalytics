@@ -82,7 +82,9 @@ def get_filter_string(filters: dict | None = None):
     return return_str
 
 
-class RasterDataViewSet(GenericViewSet, mixins.RetrieveModelMixin, LargeImageVSIFileDetailMixin):
+class RasterDataViewSet(
+    GenericViewSet, mixins.CreateModelMixin, mixins.RetrieveModelMixin, LargeImageVSIFileDetailMixin
+):
     queryset = RasterData.objects.select_related("dataset").all()
     serializer_class = RasterDataSerializer
     FILE_FIELD_NAME = "cloud_optimized_geotiff"
